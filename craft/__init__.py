@@ -4,7 +4,7 @@ CRAFT - Chatbot & RAG Framework Toolkit
 A flexible, provider-agnostic framework for building chatbots with RAG capabilities.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from craft.core.chatbot import Chatbot
 from craft.core.conversation import Conversation, Message

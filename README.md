@@ -12,7 +12,7 @@
 - 📚 **Multiple Vector Stores**: ChromaDB, FAISS, Pinecone support with adapter pattern ✅
 - 🎯 **Smart Document Chunking**: Fixed-size, sentence, paragraph, and semantic strategies ✅
 - ⚡ **Streaming Support**: Real-time streaming responses from all providers
-- 💾 **Conversation Memory**: Persistent conversation storage with multiple backends
+- 💾 **Persistent Storage**: SQLite, PostgreSQL, Redis, MongoDB adapters for conversation storage ✅
 - 🌐 **Easy Integration**: REST API, WebSocket, and web widgets for instant deployment ✅
 - 🛠️ **MCP Support**: Full Model Context Protocol integration - expose and consume tools ✅
 - 🎨 **Highly Configurable**: YAML/JSON config files or environment variables
@@ -174,6 +174,71 @@ server.run(host="0.0.0.0", port=8000)
 ```
 
 That's it! The chat widget appears on your site 🎉
+
+### Storage & Persistence
+
+**Persist conversations** with multiple storage backends:
+
+```python
+from craft import Chatbot
+from craft.providers import AnthropicProvider
+from craft.storage import PostgreSQLStorage
+
+# Create storage backend
+storage = PostgreSQLStorage(
+    host="localhost",
+    database="craft",
+    username="postgres",
+    password="your-password"
+)
+
+# Create chatbot with persistent memory
+from craft.core.memory import Memory
+memory = Memory(storage=storage, max_messages=100)
+
+chatbot = Chatbot(
+    provider=AnthropicProvider(api_key="your-key"),
+    memory=memory
+)
+
+# Conversations are automatically saved!
+chatbot.chat("Hello!")
+
+# Load conversation later
+conversation = storage.load(chatbot.conversation.id)
+```
+
+**Available Storage Backends:**
+- **SQLiteStorage**: File-based, perfect for development
+- **PostgreSQLStorage**: Production-ready with full-text search
+- **RedisStorage**: In-memory cache with TTL support
+- **MongoDBStorage**: NoSQL with flexible schemas
+
+```python
+from craft.storage import SQLiteStorage, RedisStorage, MongoDBStorage
+
+# SQLite (development)
+storage = SQLiteStorage(database_path="./conversations.db")
+
+# Redis (caching/sessions)
+storage = RedisStorage(host="localhost", ttl=3600)
+
+# MongoDB (scalability)
+storage = MongoDBStorage(host="localhost", database="craft")
+```
+
+**Migrate between storage backends:**
+
+```python
+from examples.storage_migration import migrate_storage
+
+# Migrate from SQLite to PostgreSQL
+migrate_storage(
+    source=SQLiteStorage("./dev.db"),
+    destination=PostgreSQLStorage(...),
+    batch_size=100
+)
+```
 
 ### MCP Integration
 
@@ -595,12 +660,14 @@ provider = GoogleProvider(
 - [x] Retrieval engine with scoring
 - [x] Context injection in Chatbot
 
-### Phase 3 - Storage & Persistence 🚧
-- [ ] SQLite adapter
-- [ ] PostgreSQL adapter
-- [ ] Redis adapter
-- [ ] MongoDB adapter
-- [ ] Conversation export/import
+### Phase 3 - Storage & Persistence ✅
+- [x] SQLite adapter
+- [x] PostgreSQL adapter with JSONB and full-text search
+- [x] Redis adapter with TTL support
+- [x] MongoDB adapter with text search indexes
+- [x] Conversation export/import functionality
+- [x] Storage migration tools
+- [x] Integration with Memory system
 
 ### Phase 4 - API & Integrations ✅
 - [x] FastAPI server with auto-generated docs
