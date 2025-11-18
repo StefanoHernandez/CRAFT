@@ -699,6 +699,61 @@ provider = GoogleProvider(
 
 ---
 
+## 🧪 Testing
+
+CRAFT has comprehensive test coverage with unit and integration tests.
+
+### Running Tests
+
+```bash
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=craft --cov-report=html
+
+# Run specific test types
+pytest -m unit           # Unit tests only
+pytest -m integration    # Integration tests only
+pytest -m "not slow"     # Skip slow tests
+```
+
+### Test Structure
+
+```
+tests/
+├── unit/               # Unit tests
+│   ├── test_chatbot.py
+│   ├── test_conversation.py
+│   ├── test_storage.py
+│   ├── test_analytics.py
+│   └── test_i18n.py
+├── integration/        # Integration tests
+└── conftest.py         # Shared fixtures
+```
+
+### Coverage
+
+We maintain >80% test coverage. View the coverage report:
+
+```bash
+pytest --cov=craft --cov-report=html
+open htmlcov/index.html
+```
+
+### Continuous Integration
+
+All PRs must pass:
+- ✅ Unit tests on Python 3.9, 3.10, 3.11, 3.12
+- ✅ Integration tests with real databases
+- ✅ Code linting (black, ruff)
+- ✅ Type checking (mypy)
+
+---
+
 ## 🛣️ Roadmap
 
 ### Phase 1 - Core Framework ✅
