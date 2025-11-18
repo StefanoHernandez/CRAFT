@@ -60,6 +60,24 @@ storage = [
 mcp = [
     "mcp>=0.1.0",
 ]
+langfuse = [
+    "langfuse>=2.0.0",
+]
+prometheus = [
+    "prometheus-client>=0.19.0",
+]
+opentelemetry = [
+    "opentelemetry-api>=1.21.0",
+    "opentelemetry-sdk>=1.21.0",
+    "opentelemetry-exporter-otlp>=1.21.0",
+    "opentelemetry-exporter-jaeger>=1.21.0",
+]
+sentry = [
+    "sentry-sdk>=1.40.0",
+]
+all-integrations = [
+    "craft-chatbot[langfuse,prometheus,opentelemetry,sentry]",
+]
 dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
@@ -69,7 +87,7 @@ dev = [
     "mypy>=1.7.0",
 ]
 all = [
-    "craft-chatbot[all-providers,rag,api,storage,mcp,dev]",
+    "craft-chatbot[all-providers,rag,api,storage,mcp,all-integrations,dev]",
 ]
 
 [project.urls]

@@ -15,6 +15,7 @@
 - 💾 **Persistent Storage**: SQLite, PostgreSQL, Redis, MongoDB adapters for conversation storage ✅
 - 🌐 **Easy Integration**: REST API, WebSocket, and web widgets for instant deployment ✅
 - 🛠️ **MCP Support**: Full Model Context Protocol integration - expose and consume tools ✅
+- 🔍 **Production Observability**: Langfuse, Prometheus, OpenTelemetry, Sentry integrations ✅
 - 🎨 **Highly Configurable**: YAML/JSON config files or environment variables
 - 🐳 **Docker Ready**: Full Docker Compose setup included
 
@@ -42,6 +43,25 @@ pip install 'craft-chatbot[google]'
 
 # All providers
 pip install 'craft-chatbot[all-providers]'
+```
+
+### With Integrations
+
+```bash
+# Langfuse (LLM observability)
+pip install 'craft-chatbot[langfuse]'
+
+# Prometheus (metrics)
+pip install 'craft-chatbot[prometheus]'
+
+# OpenTelemetry (distributed tracing)
+pip install 'craft-chatbot[opentelemetry]'
+
+# Sentry (error tracking)
+pip install 'craft-chatbot[sentry]'
+
+# All integrations
+pip install 'craft-chatbot[all-integrations]'
 ```
 
 ### Full Installation (All Features)
@@ -638,6 +658,110 @@ response = requests.post('http://localhost:8000/chat', json={
 data = response.json()
 print(data['content'])  # Assistant response
 ```
+
+---
+
+## 🔍 Production Integrations
+
+**Monitor, trace, and debug your chatbot in production** with industry-standard observability tools.
+
+### Langfuse - LLM Observability
+
+```bash
+pip install craft-chatbot[langfuse]
+```
+
+```python
+from craft.integrations import LangfuseTracer
+
+tracer = LangfuseTracer(public_key="pk-lf-...", secret_key="sk-lf-...")
+chatbot = tracer.wrap_chatbot(chatbot)
+
+# Automatic trace generation, token tracking, and cost analysis
+# View traces at: https://cloud.langfuse.com
+```
+
+### Prometheus - Metrics & Monitoring
+
+```bash
+pip install craft-chatbot[prometheus]
+```
+
+```python
+from craft.integrations import PrometheusExporter
+
+exporter = PrometheusExporter(port=8000, namespace="craft")
+chatbot = exporter.wrap_chatbot(chatbot)
+
+# Metrics available at: http://localhost:8000/metrics
+# Track: requests, response times, tokens, errors
+```
+
+### OpenTelemetry - Distributed Tracing
+
+```bash
+pip install craft-chatbot[opentelemetry]
+```
+
+```python
+from craft.integrations import OpenTelemetryTracer
+
+tracer = OpenTelemetryTracer(
+    service_name="craft-chatbot",
+    exporter_type="otlp",
+    otlp_endpoint="http://jaeger:4317"
+)
+chatbot = tracer.wrap_chatbot(chatbot)
+
+# Works with: Jaeger, Grafana Tempo, Honeycomb, etc.
+```
+
+### Sentry - Error Tracking
+
+```bash
+pip install craft-chatbot[sentry]
+```
+
+```python
+from craft.integrations import SentryIntegration
+
+sentry = SentryIntegration(
+    dsn="https://...@sentry.io/...",
+    environment="production",
+    traces_sample_rate=0.1
+)
+chatbot = sentry.wrap_chatbot(chatbot)
+
+# Automatic error capture and performance monitoring
+```
+
+### All Integrations Together
+
+```python
+# Combine multiple integrations for complete observability
+langfuse = LangfuseTracer()
+prometheus = PrometheusExporter(port=8000)
+otel = OpenTelemetryTracer(service_name="craft")
+sentry = SentryIntegration()
+
+# Wrap chatbot with all integrations
+chatbot = Chatbot(provider=AnthropicProvider())
+chatbot = langfuse.wrap_chatbot(chatbot)
+chatbot = prometheus.wrap_chatbot(chatbot)
+chatbot = otel.wrap_chatbot(chatbot)
+chatbot = sentry.wrap_chatbot(chatbot)
+
+# Single call → full observability stack
+response = chatbot.chat("Hello!")
+```
+
+**Benefits:**
+- 📊 **Langfuse**: LLM-specific insights and cost tracking
+- 📈 **Prometheus**: Real-time metrics and alerting
+- 🔍 **OpenTelemetry**: Distributed tracing across services
+- 🐛 **Sentry**: Error tracking and performance profiling
+
+[View Integration Docs →](./INTEGRATIONS.md) | [Examples →](./examples/)
 
 ---
 
