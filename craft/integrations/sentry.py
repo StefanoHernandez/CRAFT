@@ -15,6 +15,9 @@ except ImportError:
     SENTRY_AVAILABLE = False
 
 
+__all__ = ["SentryIntegration", "SENTRY_AVAILABLE", "configure_sentry"]
+
+
 class SentryIntegration:
     """
     Sentry integration for CRAFT.

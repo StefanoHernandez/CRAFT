@@ -18,6 +18,9 @@ except ImportError:
 from craft.providers.base import Message, ChatResponse
 
 
+__all__ = ["LangfuseTracer", "LANGFUSE_AVAILABLE", "trace_llm_call"]
+
+
 class LangfuseTracer:
     """
     Langfuse integration for CRAFT.

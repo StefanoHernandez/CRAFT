@@ -15,8 +15,13 @@ try:
     from opentelemetry.sdk.resources import Resource, SERVICE_NAME
     from opentelemetry.trace import Status, StatusCode
     OTEL_AVAILABLE = True
+    OPENTELEMETRY_AVAILABLE = True  # Alias for consistency
 except ImportError:
     OTEL_AVAILABLE = False
+    OPENTELEMETRY_AVAILABLE = False
+
+
+__all__ = ["OpenTelemetryTracer", "OPENTELEMETRY_AVAILABLE", "OTEL_AVAILABLE"]
 
 
 class OpenTelemetryTracer:

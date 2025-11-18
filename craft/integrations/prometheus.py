@@ -14,6 +14,9 @@ except ImportError:
     PROMETHEUS_AVAILABLE = False
 
 
+__all__ = ["PrometheusExporter", "PROMETHEUS_AVAILABLE"]
+
+
 class PrometheusExporter:
     """
     Prometheus metrics exporter for CRAFT.
