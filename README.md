@@ -566,6 +566,64 @@ Add a chat widget to any website in 2 lines:
 - 🚫 No dependencies
 - 💬 Conversation history
 
+### React Component
+
+**React/TypeScript component with full TypeScript support:**
+
+```bash
+npm install @craft-ai/react
+```
+
+```tsx
+import { CraftChat } from '@craft-ai/react'
+import '@craft-ai/react/styles.css'
+
+function App() {
+  return (
+    <CraftChat
+      config={{
+        apiUrl: 'http://localhost:8000',
+        stream: true,
+      }}
+      theme="auto"  // 'light' | 'dark' | 'auto'
+      welcomeMessage="👋 Hi! How can I help you today?"
+      enableMarkdown={true}
+      showTimestamp={false}
+    />
+  )
+}
+```
+
+**Custom hook for building your own UI:**
+
+```tsx
+import { useCraft } from '@craft-ai/react'
+
+function MyChat() {
+  const { messages, isLoading, sendMessage } = useCraft({
+    apiUrl: 'http://localhost:8000',
+    stream: true,
+  })
+
+  return (
+    <div>
+      {messages.map(msg => <div key={msg.id}>{msg.content}</div>)}
+      <button onClick={() => sendMessage('Hello!')}>Send</button>
+    </div>
+  )
+}
+```
+
+**Features:**
+- 🎣 Custom hooks (`useCraft`)
+- 🎨 Theming (light/dark/auto)
+- ⚡ Streaming support
+- 📦 TypeScript definitions
+- 🔧 Fully customizable
+- 📱 Mobile responsive
+
+[View React Docs →](./craft-react/README.md)
+
 ### Python API Client
 
 ```python
@@ -788,7 +846,7 @@ All PRs must pass:
 - [x] Rate limiting middleware
 - [x] CORS support
 - [x] Vanilla JS widget (no dependencies!)
-- [ ] React component (coming soon)
+- [x] React component (@craft-ai/react) with TypeScript
 
 ### Phase 5 - MCP Integration ✅
 - [x] MCP server implementation (expose CRAFT as tools)

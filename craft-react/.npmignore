@@ -1,0 +1,24 @@
+# Source files
+src/
+examples/
+vite.config.ts
+tsconfig.json
+
+# Development files
+node_modules/
+.vscode/
+.idea/
+*.log
+
+# Test files
+tests/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# Build artifacts (keep dist/)
+*.tsbuildinfo
+
+# Documentation
+README.md
