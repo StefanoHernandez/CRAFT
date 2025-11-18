@@ -240,6 +240,62 @@ migrate_storage(
 )
 ```
 
+### Advanced Features (Phase 6)
+
+**Multi-language Support:**
+
+```python
+from craft.i18n import Translator, Language, detect_language
+
+# Auto-detect language
+user_message = "Ciao! Come stai?"
+lang = detect_language(user_message)  # Language.ITALIAN
+
+# Create translator
+translator = Translator(language=lang)
+print(translator.get("welcome"))  # "Benvenuto in CRAFT"
+
+# Chatbot with language instruction
+lang_prompt = translator.translate_prompt("You are a helpful assistant.")
+chatbot = Chatbot(provider=provider, system_prompt=lang_prompt)
+```
+
+**Analytics & Metrics:**
+
+```python
+from craft.analytics import AnalyticsTracker, EventType, MetricType, Timer
+
+# Track events
+tracker = AnalyticsTracker()
+tracker.track_event(EventType.MESSAGE_SENT, data={"message": "Hello"})
+
+# Track metrics
+tracker.track_metric(MetricType.RESPONSE_TIME, value=250.5)
+
+# Get statistics
+stats = tracker.get_statistics(hours=24)
+print(f"Total events: {stats['total_events']}")
+```
+
+**Monitoring & Health Checks:**
+
+```python
+from craft.monitoring import HealthCheck, AdvancedLogger, AlertManager
+
+# Health checks
+health = HealthCheck()
+health.add_check("database", check_database)
+status = await health.check_all()
+
+# Advanced logging
+logger = AdvancedLogger("my-app", json_logs=True)
+logger.info("Event occurred", user_id="123")
+
+# Alerting
+alerts = AlertManager()
+alerts.alert(AlertLevel.CRITICAL, "Service Down", "Database unreachable")
+```
+
 ### MCP Integration
 
 **Expose CRAFT as an MCP Server:**
@@ -687,12 +743,15 @@ provider = GoogleProvider(
 - [x] Function calling support
 - [x] Comprehensive MCP documentation
 
-### Phase 6 - Advanced Features 📋
-- [ ] Multi-language support
-- [ ] Analytics & metrics
-- [ ] A/B testing framework
-- [ ] Prompt optimization
-- [ ] Fine-tuning helpers
+### Phase 6 - Advanced Features ✅
+- [x] Multi-language support (i18n) - 10 languages
+- [x] Analytics & metrics tracking
+- [x] Advanced monitoring & logging
+- [x] Health checks system
+- [x] Alerting system
+- [ ] A/B testing framework (future)
+- [ ] Prompt optimization (future)
+- [ ] Fine-tuning helpers (future)
 
 ---
 
