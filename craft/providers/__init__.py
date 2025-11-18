@@ -27,3 +27,21 @@ try:
     __all__.append("GoogleProvider")
 except ImportError:
     pass
+
+try:
+    from craft.providers.azure_openai import AzureOpenAIProvider
+    __all__.append("AzureOpenAIProvider")
+except ImportError:
+    pass
+
+try:
+    from craft.providers.aws_bedrock import AWSBedrockProvider
+    __all__.append("AWSBedrockProvider")
+except ImportError:
+    pass
+
+try:
+    from craft.providers.cohere import CohereProvider
+    __all__.append("CohereProvider")
+except ImportError:
+    pass

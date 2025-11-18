@@ -11,3 +11,10 @@ __all__ = [
     "ChunkConfig",
     "ChunkingStrategy",
 ]
+
+# Advanced RAG features (optional)
+try:
+    from craft.rag.advanced import HybridSearch, Reranker, QueryRewriter
+    __all__.extend(["HybridSearch", "Reranker", "QueryRewriter"])
+except ImportError:
+    pass

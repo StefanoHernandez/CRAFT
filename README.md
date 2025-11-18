@@ -7,17 +7,29 @@
 
 ## ✨ Features
 
-- 🔌 **Provider-Agnostic**: Easily switch between Anthropic Claude, OpenAI GPT, Google Gemini, and more
-- 🧠 **RAG Integration**: Complete RAG system with embeddings, vector stores, and retrieval ✅
-- 📚 **Multiple Vector Stores**: ChromaDB, FAISS, Pinecone support with adapter pattern ✅
-- 🎯 **Smart Document Chunking**: Fixed-size, sentence, paragraph, and semantic strategies ✅
+### Core Framework
+- 🔌 **Provider-Agnostic**: Switch between 6+ LLM providers with one line of code ✅
+  - Anthropic Claude, OpenAI GPT, Google Gemini
+  - **NEW in v1.4**: Azure OpenAI, AWS Bedrock, Cohere ✅
 - ⚡ **Streaming Support**: Real-time streaming responses from all providers
-- 💾 **Persistent Storage**: SQLite, PostgreSQL, Redis, MongoDB adapters for conversation storage ✅
-- 🌐 **Easy Integration**: REST API, WebSocket, and web widgets for instant deployment ✅
-- 🛠️ **MCP Support**: Full Model Context Protocol integration - expose and consume tools ✅
-- 🔍 **Production Observability**: Langfuse, Prometheus, OpenTelemetry, Sentry integrations ✅
+- 💾 **Persistent Storage**: SQLite, PostgreSQL, Redis, MongoDB adapters ✅
 - 🎨 **Highly Configurable**: YAML/JSON config files or environment variables
 - 🐳 **Docker Ready**: Full Docker Compose setup included
+
+### RAG Capabilities
+- 🧠 **Complete RAG System**: Embeddings, vector stores, and retrieval ✅
+- 📚 **Multiple Vector Stores**: ChromaDB, FAISS, Pinecone support ✅
+- 🎯 **Smart Document Chunking**: Fixed-size, sentence, paragraph, semantic strategies ✅
+- 📄 **Document Loaders**: PDF, CSV, Web scraping (v1.4) ✅
+- 🔍 **Hybrid Search**: Dense + sparse retrieval with RRF (v1.4) ✅
+- 🎯 **Reranking**: Cross-encoder models for better results (v1.4) ✅
+- ✍️ **Query Rewriting**: Expansion, decomposition, HyDE (v1.4) ✅
+
+### Production & Integration
+- 🌐 **Easy Integration**: REST API, WebSocket, and React widget ✅
+- 🛠️ **MCP Support**: Full Model Context Protocol integration ✅
+- 🔍 **Production Observability**: Langfuse, Prometheus, OpenTelemetry, Sentry ✅
+- 📊 **Enterprise Ready**: Azure OpenAI, AWS Bedrock support (v1.4) ✅
 
 ---
 
@@ -41,13 +53,31 @@ pip install 'craft-chatbot[openai]'
 # Google Gemini
 pip install 'craft-chatbot[google]'
 
+# Azure OpenAI (v1.4+)
+pip install 'craft-chatbot[openai]'  # Uses same openai package
+
+# AWS Bedrock (v1.4+)
+pip install 'craft-chatbot[aws]'
+
+# Cohere (v1.4+)
+pip install 'craft-chatbot[cohere]'
+
 # All providers
 pip install 'craft-chatbot[all-providers]'
 ```
 
-### With Integrations
+### With Additional Features
 
 ```bash
+# RAG with vector stores
+pip install 'craft-chatbot[rag]'
+
+# Document loaders (PDF, CSV, Web) - v1.4+
+pip install 'craft-chatbot[loaders]'
+
+# Advanced RAG (hybrid search, reranking, query rewriting) - v1.4+
+pip install 'craft-chatbot[advanced-rag]'
+
 # Langfuse (LLM observability)
 pip install 'craft-chatbot[langfuse]'
 

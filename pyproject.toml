@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "craft-chatbot"
-version = "1.3.0"
+version = "1.4.0"
 description = "CRAFT - Chatbot & RAG Framework Toolkit: Easy integration of chatbots with RAG across multiple LLM providers"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -36,16 +36,30 @@ dependencies = [
 anthropic = ["anthropic>=0.39.0"]
 openai = ["openai>=1.0.0"]
 google = ["google-generativeai>=0.3.0"]
+aws = ["boto3>=1.34.0"]
+cohere = ["cohere>=5.0.0"]
 all-providers = [
     "anthropic>=0.39.0",
     "openai>=1.0.0",
     "google-generativeai>=0.3.0",
+    "boto3>=1.34.0",
+    "cohere>=5.0.0",
 ]
 rag = [
     "chromadb>=0.4.0",
     "sentence-transformers>=2.2.0",
     "faiss-cpu>=1.7.4",
     "pinecone-client>=3.0.0",
+]
+loaders = [
+    "pypdf>=4.0.0",
+    "pandas>=2.0.0",
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+]
+advanced-rag = [
+    "rank-bm25>=0.2.2",
+    "flashrank>=0.2.0",
 ]
 api = [
     "fastapi>=0.104.0",
