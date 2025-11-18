@@ -5,6 +5,82 @@ All notable changes to CRAFT will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-11-18
+
+### Added - Production Observability Integrations
+- **Langfuse Integration**
+  - LLM-specific observability and tracing
+  - Automatic trace generation for all chat interactions
+  - Token usage tracking and cost analysis
+  - RAG query tracing with retrieval analytics
+  - Session tracking across multiple interactions
+  - Custom metadata and tags support
+  - User feedback integration
+
+- **Prometheus Integration**
+  - Metrics exporter for monitoring
+  - Request counters by provider, model, and status
+  - Response time histograms with percentiles
+  - Token usage tracking (input/output)
+  - Error rate monitoring
+  - Custom labels and namespaces
+  - HTTP server for Prometheus scraping
+
+- **OpenTelemetry Integration**
+  - Distributed tracing across services
+  - Support for OTLP, Jaeger, and Zipkin exporters
+  - Automatic span generation for chat operations
+  - Custom spans and nested operations
+  - Exception recording with stack traces
+  - Resource attributes and metadata
+  - Context propagation
+
+- **Sentry Integration**
+  - Error tracking and performance monitoring
+  - Automatic exception capture with context
+  - Performance transaction tracking
+  - User context and identification
+  - Custom tags and metadata
+  - Release tracking and breadcrumbs
+  - Performance profiling with sampling
+
+- **React Component (@craft-ai/react v1.0.0)**
+  - Complete TypeScript React component library
+  - useCraft custom hook for state management
+  - CraftChat main component with full UI
+  - Streaming support with real-time updates
+  - Theming system (light/dark/auto)
+  - Markdown rendering support
+  - Error handling and loading states
+  - Responsive design
+  - TypeScript definitions included
+  - ESM and CJS builds
+
+- **Examples**
+  - integrations_langfuse.py: Langfuse tracing examples
+  - integrations_prometheus.py: Prometheus metrics and Grafana queries
+  - integrations_otel.py: OpenTelemetry distributed tracing
+  - integrations_sentry.py: Sentry error tracking and performance
+
+- **Documentation**
+  - INTEGRATIONS.md: Comprehensive integration guide
+  - Setup instructions for each integration
+  - Grafana/Prometheus query examples
+  - Best practices and troubleshooting
+  - Performance benchmarks
+  - craft-react/README.md: React component documentation
+
+### Changed
+- Updated pyproject.toml with optional integration dependencies
+- Updated README.md with Production Integrations section
+- Enhanced installation options for integrations
+
+### Performance
+- All integrations support graceful degradation
+- Combined overhead <5ms per request with proper sampling
+- Async trace sending (Langfuse) for minimal impact
+- Configurable sampling rates for production use
+
 ## [1.2.0] - 2025-01-18
 
 ### Added - Phase 6: Advanced Features
@@ -182,18 +258,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- React widget component
 - A/B testing framework
 - Prompt optimization tools
 - Fine-tuning helpers
 - Advanced RAG features (hybrid search, reranking)
 - Performance optimizations
 - Enhanced security features
+- Additional LLM provider integrations
 
 ---
 
 ## Version History
 
+- **1.3.0** - Production Observability (Langfuse, Prometheus, OpenTelemetry, Sentry) + React Component
 - **1.2.0** - Phase 6: Advanced Features (i18n, Analytics, Monitoring)
 - **1.1.0** - Phase 3: Storage & Persistence
 - **1.0.0** - Phase 5: MCP Integration (production ready)
@@ -201,6 +278,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **0.2.0** - Phase 2: RAG System
 - **0.1.0** - Phase 1: Core Framework
 
+[1.3.0]: https://github.com/StefanoHernandez/CRAFT/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/StefanoHernandez/CRAFT/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/StefanoHernandez/CRAFT/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/StefanoHernandez/CRAFT/compare/v0.3.0...v1.0.0

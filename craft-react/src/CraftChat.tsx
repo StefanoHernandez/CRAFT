@@ -19,7 +19,7 @@ export const CraftChat: React.FC<CraftChatProps> = ({
   enableMarkdown = true,
   maxHeight = '600px',
   onMessageSent,
-  onResponseReceived,
+  onResponseReceived: _onResponseReceived,
 }) => {
   const {
     messages,
