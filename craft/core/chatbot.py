@@ -1,11 +1,14 @@
 """Core Chatbot class."""
 
-from typing import Any, AsyncIterator, Optional, Union
+from typing import Any, AsyncIterator, Optional, Union, TYPE_CHECKING
 from craft.providers.base import Provider, ChatResponse, StreamChunk, Role
 from craft.core.conversation import Conversation
 from craft.core.context import Context
 from craft.core.memory import Memory
 from craft.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from craft.rag.retrieval import RetrievalEngine
 
 
 class Chatbot:
@@ -22,6 +25,7 @@ class Chatbot:
         memory: Optional[Union[bool, Memory]] = None,
         context: Optional[Context] = None,
         conversation: Optional[Conversation] = None,
+        rag: Optional["RetrievalEngine"] = None,
         log_level: str = "INFO",
     ):
         """
@@ -33,10 +37,12 @@ class Chatbot:
             memory: Memory instance or True to use default in-memory storage
             context: Optional context for RAG
             conversation: Optional existing conversation
+            rag: Optional RAG retrieval engine
             log_level: Logging level
         """
         self.provider = provider
         self.system_prompt = system_prompt
+        self.rag = rag
         self.logger = get_logger("craft.chatbot", level=log_level)
 
         # Initialize memory
@@ -60,13 +66,15 @@ class Chatbot:
             if system_prompt:
                 self.conversation.add_system_message(system_prompt)
 
-        self.logger.info(f"Chatbot initialized with {self.provider.name} provider")
+        rag_status = "enabled" if rag else "disabled"
+        self.logger.info(f"Chatbot initialized with {self.provider.name} provider (RAG: {rag_status})")
 
     def chat(
         self,
         message: str,
         stream: bool = False,
         save_history: bool = True,
+        use_rag: bool = True,
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk], str]:
         """
@@ -76,17 +84,50 @@ class Chatbot:
             message: User message
             stream: Whether to stream the response
             save_history: Whether to save messages to conversation history
+            use_rag: Whether to use RAG for this query (if available)
             **kwargs: Additional provider-specific parameters
 
         Returns:
             ChatResponse, StreamChunk iterator, or string content
         """
-        # Add user message to conversation
-        if save_history:
-            self.conversation.add_user_message(message)
+        # Retrieve relevant context if RAG is enabled
+        if self.rag and use_rag:
+            self.logger.debug("Retrieving relevant context with RAG")
+            retrieved_docs = self.rag.retrieve(message)
 
-        # Prepare messages for provider
-        messages = self.conversation.get_messages()
+            if retrieved_docs:
+                # Format context and inject into conversation
+                context_text = self.rag.format_context(retrieved_docs)
+
+                # Add context as a temporary system message
+                enhanced_message = f"{context_text}\n\nUser question: {message}"
+
+                # Add to conversation history
+                if save_history:
+                    self.conversation.add_user_message(message)
+
+                # Create temporary conversation with context
+                temp_conversation = Conversation()
+                if self.system_prompt:
+                    temp_conversation.add_system_message(self.system_prompt)
+
+                # Add previous messages
+                for msg in self.conversation.messages[:-1]:  # Exclude the last message we just added
+                    temp_conversation.messages.append(msg)
+
+                # Add enhanced message
+                temp_conversation.add_user_message(enhanced_message)
+                messages = temp_conversation.get_messages()
+            else:
+                # No relevant docs found, proceed normally
+                if save_history:
+                    self.conversation.add_user_message(message)
+                messages = self.conversation.get_messages()
+        else:
+            # No RAG, proceed normally
+            if save_history:
+                self.conversation.add_user_message(message)
+            messages = self.conversation.get_messages()
 
         # Get response from provider
         self.logger.debug(f"Sending message to {self.provider.name}")
@@ -133,6 +174,7 @@ class Chatbot:
         message: str,
         stream: bool = False,
         save_history: bool = True,
+        use_rag: bool = True,
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """
@@ -142,17 +184,50 @@ class Chatbot:
             message: User message
             stream: Whether to stream the response
             save_history: Whether to save messages to conversation history
+            use_rag: Whether to use RAG for this query (if available)
             **kwargs: Additional provider-specific parameters
 
         Returns:
             ChatResponse or async iterator of StreamChunk
         """
-        # Add user message to conversation
-        if save_history:
-            self.conversation.add_user_message(message)
+        # Retrieve relevant context if RAG is enabled
+        if self.rag and use_rag:
+            self.logger.debug("Retrieving relevant context with RAG (async)")
+            retrieved_docs = await self.rag.aretrieve(message)
 
-        # Prepare messages for provider
-        messages = self.conversation.get_messages()
+            if retrieved_docs:
+                # Format context and inject into conversation
+                context_text = self.rag.format_context(retrieved_docs)
+
+                # Add context as a temporary system message
+                enhanced_message = f"{context_text}\n\nUser question: {message}"
+
+                # Add to conversation history
+                if save_history:
+                    self.conversation.add_user_message(message)
+
+                # Create temporary conversation with context
+                temp_conversation = Conversation()
+                if self.system_prompt:
+                    temp_conversation.add_system_message(self.system_prompt)
+
+                # Add previous messages
+                for msg in self.conversation.messages[:-1]:
+                    temp_conversation.messages.append(msg)
+
+                # Add enhanced message
+                temp_conversation.add_user_message(enhanced_message)
+                messages = temp_conversation.get_messages()
+            else:
+                # No relevant docs found, proceed normally
+                if save_history:
+                    self.conversation.add_user_message(message)
+                messages = self.conversation.get_messages()
+        else:
+            # No RAG, proceed normally
+            if save_history:
+                self.conversation.add_user_message(message)
+            messages = self.conversation.get_messages()
 
         # Get response from provider
         self.logger.debug(f"Sending async message to {self.provider.name}")
@@ -261,5 +336,6 @@ class Chatbot:
         return (
             f"Chatbot(provider={self.provider.name}, "
             f"messages={self.message_count}, "
-            f"memory={'enabled' if self.memory else 'disabled'})"
+            f"memory={'enabled' if self.memory else 'disabled'}, "
+            f"rag={'enabled' if self.rag else 'disabled'})"
         )

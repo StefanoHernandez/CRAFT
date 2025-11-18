@@ -1,4 +1,13 @@
 """RAG (Retrieval-Augmented Generation) components."""
 
-# RAG system will be implemented in Phase 2
-__all__ = []
+from craft.rag.retrieval import RetrievalEngine, RetrievalConfig, RetrievedDocument
+from craft.rag.chunking import DocumentChunker, ChunkConfig, ChunkingStrategy
+
+__all__ = [
+    "RetrievalEngine",
+    "RetrievalConfig",
+    "RetrievedDocument",
+    "DocumentChunker",
+    "ChunkConfig",
+    "ChunkingStrategy",
+]

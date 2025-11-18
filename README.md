@@ -8,10 +8,12 @@
 ## ✨ Features
 
 - 🔌 **Provider-Agnostic**: Easily switch between Anthropic Claude, OpenAI GPT, Google Gemini, and more
-- 🧠 **RAG Integration**: Built-in support for vector stores and retrieval systems (coming soon)
+- 🧠 **RAG Integration**: Complete RAG system with embeddings, vector stores, and retrieval ✅
+- 📚 **Multiple Vector Stores**: ChromaDB, FAISS, Pinecone support with adapter pattern ✅
+- 🎯 **Smart Document Chunking**: Fixed-size, sentence, paragraph, and semantic strategies ✅
 - ⚡ **Streaming Support**: Real-time streaming responses from all providers
 - 💾 **Conversation Memory**: Persistent conversation storage with multiple backends
-- 🌐 **Easy Integration**: REST API, WebSocket, and web widgets for instant deployment
+- 🌐 **Easy Integration**: REST API, WebSocket, and web widgets for instant deployment (coming soon)
 - 🛠️ **MCP Support**: Extend with custom tools via Model Context Protocol (coming soon)
 - 🎨 **Highly Configurable**: YAML/JSON config files or environment variables
 - 🐳 **Docker Ready**: Full Docker Compose setup included
@@ -100,6 +102,41 @@ chatbot = Chatbot(provider=GoogleProvider(model="gemini-1.5-pro"))
 # That's it! Same API, different providers
 ```
 
+### RAG (Retrieval-Augmented Generation)
+
+```python
+from craft import Chatbot
+from craft.providers import AnthropicProvider
+from craft.rag import RetrievalEngine
+from craft.rag.embeddings import SentenceTransformerEmbedding
+from craft.rag.vectorstores import ChromaVectorStore
+
+# Create RAG components
+embeddings = SentenceTransformerEmbedding(model="all-MiniLM-L6-v2")
+vector_store = ChromaVectorStore(collection_name="my_docs")
+rag = RetrievalEngine(
+    embedding_provider=embeddings,
+    vector_store=vector_store
+)
+
+# Add documents to knowledge base
+documents = [
+    "CRAFT is a chatbot framework with RAG support.",
+    "It supports multiple LLM providers and vector stores.",
+]
+rag.add_documents(documents)
+
+# Create chatbot with RAG
+chatbot = Chatbot(
+    provider=AnthropicProvider(api_key="your-key"),
+    rag=rag  # Enable RAG!
+)
+
+# Ask questions about your documents
+response = chatbot.chat("What is CRAFT?")
+# The chatbot will retrieve relevant context and use it to answer!
+```
+
 ---
 
 ## 📚 Examples
@@ -165,6 +202,55 @@ for provider in providers:
     chatbot = Chatbot(provider=provider)
     response = chatbot.chat(question)
     print(f"\n{provider.name}: {response.content}")
+```
+
+### 4. RAG with Document Q&A
+
+```python
+from craft import Chatbot
+from craft.providers import AnthropicProvider
+from craft.rag import RetrievalEngine, RetrievalConfig, ChunkConfig, ChunkingStrategy
+from craft.rag.embeddings import SentenceTransformerEmbedding
+from craft.rag.vectorstores import ChromaVectorStore
+
+# Configure chunking and retrieval
+chunk_config = ChunkConfig(
+    strategy=ChunkingStrategy.SENTENCE,
+    chunk_size=512,
+    chunk_overlap=50
+)
+
+retrieval_config = RetrievalConfig(
+    top_k=3,  # Retrieve top 3 chunks
+    score_threshold=0.5,
+    chunk_config=chunk_config
+)
+
+# Setup RAG
+embeddings = SentenceTransformerEmbedding()
+vector_store = ChromaVectorStore(collection_name="docs")
+rag = RetrievalEngine(
+    embedding_provider=embeddings,
+    vector_store=vector_store,
+    config=retrieval_config
+)
+
+# Load your documents
+with open("documentation.txt", "r") as f:
+    docs = [f.read()]
+
+rag.add_documents(docs, metadatas=[{"source": "docs"}], chunk=True)
+
+# Create RAG chatbot
+chatbot = Chatbot(
+    provider=AnthropicProvider(api_key="your-key"),
+    rag=rag,
+    system_prompt="Answer based on the provided documentation."
+)
+
+# Ask questions about your documents
+response = chatbot.chat("How do I configure the system?")
+print(response.content)
 ```
 
 ---
@@ -295,12 +381,12 @@ provider = GoogleProvider(
 - [x] Configuration system
 - [x] Docker support
 
-### Phase 2 - RAG System 🚧
-- [ ] Vector store adapters (ChromaDB, Pinecone, FAISS, Qdrant)
-- [ ] Embedding providers
-- [ ] Document chunking strategies
-- [ ] Retrieval engine
-- [ ] Context injection
+### Phase 2 - RAG System ✅
+- [x] Vector store adapters (ChromaDB, FAISS, Pinecone)
+- [x] Embedding providers (OpenAI, Sentence Transformers)
+- [x] Document chunking strategies (fixed, sentence, paragraph)
+- [x] Retrieval engine with scoring
+- [x] Context injection in Chatbot
 
 ### Phase 3 - Storage & Persistence 🚧
 - [ ] SQLite adapter
