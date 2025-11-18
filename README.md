@@ -13,7 +13,7 @@
 - 🎯 **Smart Document Chunking**: Fixed-size, sentence, paragraph, and semantic strategies ✅
 - ⚡ **Streaming Support**: Real-time streaming responses from all providers
 - 💾 **Conversation Memory**: Persistent conversation storage with multiple backends
-- 🌐 **Easy Integration**: REST API, WebSocket, and web widgets for instant deployment (coming soon)
+- 🌐 **Easy Integration**: REST API, WebSocket, and web widgets for instant deployment ✅
 - 🛠️ **MCP Support**: Extend with custom tools via Model Context Protocol (coming soon)
 - 🎨 **Highly Configurable**: YAML/JSON config files or environment variables
 - 🐳 **Docker Ready**: Full Docker Compose setup included
@@ -137,6 +137,44 @@ response = chatbot.chat("What is CRAFT?")
 # The chatbot will retrieve relevant context and use it to answer!
 ```
 
+### API Server & Web Integration
+
+```python
+from craft import Chatbot
+from craft.providers import AnthropicProvider
+from craft.integrations.api import CRAFTServer
+
+# Create chatbot
+chatbot = Chatbot(
+    provider=AnthropicProvider(api_key="your-key"),
+    memory=True
+)
+
+# Create API server
+server = CRAFTServer(chatbot=chatbot, enable_cors=True)
+
+# Run server
+server.run(host="0.0.0.0", port=8000)
+# API Docs: http://localhost:8000/docs
+# WebSocket: ws://localhost:8000/ws
+```
+
+**Integrate into any website** (JavaScript Widget):
+
+```html
+<!-- Add to your HTML -->
+<script src="craft-widget.js"></script>
+<script>
+  CRAFT.init({
+    apiUrl: 'https://your-api-server.com',
+    theme: 'light',
+    position: 'bottom-right'
+  });
+</script>
+```
+
+That's it! The chat widget appears on your site 🎉
+
 ---
 
 ## 📚 Examples
@@ -251,6 +289,122 @@ chatbot = Chatbot(
 # Ask questions about your documents
 response = chatbot.chat("How do I configure the system?")
 print(response.content)
+```
+
+### 5. API Server with RAG
+
+```python
+from craft import Chatbot
+from craft.providers import AnthropicProvider
+from craft.rag import RetrievalEngine
+from craft.rag.embeddings import SentenceTransformerEmbedding
+from craft.rag.vectorstores import ChromaVectorStore
+from craft.integrations.api import CRAFTServer
+
+# Setup RAG
+embeddings = SentenceTransformerEmbedding()
+vector_store = ChromaVectorStore(collection_name="docs")
+rag = RetrievalEngine(embeddings, vector_store)
+rag.add_documents(["CRAFT is awesome!", "It has an API!"])
+
+# Create chatbot
+chatbot = Chatbot(
+    provider=AnthropicProvider(api_key="your-key"),
+    rag=rag,
+    memory=True
+)
+
+# Create and run server
+server = CRAFTServer(chatbot=chatbot)
+server.run(port=8000)
+
+# Now you have:
+# - REST API: http://localhost:8000/chat
+# - WebSocket: ws://localhost:8000/ws
+# - API Docs: http://localhost:8000/docs
+```
+
+---
+
+## 🌐 API & Web Integration
+
+### REST API
+
+CRAFT includes a full-featured FastAPI server:
+
+```python
+from craft.integrations.api import CRAFTServer
+from craft.integrations.api.auth import APIKeyManager
+from craft.integrations.api.rate_limiter import RateLimiter
+
+# Optional: Setup authentication
+api_keys = APIKeyManager()
+api_key = api_keys.create_key(name="client", rate_limit=100)
+
+# Optional: Rate limiting
+rate_limiter = RateLimiter(requests_per_minute=60)
+
+# Create server
+server = CRAFTServer(
+    chatbot=chatbot,
+    api_key_manager=api_keys,
+    rate_limiter=rate_limiter,
+    enable_cors=True
+)
+
+server.run(port=8000)
+```
+
+**API Endpoints:**
+- `GET /health` - Health check
+- `POST /chat` - Send message (non-streaming)
+- `POST /chat/stream` - Send message (streaming SSE)
+- `WebSocket /ws` - Real-time bidirectional chat
+- `GET /conversation/{id}` - Get conversation details
+- `DELETE /conversation/{id}` - Delete conversation
+
+**Interactive docs** at: `http://localhost:8000/docs`
+
+### JavaScript Widget
+
+Add a chat widget to any website in 2 lines:
+
+```html
+<script src="craft-widget.js"></script>
+<script>
+  CRAFT.init({
+    apiUrl: 'http://localhost:8000',
+    apiKey: 'your-api-key',  // Optional
+    theme: 'light',  // or 'dark'
+    position: 'bottom-right',
+    title: 'AI Assistant',
+    enableStreaming: true,
+    useRAG: true
+  });
+</script>
+```
+
+**Features:**
+- 🎨 Light/Dark themes
+- ⚡ Real-time streaming
+- 📱 Responsive design
+- 🔒 Secure (API key auth)
+- 🚫 No dependencies
+- 💬 Conversation history
+
+### Python API Client
+
+```python
+import requests
+
+# Send message
+response = requests.post('http://localhost:8000/chat', json={
+    'message': 'Hello!',
+    'use_rag': True
+})
+
+data = response.json()
+print(data['content'])  # Assistant response
 ```
 
 ---
@@ -395,13 +549,15 @@ provider = GoogleProvider(
 - [ ] MongoDB adapter
 - [ ] Conversation export/import
 
-### Phase 4 - API & Integrations 📋
-- [ ] FastAPI server
-- [ ] WebSocket support
-- [ ] REST API endpoints
-- [ ] Authentication & rate limiting
-- [ ] Vanilla JS widget
-- [ ] React component
+### Phase 4 - API & Integrations ✅
+- [x] FastAPI server with auto-generated docs
+- [x] WebSocket support for real-time chat
+- [x] REST API endpoints (chat, streaming, conversations)
+- [x] Authentication & API key management
+- [x] Rate limiting middleware
+- [x] CORS support
+- [x] Vanilla JS widget (no dependencies!)
+- [ ] React component (coming soon)
 
 ### Phase 5 - MCP Integration 📋
 - [ ] MCP server implementation
