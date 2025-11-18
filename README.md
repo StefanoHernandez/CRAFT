@@ -14,7 +14,7 @@
 - ⚡ **Streaming Support**: Real-time streaming responses from all providers
 - 💾 **Conversation Memory**: Persistent conversation storage with multiple backends
 - 🌐 **Easy Integration**: REST API, WebSocket, and web widgets for instant deployment ✅
-- 🛠️ **MCP Support**: Extend with custom tools via Model Context Protocol (coming soon)
+- 🛠️ **MCP Support**: Full Model Context Protocol integration - expose and consume tools ✅
 - 🎨 **Highly Configurable**: YAML/JSON config files or environment variables
 - 🐳 **Docker Ready**: Full Docker Compose setup included
 
@@ -174,6 +174,59 @@ server.run(host="0.0.0.0", port=8000)
 ```
 
 That's it! The chat widget appears on your site 🎉
+
+### MCP Integration
+
+**Expose CRAFT as an MCP Server:**
+
+```python
+from craft import Chatbot
+from craft.providers import AnthropicProvider
+from craft.mcp import CRAFTMCPServer
+
+chatbot = Chatbot(provider=AnthropicProvider(api_key="your-key"))
+server = CRAFTMCPServer(chatbot=chatbot)
+await server.run()  # Exposes chat, RAG, and conversation tools
+```
+
+**Use External MCP Tools:**
+
+```python
+from craft.core.tool_calling import ToolCallingMixin
+
+class ToolEnabledChatbot(Chatbot, ToolCallingMixin):
+    def __init__(self, *args, **kwargs):
+        Chatbot.__init__(self, *args, **kwargs)
+        ToolCallingMixin.__init__(self)
+
+chatbot = ToolEnabledChatbot(provider=AnthropicProvider(api_key="your-key"))
+
+# Connect to external MCP server
+await chatbot.add_mcp_server("path/to/server.py")
+
+# Execute tools
+result = await chatbot.execute_tool("tool_name", {"arg": "value"})
+```
+
+**Add Custom Tools:**
+
+```python
+def get_weather(location: str) -> str:
+    return f"Weather in {location}: Sunny, 72°F"
+
+chatbot.add_custom_tool(
+    name="get_weather",
+    func=get_weather,
+    description="Get current weather",
+    parameters={
+        "type": "object",
+        "properties": {
+            "location": {"type": "string", "description": "City name"}
+        },
+        "required": ["location"]
+    }
+)
+```
 
 ---
 
@@ -559,11 +612,13 @@ provider = GoogleProvider(
 - [x] Vanilla JS widget (no dependencies!)
 - [ ] React component (coming soon)
 
-### Phase 5 - MCP Integration 📋
-- [ ] MCP server implementation
-- [ ] MCP client for consuming tools
-- [ ] Tool registry
-- [ ] Custom tool templates
+### Phase 5 - MCP Integration ✅
+- [x] MCP server implementation (expose CRAFT as tools)
+- [x] MCP client for consuming external tools
+- [x] Tool registry and management
+- [x] Custom Python tool integration
+- [x] Function calling support
+- [x] Comprehensive MCP documentation
 
 ### Phase 6 - Advanced Features 📋
 - [ ] Multi-language support
