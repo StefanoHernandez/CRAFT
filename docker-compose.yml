@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  craft:
+    build: .
+    container_name: craft-chatbot
+    volumes:
+      - ./craft:/app/craft
+      - ./examples:/app/examples
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      # Provider API keys (set these in .env file)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+
+      # CRAFT settings
+      - CRAFT_PROVIDER=${CRAFT_PROVIDER:-anthropic}
+      - CRAFT_LOG_LEVEL=${CRAFT_LOG_LEVEL:-INFO}
+      - CRAFT_STREAMING=${CRAFT_STREAMING:-true}
+
+    ports:
+      - "8000:8000"
+    stdin_open: true
+    tty: true
+    command: python examples/basic_chat.py
+
+  # Optional: Redis for caching/storage
+  redis:
+    image: redis:7-alpine
+    container_name: craft-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  # Optional: PostgreSQL for conversation storage
+  postgres:
+    image: postgres:16-alpine
+    container_name: craft-postgres
+    environment:
+      - POSTGRES_DB=craft
+      - POSTGRES_USER=craft
+      - POSTGRES_PASSWORD=craft_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  redis_data:
+  postgres_data:

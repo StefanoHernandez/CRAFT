@@ -1,0 +1,31 @@
+# CRAFT Configuration File Example
+
+# Provider settings
+provider: anthropic
+provider_config:
+  model: claude-3-5-sonnet-20241022
+  temperature: 0.7
+  max_tokens: 4096
+
+# RAG settings (for future implementation)
+rag_enabled: false
+rag_config:
+  vectorstore: chromadb
+  embedding_model: all-MiniLM-L6-v2
+  chunk_size: 512
+  chunk_overlap: 50
+
+# Memory settings
+memory_enabled: true
+memory_config:
+  storage_type: sqlite
+  database_path: ./data/conversations.db
+
+# Feature flags
+streaming: true
+multilingual: true
+analytics: false
+
+# Logging
+log_level: INFO
+log_file: ./logs/craft.log

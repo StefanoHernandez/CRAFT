@@ -1,0 +1,104 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "craft-chatbot"
+version = "0.1.0"
+description = "CRAFT - Chatbot & RAG Framework Toolkit: Easy integration of chatbots with RAG across multiple LLM providers"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "CRAFT Contributors"}
+]
+keywords = ["chatbot", "rag", "llm", "ai", "framework", "anthropic", "openai", "google"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+    "httpx>=0.25.0",
+    "python-dotenv>=1.0.0",
+    "tenacity>=8.2.0",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.39.0"]
+openai = ["openai>=1.0.0"]
+google = ["google-generativeai>=0.3.0"]
+all-providers = [
+    "anthropic>=0.39.0",
+    "openai>=1.0.0",
+    "google-generativeai>=0.3.0",
+]
+rag = [
+    "chromadb>=0.4.0",
+    "sentence-transformers>=2.2.0",
+    "faiss-cpu>=1.7.4",
+    "pinecone-client>=3.0.0",
+]
+api = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "websockets>=12.0",
+]
+storage = [
+    "sqlalchemy>=2.0.0",
+    "redis>=5.0.0",
+    "pymongo>=4.6.0",
+]
+mcp = [
+    "mcp>=0.1.0",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+]
+all = [
+    "craft-chatbot[all-providers,rag,api,storage,mcp,dev]",
+]
+
+[project.urls]
+Homepage = "https://github.com/StefanoHernandez/CRAFT"
+Documentation = "https://github.com/StefanoHernandez/CRAFT#readme"
+Repository = "https://github.com/StefanoHernandez/CRAFT"
+Issues = "https://github.com/StefanoHernandez/CRAFT/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["craft*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py39']
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=craft --cov-report=html --cov-report=term"
