@@ -28,16 +28,28 @@ class ToolRegistry:
         self.logger = get_logger("craft.mcp.registry")
         self._mcp_tools: Dict[str, MCPTool] = {}
         self._custom_tools: Dict[str, Callable] = {}
+        self._namespaces: Dict[str, Dict[str, MCPTool]] = {}  # namespace -> tools mapping
 
-    def register_mcp_tool(self, tool: MCPTool) -> None:
+    def register_mcp_tool(self, tool: MCPTool, namespace: Optional[str] = None) -> None:
         """
         Register an MCP tool.
 
         Args:
             tool: MCP tool to register
+            namespace: Optional namespace for the tool (e.g., MCP server name)
         """
-        self._mcp_tools[tool.name] = tool
-        self.logger.info(f"Registered MCP tool: {tool.name}")
+        if namespace:
+            # Register in namespace
+            if namespace not in self._namespaces:
+                self._namespaces[namespace] = {}
+            self._namespaces[namespace][tool.name] = tool
+            # Also register with namespaced name
+            namespaced_name = f"{namespace}:{tool.name}"
+            self._mcp_tools[namespaced_name] = tool
+            self.logger.info(f"Registered MCP tool in namespace '{namespace}': {tool.name}")
+        else:
+            self._mcp_tools[tool.name] = tool
+            self.logger.info(f"Registered MCP tool: {tool.name}")
 
     def register_custom_tool(
         self,
@@ -64,9 +76,27 @@ class ToolRegistry:
 
         self.logger.info(f"Registered custom tool: {name}")
 
-    def get_tool(self, name: str) -> Optional[MCPTool]:
-        """Get a tool by name."""
-        return self._mcp_tools.get(name)
+    def get_tool(self, name: str, namespace: Optional[str] = None) -> Optional[MCPTool]:
+        """
+        Get a tool by name.
+        
+        Args:
+            name: Tool name (can include namespace prefix like "namespace:tool_name")
+            namespace: Optional namespace to search in
+            
+        Returns:
+            MCPTool if found, None otherwise
+        """
+        # Check if name includes namespace prefix
+        if ":" in name and namespace is None:
+            namespace, name = name.split(":", 1)
+        
+        if namespace:
+            # Look in specific namespace
+            return self._namespaces.get(namespace, {}).get(name)
+        else:
+            # Look in global registry
+            return self._mcp_tools.get(name)
 
     def list_tools(self) -> List[MCPTool]:
         """List all registered tools."""
@@ -165,8 +195,55 @@ class ToolRegistry:
     def __len__(self) -> int:
         return len(self._mcp_tools)
 
+    def resolve_namespace(self, tool_name: str) -> List[str]:
+        """
+        Find all namespaces that contain a tool with the given name.
+        
+        Args:
+            tool_name: Tool name to search for
+            
+        Returns:
+            List of namespace names that contain the tool
+        """
+        namespaces = []
+        
+        # Check global registry
+        if tool_name in self._mcp_tools:
+            namespaces.append("global")
+        
+        # Check all namespaces
+        for ns_name, ns_tools in self._namespaces.items():
+            if tool_name in ns_tools:
+                namespaces.append(ns_name)
+        
+        return namespaces
+    
+    def list_namespaces(self) -> List[str]:
+        """
+        List all registered namespaces.
+        
+        Returns:
+            List of namespace names
+        """
+        return list(self._namespaces.keys())
+    
+    def count(self, namespace: Optional[str] = None) -> int:
+        """
+        Get count of registered tools.
+        
+        Args:
+            namespace: Optional namespace to count
+            
+        Returns:
+            Number of tools
+        """
+        if namespace:
+            return len(self._namespaces.get(namespace, {}))
+        else:
+            return len(self._mcp_tools)
+
     def __repr__(self) -> str:
-        return f"ToolRegistry(tools={len(self._mcp_tools)})"
+        return f"ToolRegistry(tools={len(self._mcp_tools)}, namespaces={len(self._namespaces)})"
 
 
 # Need to import asyncio for iscoroutinefunction

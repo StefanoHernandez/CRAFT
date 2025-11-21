@@ -15,6 +15,7 @@
 - 💾 **Persistent Storage**: SQLite, PostgreSQL, Redis, MongoDB adapters ✅
 - 🎨 **Highly Configurable**: YAML/JSON config files or environment variables
 - 🐳 **Docker Ready**: Full Docker Compose setup included
+- 🎯 **TOON Format**: 30-60% fewer tokens than JSON for LLM communication ✅
 
 ### RAG Capabilities
 - 🧠 **Complete RAG System**: Embeddings, vector stores, and retrieval ✅

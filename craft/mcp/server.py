@@ -11,6 +11,11 @@ try:
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
+    # Define stub types when MCP is not available
+    Server = None
+    Tool = None
+    TextContent = None
+    CallToolResult = None
 
 from craft.core.chatbot import Chatbot
 from craft.utils.logging import get_logger
