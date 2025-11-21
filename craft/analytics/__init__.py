@@ -7,7 +7,7 @@ from craft.analytics.tracker import (
     Metric,
     MetricType,
 )
-from craft.analytics.collector import MetricsCollector
+from craft.analytics.collector import MetricsCollector, Timer
 
 __all__ = [
     "AnalyticsTracker",
@@ -16,4 +16,5 @@ __all__ = [
     "Metric",
     "MetricType",
     "MetricsCollector",
+    "Timer",
 ]

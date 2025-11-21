@@ -1,0 +1,638 @@
+"""Core agent implementation for autonomous task execution."""
+
+from typing import Any, AsyncIterator, Dict, Iterator, List, Optional, Union
+from datetime import datetime
+from pydantic import BaseModel, Field
+import time
+
+from craft.providers.base import Provider, Message, Role, ChatResponse
+from craft.tools.base import Tool
+from craft.core.memory import Memory
+from craft.core.errors import AgentExecutionError, ToolExecutionError
+
+
+class ToolCall(BaseModel):
+    """Record of a tool invocation."""
+
+    tool_name: str
+    arguments: Dict[str, Any]
+    result: Any = None
+    success: bool = True
+    error: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.now)
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class Plan(BaseModel):
+    """Agent's execution plan."""
+
+    steps: List[str]
+    current_step_index: int = 0
+    completed_steps: List[int] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+
+class AgentState(BaseModel):
+    """State maintained during agent execution."""
+
+    task_input: str
+    current_step: int = 0
+    max_steps: int
+    messages: List[Message] = Field(default_factory=list)
+    tools_used: List[ToolCall] = Field(default_factory=list)
+    plan: Optional[Plan] = None
+    finished: bool = False
+    result: Optional[str] = None
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class StepResult(BaseModel):
+    """Result of a single agent execution step."""
+
+    index: int
+    text: str
+    tools_used: List[ToolCall] = Field(default_factory=list)
+    finished: bool = False
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class AgentResult(BaseModel):
+    """Final result from agent execution."""
+
+    text: str
+    steps: List[StepResult] = Field(default_factory=list)
+    total_steps: int
+    tools_used: List[str] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class AgentConfig(BaseModel):
+    """Configuration for an Agent."""
+
+    name: str
+    role: Optional[str] = None
+    goal: Optional[str] = None
+    backstory: Optional[str] = None
+    system_prompt: Optional[str] = None
+    max_steps: int = Field(default=10, ge=1, le=100)
+    planning_interval: Optional[int] = Field(default=None, ge=1)
+    terminate_on_text: bool = True
+    verbose: bool = False
+
+
+class Agent:
+    """
+    Autonomous agent that can reason and execute multi-step tasks.
+
+    Inspired by DataPizza AI's simplicity and CrewAI's role-based design.
+    The agent can use tools, maintain conversation history, and execute
+    complex tasks through iterative reasoning.
+
+    Example:
+        from craft.agents import Agent
+        from craft.providers import AnthropicProvider
+        from craft.tools.builtin import search_web
+
+        provider = AnthropicProvider(api_key="...", model="claude-3-sonnet")
+        agent = Agent(
+            name="research_agent",
+            provider=provider,
+            role="Research Assistant",
+            goal="Find and summarize information",
+            tools=[search_web]
+        )
+
+        result = agent.run("What are the latest developments in AI?")
+        print(result.text)
+    """
+
+    def __init__(
+        self,
+        name: str,
+        provider: Provider,
+        role: Optional[str] = None,
+        goal: Optional[str] = None,
+        backstory: Optional[str] = None,
+        system_prompt: Optional[str] = None,
+        tools: Optional[List[Tool]] = None,
+        max_steps: int = 10,
+        planning_interval: Optional[int] = None,
+        memory: Optional[Union[bool, Memory]] = None,
+        verbose: bool = False,
+    ):
+        """
+        Initialize agent with configuration.
+
+        Args:
+            name: Agent name/identifier
+            provider: LLM provider for agent reasoning
+            role: Agent's role (e.g., "Research Assistant")
+            goal: Agent's goal (e.g., "Find accurate information")
+            backstory: Agent's backstory for context
+            system_prompt: Custom system prompt (overrides role/goal/backstory)
+            tools: List of tools available to the agent
+            max_steps: Maximum execution steps before termination
+            planning_interval: Steps between plan re-evaluations (None = no planning)
+            memory: Memory instance or True for default memory, False/None for no memory
+            verbose: Whether to print execution details
+        """
+        self.config = AgentConfig(
+            name=name,
+            role=role,
+            goal=goal,
+            backstory=backstory,
+            system_prompt=system_prompt,
+            max_steps=max_steps,
+            planning_interval=planning_interval,
+            verbose=verbose,
+        )
+
+        self.provider = provider
+        self.tools = tools or []
+        self.tool_map = {tool.name: tool for tool in self.tools}
+
+        # Set up memory
+        if memory is True:
+            self.memory = Memory()
+        elif isinstance(memory, Memory):
+            self.memory = memory
+        else:
+            self.memory = None
+
+        # Build system prompt
+        self.system_prompt = self._build_system_prompt()
+
+        # State for current execution
+        self.state: Optional[AgentState] = None
+
+        # Track callable agents (for multi-agent collaboration)
+        self.callable_agents: Dict[str, "Agent"] = {}
+
+    def _build_system_prompt(self) -> str:
+        """
+        Build system prompt from role, goal, and backstory.
+
+        Returns:
+            System prompt string
+        """
+        if self.config.system_prompt:
+            return self.config.system_prompt
+
+        prompt_parts = []
+
+        if self.config.role:
+            prompt_parts.append(f"You are a {self.config.role}.")
+
+        if self.config.goal:
+            prompt_parts.append(f"Your goal is: {self.config.goal}")
+
+        if self.config.backstory:
+            prompt_parts.append(f"Background: {self.config.backstory}")
+
+        if self.tools:
+            tool_names = ", ".join(tool.name for tool in self.tools)
+            prompt_parts.append(
+                f"\nYou have access to the following tools: {tool_names}"
+            )
+            prompt_parts.append(
+                "Use tools when needed to accomplish your task. "
+                "When you have enough information to answer, provide your final answer."
+            )
+
+        if not prompt_parts:
+            prompt_parts.append(
+                "You are a helpful AI assistant. Answer questions accurately and concisely."
+            )
+
+        return "\n\n".join(prompt_parts)
+
+    def run(
+        self,
+        task_input: str,
+        tool_choice: Union[str, List[str]] = "auto",
+        **kwargs: Any,
+    ) -> AgentResult:
+        """
+        Execute task and return final result.
+
+        Args:
+            task_input: Task description or question
+            tool_choice: Tool usage control - "auto", "required", "required_first", "none", or list of tool names
+            **kwargs: Additional provider parameters
+
+        Returns:
+            AgentResult with final answer and execution metadata
+
+        Raises:
+            AgentExecutionError: If execution fails
+        """
+        # Initialize execution state
+        self._initialize_state(task_input)
+
+        # Track execution metadata
+        start_time = time.time()
+        step_results: List[StepResult] = []
+
+        try:
+            # Main execution loop
+            while not self.state.finished and self.state.current_step < self.state.max_steps:
+                if self.config.verbose:
+                    print(f"\n--- Step {self.state.current_step + 1} ---")
+
+                # Execute one step
+                step_result = self._execute_step(tool_choice, **kwargs)
+                step_results.append(step_result)
+
+                # Check if finished
+                if step_result.finished:
+                    self.state.finished = True
+                    self.state.result = step_result.text
+                    break
+
+                self.state.current_step += 1
+
+            # Handle max steps termination
+            if not self.state.finished:
+                return self._handle_max_steps(step_results)
+
+            # Build final result
+            execution_time = time.time() - start_time
+            tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
+
+            result = AgentResult(
+                text=self.state.result or "",
+                steps=step_results,
+                total_steps=self.state.current_step + 1,
+                tools_used=tools_used_names,
+                metadata={
+                    "execution_time_seconds": execution_time,
+                    "max_steps_reached": False,
+                },
+            )
+
+            # Save to memory if enabled
+            if self.memory:
+                self._save_to_memory()
+
+            return result
+
+        except Exception as e:
+            raise AgentExecutionError(
+                f"Agent execution failed: {str(e)}",
+                details={
+                    "agent_name": self.config.name,
+                    "current_step": self.state.current_step,
+                    "task_input": task_input,
+                },
+            )
+
+    def _initialize_state(self, task_input: str) -> None:
+        """
+        Initialize agent state for new execution.
+
+        Args:
+            task_input: Task description
+        """
+        # Create initial messages with system prompt
+        messages = [
+            Message(role=Role.SYSTEM, content=self.system_prompt),
+            Message(role=Role.USER, content=task_input),
+        ]
+
+        self.state = AgentState(
+            task_input=task_input,
+            current_step=0,
+            max_steps=self.config.max_steps,
+            messages=messages,
+            tools_used=[],
+            finished=False,
+        )
+
+    def _execute_step(
+        self, tool_choice: Union[str, List[str]], **kwargs: Any
+    ) -> StepResult:
+        """
+        Execute a single reasoning/action step.
+
+        Args:
+            tool_choice: Tool usage control
+            **kwargs: Provider parameters
+
+        Returns:
+            StepResult for this step
+        """
+        # Call provider to get next action
+        response = self.provider.chat(
+            messages=self.state.messages,
+            stream=False,
+            **kwargs,
+        )
+
+        # Extract response content
+        response_text = response.content if isinstance(response, ChatResponse) else str(response)
+
+        # Add assistant response to messages
+        self.state.messages.append(
+            Message(role=Role.ASSISTANT, content=response_text)
+        )
+
+        # Check if this is a final answer (no tool calls)
+        # For now, we'll use a simple heuristic - if response doesn't mention tools
+        # and seems conclusive, mark as finished
+        is_finished = self._is_final_answer(response_text)
+
+        step_result = StepResult(
+            index=self.state.current_step,
+            text=response_text,
+            tools_used=[],
+            finished=is_finished,
+            metadata={},
+        )
+
+        if self.config.verbose:
+            print(f"Response: {response_text[:200]}...")
+            if is_finished:
+                print("✓ Final answer detected")
+
+        return step_result
+
+    def _is_final_answer(self, text: str) -> bool:
+        """
+        Determine if response is a final answer.
+
+        Args:
+            text: Response text
+
+        Returns:
+            True if this appears to be a final answer
+        """
+        # Simple heuristic: if text doesn't mention needing more info or tools
+        # and has substantial content, consider it final
+        text_lower = text.lower()
+
+        # Indicators that it's NOT final
+        not_final_indicators = [
+            "i need to",
+            "let me search",
+            "i'll look up",
+            "i should check",
+            "i don't have enough information",
+        ]
+
+        for indicator in not_final_indicators:
+            if indicator in text_lower:
+                return False
+
+        # If we have substantial content (>50 chars), consider it final
+        return len(text.strip()) > 50
+
+    def _handle_max_steps(self, step_results: List[StepResult], execution_time: float = 0.0) -> AgentResult:
+        """
+        Handle graceful termination when max_steps is reached.
+
+        Args:
+            step_results: Results from all steps
+            execution_time: Execution time in seconds
+
+        Returns:
+            AgentResult with partial results and explanation
+        """
+        # Get the last response as partial result
+        last_text = step_results[-1].text if step_results else "No results generated"
+
+        partial_result = (
+            f"Task incomplete: Maximum steps ({self.config.max_steps}) reached.\n\n"
+            f"Partial result:\n{last_text}"
+        )
+
+        tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
+
+        return AgentResult(
+            text=partial_result,
+            steps=step_results,
+            total_steps=self.state.current_step,
+            tools_used=tools_used_names,
+            metadata={
+                "execution_time_seconds": execution_time,
+                "max_steps_reached": True,
+                "terminated": "max_steps",
+                "partial": True,
+            },
+        )
+
+    def _save_to_memory(self) -> None:
+        """Save current execution to memory."""
+        if not self.memory or not self.state:
+            return
+
+        # Create a conversation from the current state
+        from craft.core.conversation import Conversation
+
+        conversation = Conversation(id=f"{self.config.name}_{int(time.time())}")
+        conversation.messages = self.state.messages
+
+        self.memory.save(conversation)
+
+    def stream_invoke(
+        self,
+        task_input: str,
+        tool_choice: Union[str, List[str]] = "auto",
+        **kwargs: Any,
+    ) -> Iterator[StepResult]:
+        """
+        Stream execution steps in real-time.
+
+        Args:
+            task_input: Task description
+            tool_choice: Tool usage control
+            **kwargs: Provider parameters
+
+        Yields:
+            StepResult objects for each execution step
+        """
+        # For now, run synchronously and yield results
+        # TODO: Implement true streaming in future iterations
+        result = self.run(task_input, tool_choice, **kwargs)
+
+        # Yield each step
+        for step in result.steps:
+            yield step
+
+    async def arun(
+        self,
+        task_input: str,
+        tool_choice: Union[str, List[str]] = "auto",
+        **kwargs: Any,
+    ) -> AgentResult:
+        """
+        Async version of run.
+
+        Args:
+            task_input: Task description
+            tool_choice: Tool usage control
+            **kwargs: Provider parameters
+
+        Returns:
+            AgentResult with final answer and execution metadata
+        """
+        # Initialize execution state
+        self._initialize_state(task_input)
+
+        # Track execution metadata
+        start_time = time.time()
+        step_results: List[StepResult] = []
+
+        try:
+            # Main execution loop
+            while not self.state.finished and self.state.current_step < self.state.max_steps:
+                if self.config.verbose:
+                    print(f"\n--- Step {self.state.current_step + 1} ---")
+
+                # Execute one step asynchronously
+                step_result = await self._aexecute_step(tool_choice, **kwargs)
+                step_results.append(step_result)
+
+                # Check if finished
+                if step_result.finished:
+                    self.state.finished = True
+                    self.state.result = step_result.text
+                    break
+
+                self.state.current_step += 1
+
+            # Handle max steps termination
+            if not self.state.finished:
+                return self._handle_max_steps(step_results)
+
+            # Build final result
+            execution_time = time.time() - start_time
+            tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
+
+            result = AgentResult(
+                text=self.state.result or "",
+                steps=step_results,
+                total_steps=self.state.current_step + 1,
+                tools_used=tools_used_names,
+                metadata={
+                    "execution_time_seconds": execution_time,
+                    "max_steps_reached": False,
+                },
+            )
+
+            # Save to memory if enabled
+            if self.memory:
+                self._save_to_memory()
+
+            return result
+
+        except Exception as e:
+            raise AgentExecutionError(
+                f"Agent execution failed: {str(e)}",
+                details={
+                    "agent_name": self.config.name,
+                    "current_step": self.state.current_step,
+                    "task_input": task_input,
+                },
+            )
+
+    async def _aexecute_step(
+        self, tool_choice: Union[str, List[str]], **kwargs: Any
+    ) -> StepResult:
+        """
+        Execute a single reasoning/action step asynchronously.
+
+        Args:
+            tool_choice: Tool usage control
+            **kwargs: Provider parameters
+
+        Returns:
+            StepResult for this step
+        """
+        # Call provider asynchronously
+        response = await self.provider.achat(
+            messages=self.state.messages,
+            stream=False,
+            **kwargs,
+        )
+
+        # Extract response content
+        response_text = response.content if isinstance(response, ChatResponse) else str(response)
+
+        # Add assistant response to messages
+        self.state.messages.append(
+            Message(role=Role.ASSISTANT, content=response_text)
+        )
+
+        # Check if this is a final answer
+        is_finished = self._is_final_answer(response_text)
+
+        step_result = StepResult(
+            index=self.state.current_step,
+            text=response_text,
+            tools_used=[],
+            finished=is_finished,
+            metadata={},
+        )
+
+        if self.config.verbose:
+            print(f"Response: {response_text[:200]}...")
+            if is_finished:
+                print("✓ Final answer detected")
+
+        return step_result
+
+    async def a_stream_invoke(
+        self,
+        task_input: str,
+        tool_choice: Union[str, List[str]] = "auto",
+        **kwargs: Any,
+    ) -> AsyncIterator[StepResult]:
+        """
+        Async version of stream_invoke.
+
+        Args:
+            task_input: Task description
+            tool_choice: Tool usage control
+            **kwargs: Provider parameters
+
+        Yields:
+            StepResult objects for each execution step
+        """
+        # For now, run asynchronously and yield results
+        result = await self.arun(task_input, tool_choice, **kwargs)
+
+        # Yield each step
+        for step in result.steps:
+            yield step
+
+    def can_call(self, agents: List["Agent"]) -> None:
+        """
+        Register other agents as callable tools.
+
+        Args:
+            agents: List of agents to make callable
+        """
+        for agent in agents:
+            self.callable_agents[agent.config.name] = agent
+
+            # Create a tool wrapper for the agent
+            # TODO: Implement in multi-agent collaboration task
+            pass
+
+    def __repr__(self) -> str:
+        return (
+            f"Agent(name={self.config.name}, "
+            f"role={self.config.role}, "
+            f"tools={len(self.tools)})"
+        )

@@ -143,52 +143,52 @@ The plan follows an implementation-first approach: build features before writing
   - **Property 12: MCP Namespace Resolution**
   - **Validates: Requirements 3.1, 3.2, 3.4, 3.5**
 
-- [ ] 4. Checkpoint - Ensure all tests pass
+- [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Autonomous Agent System Core
+- [-] 5. Autonomous Agent System Core
   - Implement the core agent execution engine
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
 
-- [ ] 5.1 Implement Agent class and initialization
+- [x] 5.1 Implement Agent class and initialization
   - Create `craft/agents/agent.py` with Agent class
   - Implement __init__() with role, goal, backstory, tools
   - Initialize agent state and execution context
   - Set up system prompt from role and goal
   - _Requirements: 4.1_
 
-- [ ] 5.2 Implement agent execution loop
+- [x] 5.2 Implement agent execution loop
   - Implement run() method for synchronous execution
   - Create execution loop that iterates up to max_steps
   - Decide at each step: use tool, reason, or finish
   - Maintain execution state throughout
   - _Requirements: 4.2, 4.3_
 
-- [ ] 5.3 Implement tool result integration
+- [x] 5.3 Implement tool result integration
   - Add tool results to agent's message history
   - Format tool results for LLM consumption
   - Maintain tool call records in execution state
   - _Requirements: 4.4_
 
-- [ ] 5.4 Implement agent result generation
+- [x] 5.4 Implement agent result generation
   - Create AgentResult with final answer and metadata
   - Include all execution steps and tools used
   - Add timing and token usage information
   - _Requirements: 4.5_
 
-- [ ] 5.5 Implement max steps termination
+- [x] 5.5 Implement max steps termination
   - Check step count at each iteration
   - Terminate gracefully when max_steps reached
   - Return partial results with explanation
   - _Requirements: 4.6_
 
-- [ ] 5.6 Implement async agent execution
+- [x] 5.6 Implement async agent execution
   - Implement arun() method for async execution
   - Use async provider calls throughout
   - Maintain same behavior as sync version
   - _Requirements: 4.2, 4.3_
 
-- [ ] 5.7 Write property tests for agent system
+- [-] 5.7 Write property tests for agent system
   - **Property 13: Agent Initialization**
   - **Property 14: Tool Result Integration**
   - **Property 15: Agent Result Structure**
