@@ -624,13 +624,84 @@ class Agent:
         Yields:
             StepResult objects for each execution step
         """
-        # For now, run synchronously and yield results
-        # TODO: Implement true streaming in future iterations
-        result = self.run(task_input, tool_choice, **kwargs)
+        # Initialize execution state
+        self._initialize_state(task_input)
 
-        # Yield each step
-        for step in result.steps:
-            yield step
+        # Track execution metadata
+        start_time = time.time()
+
+        try:
+            # Main execution loop - yield after each step
+            while not self.state.finished and self.state.current_step < self.state.max_steps:
+                if self.config.verbose:
+                    print(f"\n--- Step {self.state.current_step + 1} ---")
+
+                # Check if we should re-evaluate the plan
+                if self._should_reevaluate_plan():
+                    self._reevaluate_plan()
+
+                # Execute one step
+                step_result = self._execute_step(tool_choice, **kwargs)
+                
+                # Yield the step result immediately
+                yield step_result
+
+                # Check if finished
+                if step_result.finished:
+                    self.state.finished = True
+                    self.state.result = step_result.text
+                    break
+
+                self.state.current_step += 1
+
+            # Calculate execution time
+            execution_time = time.time() - start_time
+
+            # Handle max steps termination - yield final result
+            if not self.state.finished:
+                # Create a final step result indicating max steps reached
+                partial_text = (
+                    f"Task incomplete: Maximum steps ({self.config.max_steps}) reached.\n\n"
+                    f"Partial result:\n{step_result.text if 'step_result' in locals() else 'No results generated'}"
+                )
+                
+                final_step = StepResult(
+                    index=self.state.current_step,
+                    text=partial_text,
+                    tools_used=[],
+                    finished=True,
+                    metadata={
+                        "execution_time_seconds": execution_time,
+                        "max_steps_reached": True,
+                        "terminated": "max_steps",
+                        "partial": True,
+                    },
+                )
+                yield final_step
+
+            # Save to memory if enabled
+            if self.memory:
+                self._save_to_memory()
+
+        except Exception as e:
+            # Yield error as final step
+            error_step = StepResult(
+                index=self.state.current_step if self.state else 0,
+                text=f"Error: {str(e)}",
+                tools_used=[],
+                finished=True,
+                metadata={"error": True, "error_message": str(e)},
+            )
+            yield error_step
+            
+            raise AgentExecutionError(
+                f"Agent execution failed: {str(e)}",
+                details={
+                    "agent_name": self.config.name,
+                    "current_step": self.state.current_step if self.state else 0,
+                    "task_input": task_input,
+                },
+            )
 
     async def _ainitialize_state(self, task_input: str) -> None:
         """
@@ -829,12 +900,84 @@ class Agent:
         Yields:
             StepResult objects for each execution step
         """
-        # For now, run asynchronously and yield results
-        result = await self.arun(task_input, tool_choice, **kwargs)
+        # Initialize execution state
+        await self._ainitialize_state(task_input)
 
-        # Yield each step
-        for step in result.steps:
-            yield step
+        # Track execution metadata
+        start_time = time.time()
+
+        try:
+            # Main execution loop - yield after each step
+            while not self.state.finished and self.state.current_step < self.state.max_steps:
+                if self.config.verbose:
+                    print(f"\n--- Step {self.state.current_step + 1} ---")
+
+                # Check if we should re-evaluate the plan
+                if self._should_reevaluate_plan():
+                    await self._areevaluate_plan()
+
+                # Execute one step asynchronously
+                step_result = await self._aexecute_step(tool_choice, **kwargs)
+                
+                # Yield the step result immediately
+                yield step_result
+
+                # Check if finished
+                if step_result.finished:
+                    self.state.finished = True
+                    self.state.result = step_result.text
+                    break
+
+                self.state.current_step += 1
+
+            # Calculate execution time
+            execution_time = time.time() - start_time
+
+            # Handle max steps termination - yield final result
+            if not self.state.finished:
+                # Create a final step result indicating max steps reached
+                partial_text = (
+                    f"Task incomplete: Maximum steps ({self.config.max_steps}) reached.\n\n"
+                    f"Partial result:\n{step_result.text if 'step_result' in locals() else 'No results generated'}"
+                )
+                
+                final_step = StepResult(
+                    index=self.state.current_step,
+                    text=partial_text,
+                    tools_used=[],
+                    finished=True,
+                    metadata={
+                        "execution_time_seconds": execution_time,
+                        "max_steps_reached": True,
+                        "terminated": "max_steps",
+                        "partial": True,
+                    },
+                )
+                yield final_step
+
+            # Save to memory if enabled
+            if self.memory:
+                self._save_to_memory()
+
+        except Exception as e:
+            # Yield error as final step
+            error_step = StepResult(
+                index=self.state.current_step if self.state else 0,
+                text=f"Error: {str(e)}",
+                tools_used=[],
+                finished=True,
+                metadata={"error": True, "error_message": str(e)},
+            )
+            yield error_step
+            
+            raise AgentExecutionError(
+                f"Agent execution failed: {str(e)}",
+                details={
+                    "agent_name": self.config.name,
+                    "current_step": self.state.current_step if self.state else 0,
+                    "task_input": task_input,
+                },
+            )
 
     def can_call(self, agents: List["Agent"]) -> None:
         """

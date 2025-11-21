@@ -239,30 +239,30 @@ The plan follows an implementation-first approach: build features before writing
   - **Property 20: Plan Visibility**
   - **Validates: Requirements 5.1, 5.2, 5.3, 5.5**
 
-- [ ] 7. Agent Streaming
+- [x] 7. Agent Streaming
   - Implement real-time streaming of agent execution
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 7.1 Implement synchronous streaming
+- [x] 7.1 Implement synchronous streaming
   - Create `craft/agents/step.py` with StepResult class
   - Implement stream_invoke() that yields StepResult objects
   - Yield after each execution step
   - Include step index, text, and tools used
   - _Requirements: 6.1, 6.2, 6.3_
 
-- [ ] 7.2 Implement final result streaming
+- [x] 7.2 Implement final result streaming
   - Yield final StepResult with complete answer
   - Set finished=True on final step
   - Include all execution metadata
   - _Requirements: 6.4_
 
-- [ ] 7.3 Implement asynchronous streaming
+- [x] 7.3 Implement asynchronous streaming
   - Implement a_stream_invoke() as async generator
   - Use async provider calls throughout
   - Maintain same behavior as sync streaming
   - _Requirements: 6.5_
 
-- [ ] 7.4 Write property tests for streaming
+- [x] 7.4 Write property tests for streaming
   - **Property 21: Stream Step Yielding**
   - **Property 22: Step Data Completeness**
   - **Property 23: Final Result Streaming**

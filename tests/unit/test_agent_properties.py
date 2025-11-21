@@ -907,3 +907,394 @@ async def test_agent_async_with_planning():
     # Verify result
     assert result is not None
     assert isinstance(result, AgentResult)
+
+
+# ============================================================================
+# Streaming Property Tests
+# ============================================================================
+
+# Feature: craft-v2-agents-tools, Property 21: Stream Step Yielding
+@settings(max_examples=100)
+@given(
+    agent_names(),
+    task_inputs(),
+    st.integers(min_value=2, max_value=5)  # max_steps
+)
+def test_property_21_stream_step_yielding(name, task_input, max_steps):
+    """
+    Property 21: Stream Step Yielding
+    
+    For any agent execution using stream_invoke, the system SHALL yield a StepResult
+    object for each execution step.
+    
+    **Validates: Requirements 6.1**
+    """
+    # Create mock provider with multiple responses
+    responses = [
+        "Step 1 response",
+        "Step 2 response",
+        "Step 3 response",
+        "Final answer"
+    ]
+    provider = MockProvider(responses=responses)
+    
+    # Create agent
+    agent = Agent(
+        name=name,
+        provider=provider,
+        max_steps=max_steps
+    )
+    
+    # Stream execution
+    steps = list(agent.stream_invoke(task_input))
+    
+    # Verify steps were yielded
+    assert len(steps) > 0
+    # Note: Can be max_steps + 1 if max_steps termination occurs (final termination step)
+    assert len(steps) <= max_steps + 1
+    
+    # Verify each yielded item is a StepResult
+    for step in steps:
+        assert isinstance(step, StepResult)
+    
+    # Verify steps are in order
+    for i, step in enumerate(steps):
+        assert step.index == i
+
+
+# Feature: craft-v2-agents-tools, Property 22: Step Data Completeness
+@settings(max_examples=100)
+@given(
+    agent_names(),
+    task_inputs(),
+    st.integers(min_value=2, max_value=5)
+)
+def test_property_22_step_data_completeness(name, task_input, max_steps):
+    """
+    Property 22: Step Data Completeness
+    
+    For any streamed StepResult, it SHALL contain step index, reasoning text,
+    and list of tools used.
+    
+    **Validates: Requirements 6.2, 6.3**
+    """
+    # Create mock provider
+    provider = MockProvider(responses=[
+        "First step reasoning",
+        "Second step reasoning",
+        "Final answer"
+    ])
+    
+    # Create agent
+    agent = Agent(
+        name=name,
+        provider=provider,
+        max_steps=max_steps
+    )
+    
+    # Stream execution
+    steps = list(agent.stream_invoke(task_input))
+    
+    # Verify each step has complete data
+    for step in steps:
+        # Verify step index exists and is valid
+        assert isinstance(step.index, int)
+        assert step.index >= 0
+        
+        # Verify text exists and is non-empty
+        assert step.text is not None
+        assert isinstance(step.text, str)
+        assert len(step.text) > 0
+        
+        # Verify tools_used list exists (even if empty)
+        assert step.tools_used is not None
+        assert isinstance(step.tools_used, list)
+        
+        # Verify finished flag exists
+        assert isinstance(step.finished, bool)
+        
+        # Verify metadata exists
+        assert step.metadata is not None
+        assert isinstance(step.metadata, dict)
+
+
+# Feature: craft-v2-agents-tools, Property 23: Final Result Streaming
+@settings(max_examples=100)
+@given(
+    agent_names(),
+    task_inputs(),
+    st.integers(min_value=2, max_value=5)
+)
+def test_property_23_final_result_streaming(name, task_input, max_steps):
+    """
+    Property 23: Final Result Streaming
+    
+    For any agent execution that completes, the final streamed item SHALL be a
+    complete result with the answer.
+    
+    **Validates: Requirements 6.4**
+    """
+    # Create mock provider with final answer
+    provider = MockProvider(responses=[
+        "Working on it",
+        "Almost done",
+        "Here is the complete final answer to your question"
+    ])
+    
+    # Create agent
+    agent = Agent(
+        name=name,
+        provider=provider,
+        max_steps=max_steps
+    )
+    
+    # Stream execution
+    steps = list(agent.stream_invoke(task_input))
+    
+    # Verify we got steps
+    assert len(steps) > 0
+    
+    # Get the last step
+    final_step = steps[-1]
+    
+    # Verify final step is marked as finished
+    assert final_step.finished is True
+    
+    # Verify final step has text (the answer)
+    assert final_step.text is not None
+    assert len(final_step.text) > 0
+    
+    # Verify final step has metadata
+    assert final_step.metadata is not None
+    assert isinstance(final_step.metadata, dict)
+
+
+# Feature: craft-v2-agents-tools, Property 24: Async Stream Interface
+@settings(max_examples=100)
+@given(
+    agent_names(),
+    task_inputs(),
+    st.integers(min_value=2, max_value=5)
+)
+@pytest.mark.asyncio
+async def test_property_24_async_stream_interface(name, task_input, max_steps):
+    """
+    Property 24: Async Stream Interface
+    
+    For any agent execution using a_stream_invoke, the system SHALL provide an
+    async generator that yields StepResult objects.
+    
+    **Validates: Requirements 6.5**
+    """
+    # Create mock provider
+    provider = MockProvider(responses=[
+        "Async step 1",
+        "Async step 2",
+        "Async final answer"
+    ])
+    
+    # Create agent
+    agent = Agent(
+        name=name,
+        provider=provider,
+        max_steps=max_steps
+    )
+    
+    # Stream execution asynchronously
+    steps = []
+    async for step in agent.a_stream_invoke(task_input):
+        steps.append(step)
+    
+    # Verify steps were yielded
+    assert len(steps) > 0
+    # Note: Can be max_steps + 1 if max_steps termination occurs (final termination step)
+    assert len(steps) <= max_steps + 1
+    
+    # Verify each yielded item is a StepResult
+    for step in steps:
+        assert isinstance(step, StepResult)
+    
+    # Verify steps are in order
+    for i, step in enumerate(steps):
+        assert step.index == i
+    
+    # Verify final step is marked as finished
+    assert steps[-1].finished is True
+
+
+# Additional streaming tests
+def test_streaming_with_max_steps_termination():
+    """Test that streaming handles max_steps termination correctly."""
+    # Create provider that never gives final answer
+    provider = MockProvider(responses=["Not done yet"] * 10)
+    
+    agent = Agent(
+        name="test_agent",
+        provider=provider,
+        max_steps=3
+    )
+    
+    # Stream execution
+    steps = list(agent.stream_invoke("Test task"))
+    
+    # Should have exactly max_steps + 1 (the final termination step)
+    assert len(steps) == 4  # 3 regular steps + 1 final termination step
+    
+    # Last step should indicate max_steps reached
+    final_step = steps[-1]
+    assert final_step.finished is True
+    assert final_step.metadata.get("max_steps_reached") is True
+    assert "Maximum steps" in final_step.text or "max" in final_step.text.lower()
+
+
+def test_streaming_yields_immediately():
+    """Test that streaming yields steps immediately, not after completion."""
+    # This is a behavioral test - we verify that stream_invoke is a generator
+    provider = MockProvider(responses=["Step 1", "Step 2", "Final"])
+    
+    agent = Agent(
+        name="test_agent",
+        provider=provider,
+        max_steps=5
+    )
+    
+    # Get the generator
+    stream = agent.stream_invoke("Test task")
+    
+    # Verify it's a generator
+    import types
+    assert isinstance(stream, types.GeneratorType)
+    
+    # Get first step
+    first_step = next(stream)
+    assert isinstance(first_step, StepResult)
+    assert first_step.index == 0
+    
+    # Get second step
+    second_step = next(stream)
+    assert isinstance(second_step, StepResult)
+    assert second_step.index == 1
+
+
+@pytest.mark.asyncio
+async def test_async_streaming_yields_immediately():
+    """Test that async streaming yields steps immediately."""
+    provider = MockProvider(responses=["Async step 1", "Async step 2", "Async final"])
+    
+    agent = Agent(
+        name="test_agent",
+        provider=provider,
+        max_steps=5
+    )
+    
+    # Get the async generator
+    stream = agent.a_stream_invoke("Test task")
+    
+    # Verify it's an async generator
+    import types
+    assert isinstance(stream, types.AsyncGeneratorType)
+    
+    # Get first step
+    first_step = await stream.__anext__()
+    assert isinstance(first_step, StepResult)
+    assert first_step.index == 0
+    
+    # Get second step
+    second_step = await stream.__anext__()
+    assert isinstance(second_step, StepResult)
+    assert second_step.index == 1
+
+
+def test_streaming_with_verbose_mode():
+    """Test that streaming works with verbose mode enabled."""
+    provider = MockProvider(responses=["Verbose step 1", "Verbose final"])
+    
+    agent = Agent(
+        name="test_agent",
+        provider=provider,
+        max_steps=3,
+        verbose=True
+    )
+    
+    # Should not raise any errors
+    steps = list(agent.stream_invoke("Test task"))
+    assert len(steps) > 0
+
+
+@pytest.mark.asyncio
+async def test_async_streaming_with_planning():
+    """Test async streaming with planning enabled."""
+    provider = MockProvider(responses=[
+        "Plan: 1. Do this\n2. Do that",
+        "Working on step 1",
+        "Final answer"
+    ])
+    
+    agent = Agent(
+        name="test_agent",
+        provider=provider,
+        max_steps=5,
+        planning_interval=2
+    )
+    
+    # Stream with planning
+    steps = []
+    async for step in agent.a_stream_invoke("Test task"):
+        steps.append(step)
+    
+    # Verify steps were yielded
+    assert len(steps) > 0
+    
+    # Verify plan was created
+    assert agent.state.plan is not None
+
+
+def test_streaming_error_handling():
+    """Test that streaming handles errors gracefully."""
+    # Create provider that raises an error
+    provider = MockProvider()
+    provider.chat = Mock(side_effect=Exception("Streaming error"))
+    
+    agent = Agent(
+        name="test_agent",
+        provider=provider,
+        max_steps=3
+    )
+    
+    # Stream should yield error step and then raise
+    steps = []
+    with pytest.raises(AgentExecutionError):
+        for step in agent.stream_invoke("Test task"):
+            steps.append(step)
+    
+    # Should have yielded at least one error step
+    assert len(steps) > 0
+    error_step = steps[-1]
+    assert error_step.finished is True
+    assert error_step.metadata.get("error") is True
+
+
+@pytest.mark.asyncio
+async def test_async_streaming_error_handling():
+    """Test that async streaming handles errors gracefully."""
+    # Create provider that raises an error
+    provider = MockProvider()
+    provider.achat = AsyncMock(side_effect=Exception("Async streaming error"))
+    
+    agent = Agent(
+        name="test_agent",
+        provider=provider,
+        max_steps=3
+    )
+    
+    # Stream should yield error step and then raise
+    steps = []
+    with pytest.raises(AgentExecutionError):
+        async for step in agent.a_stream_invoke("Test task"):
+            steps.append(step)
+    
+    # Should have yielded at least one error step
+    assert len(steps) > 0
+    error_step = steps[-1]
+    assert error_step.finished is True
+    assert error_step.metadata.get("error") is True
