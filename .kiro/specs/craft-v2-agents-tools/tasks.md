@@ -146,7 +146,7 @@ The plan follows an implementation-first approach: build features before writing
 - [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [-] 5. Autonomous Agent System Core
+- [x] 5. Autonomous Agent System Core
   - Implement the core agent execution engine
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
 
@@ -188,7 +188,7 @@ The plan follows an implementation-first approach: build features before writing
   - Maintain same behavior as sync version
   - _Requirements: 4.2, 4.3_
 
-- [-] 5.7 Write property tests for agent system
+- [x] 5.7 Write property tests for agent system
   - **Property 13: Agent Initialization**
   - **Property 14: Tool Result Integration**
   - **Property 15: Agent Result Structure**
@@ -196,43 +196,43 @@ The plan follows an implementation-first approach: build features before writing
   - **Validates: Requirements 4.1, 4.4, 4.5, 4.6**
 
 
-- [ ] 6. Agent Planning System
+- [x] 6. Agent Planning System
   - Implement planning capabilities for complex tasks
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 6.1 Implement plan generation
+- [x] 6.1 Implement plan generation
   - Create `craft/agents/planning.py` with Plan class
   - Implement generate_plan() to create initial plan from task
   - Use LLM to break down task into numbered steps
   - Store plan in agent state
   - _Requirements: 5.1_
 
-- [ ] 6.2 Implement planning interval logic
+- [x] 6.2 Implement planning interval logic
   - Add planning_interval parameter to Agent
   - Re-evaluate plan at specified step intervals
   - Update plan based on new information
   - Track plan revisions
   - _Requirements: 5.2_
 
-- [ ] 6.3 Implement step completion tracking
+- [x] 6.3 Implement step completion tracking
   - Mark steps as complete in plan
   - Proceed to next step after completion
   - Handle step failures and retries
   - _Requirements: 5.3_
 
-- [ ] 6.4 Implement plan revision
+- [x] 6.4 Implement plan revision
   - Detect when plan needs revision (obstacles, new info)
   - Generate revised plan using LLM
   - Maintain plan history for debugging
   - _Requirements: 5.4_
 
-- [ ] 6.5 Implement plan inspection
+- [x] 6.5 Implement plan inspection
   - Add get_plan() method to Agent
   - Provide access to current plan and completed steps
   - Format plan for display
   - _Requirements: 5.5_
 
-- [ ] 6.6 Write property tests for planning system
+- [x] 6.6 Write property tests for planning system
   - **Property 17: Plan Generation**
   - **Property 18: Planning Interval Adherence**
   - **Property 19: Step Completion Tracking**

@@ -9,6 +9,17 @@ from craft.providers.base import Provider, Message, Role, ChatResponse
 from craft.tools.base import Tool
 from craft.core.memory import Memory
 from craft.core.errors import AgentExecutionError, ToolExecutionError
+from craft.agents.planning import (
+    Plan,
+    generate_plan,
+    generate_plan_sync,
+    revise_plan,
+    revise_plan_sync,
+    mark_step_complete,
+    advance_to_next_step,
+    get_current_step,
+    format_plan_for_display,
+)
 
 
 class ToolCall(BaseModel):
@@ -25,14 +36,7 @@ class ToolCall(BaseModel):
         arbitrary_types_allowed = True
 
 
-class Plan(BaseModel):
-    """Agent's execution plan."""
-
-    steps: List[str]
-    current_step_index: int = 0
-    completed_steps: List[int] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+# Plan is now imported from craft.agents.planning
 
 
 class AgentState(BaseModel):
@@ -250,6 +254,10 @@ class Agent:
                 if self.config.verbose:
                     print(f"\n--- Step {self.state.current_step + 1} ---")
 
+                # Check if we should re-evaluate the plan
+                if self._should_reevaluate_plan():
+                    self._reevaluate_plan()
+
                 # Execute one step
                 step_result = self._execute_step(tool_choice, **kwargs)
                 step_results.append(step_result)
@@ -262,12 +270,18 @@ class Agent:
 
                 self.state.current_step += 1
 
+            # Calculate execution time
+            execution_time = time.time() - start_time
+
             # Handle max steps termination
             if not self.state.finished:
-                return self._handle_max_steps(step_results)
+                result = self._handle_max_steps(step_results, execution_time)
+                # Save to memory even for partial results
+                if self.memory:
+                    self._save_to_memory()
+                return result
 
             # Build final result
-            execution_time = time.time() - start_time
             tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
 
             result = AgentResult(
@@ -310,12 +324,22 @@ class Agent:
             Message(role=Role.USER, content=task_input),
         ]
 
+        # Generate initial plan if planning is enabled
+        plan = None
+        if self.config.planning_interval is not None:
+            if self.config.verbose:
+                print("Generating initial plan...")
+            plan = generate_plan_sync(self.provider, task_input)
+            if self.config.verbose:
+                print(format_plan_for_display(plan))
+
         self.state = AgentState(
             task_input=task_input,
             current_step=0,
             max_steps=self.config.max_steps,
             messages=messages,
             tools_used=[],
+            plan=plan,
             finished=False,
         )
 
@@ -332,6 +356,12 @@ class Agent:
         Returns:
             StepResult for this step
         """
+        # If we have a plan, include current step in context
+        if self.state.plan:
+            current_step_text = get_current_step(self.state.plan)
+            if current_step_text and self.config.verbose:
+                print(f"Current plan step: {current_step_text}")
+
         # Call provider to get next action
         response = self.provider.chat(
             messages=self.state.messages,
@@ -351,6 +381,15 @@ class Agent:
         # For now, we'll use a simple heuristic - if response doesn't mention tools
         # and seems conclusive, mark as finished
         is_finished = self._is_final_answer(response_text)
+
+        # Track step completion in plan
+        if self.state.plan and not is_finished:
+            # Check if step appears complete based on response
+            if self._is_step_complete(response_text):
+                mark_step_complete(self.state.plan, self.state.plan.current_step_index)
+                advance_to_next_step(self.state.plan)
+                if self.config.verbose:
+                    print(f"✓ Completed plan step {self.state.plan.current_step_index}")
 
         step_result = StepResult(
             index=self.state.current_step,
@@ -396,6 +435,130 @@ class Agent:
 
         # If we have substantial content (>50 chars), consider it final
         return len(text.strip()) > 50
+
+    def _is_step_complete(self, response_text: str) -> bool:
+        """
+        Determine if a plan step is complete based on response.
+
+        Args:
+            response_text: Agent's response
+
+        Returns:
+            True if step appears complete
+        """
+        text_lower = response_text.lower()
+
+        # Indicators of completion
+        completion_indicators = [
+            "completed",
+            "done",
+            "finished",
+            "successfully",
+            "found",
+            "retrieved",
+            "obtained",
+        ]
+
+        for indicator in completion_indicators:
+            if indicator in text_lower:
+                return True
+
+        # If response is substantial and doesn't indicate more work needed
+        if len(response_text.strip()) > 100:
+            not_complete_indicators = [
+                "i need to",
+                "next i will",
+                "i should",
+                "let me",
+            ]
+            for indicator in not_complete_indicators:
+                if indicator in text_lower:
+                    return False
+            return True
+
+        return False
+
+    def _should_reevaluate_plan(self) -> bool:
+        """
+        Check if plan should be re-evaluated at this step.
+
+        Returns:
+            True if plan should be re-evaluated
+        """
+        if not self.state.plan or self.config.planning_interval is None:
+            return False
+
+        # Re-evaluate at planning intervals
+        return (self.state.current_step > 0 and 
+                self.state.current_step % self.config.planning_interval == 0)
+
+    def _reevaluate_plan(self) -> None:
+        """Re-evaluate and potentially revise the current plan."""
+        if not self.state.plan:
+            return
+
+        # Gather context from recent steps
+        recent_context = self._gather_recent_context()
+
+        if self.config.verbose:
+            print(f"\n--- Re-evaluating plan at step {self.state.current_step} ---")
+
+        # Revise plan based on new information
+        self.state.plan = revise_plan_sync(
+            self.provider,
+            self.state.plan,
+            self.state.task_input,
+            recent_context,
+        )
+
+        if self.config.verbose:
+            print(format_plan_for_display(self.state.plan))
+
+    def _gather_recent_context(self) -> str:
+        """
+        Gather context from recent execution for plan revision.
+
+        Returns:
+            Context string summarizing recent progress
+        """
+        # Get last few messages
+        recent_messages = self.state.messages[-5:] if len(self.state.messages) > 5 else self.state.messages
+
+        context_parts = [f"Current step: {self.state.current_step}"]
+
+        # Add recent conversation
+        for msg in recent_messages:
+            if msg.role == Role.ASSISTANT:
+                context_parts.append(f"Agent: {msg.content[:200]}...")
+
+        # Add tools used
+        if self.state.tools_used:
+            recent_tools = [tc.tool_name for tc in self.state.tools_used[-3:]]
+            context_parts.append(f"Recent tools used: {', '.join(recent_tools)}")
+
+        return "\n".join(context_parts)
+
+    async def _areevaluate_plan(self) -> None:
+        """Async version of _reevaluate_plan."""
+        if not self.state.plan:
+            return
+
+        # Gather context from recent steps
+        recent_context = self._gather_recent_context()
+
+        if self.config.verbose:
+            print(f"\n--- Re-evaluating plan at step {self.state.current_step} ---")
+
+        # Revise plan based on new information
+        self.state.plan = await revise_plan(
+            self.provider,
+            self.state.plan,
+            self.state.task_input,
+            recent_context,
+        )
+
+        if self.config.verbose:
+            print(format_plan_for_display(self.state.plan))
 
     def _handle_max_steps(self, step_results: List[StepResult], execution_time: float = 0.0) -> AgentResult:
         """
@@ -469,6 +632,38 @@ class Agent:
         for step in result.steps:
             yield step
 
+    async def _ainitialize_state(self, task_input: str) -> None:
+        """
+        Async version of _initialize_state.
+
+        Args:
+            task_input: Task description
+        """
+        # Create initial messages with system prompt
+        messages = [
+            Message(role=Role.SYSTEM, content=self.system_prompt),
+            Message(role=Role.USER, content=task_input),
+        ]
+
+        # Generate initial plan if planning is enabled
+        plan = None
+        if self.config.planning_interval is not None:
+            if self.config.verbose:
+                print("Generating initial plan...")
+            plan = await generate_plan(self.provider, task_input)
+            if self.config.verbose:
+                print(format_plan_for_display(plan))
+
+        self.state = AgentState(
+            task_input=task_input,
+            current_step=0,
+            max_steps=self.config.max_steps,
+            messages=messages,
+            tools_used=[],
+            plan=plan,
+            finished=False,
+        )
+
     async def arun(
         self,
         task_input: str,
@@ -487,7 +682,7 @@ class Agent:
             AgentResult with final answer and execution metadata
         """
         # Initialize execution state
-        self._initialize_state(task_input)
+        await self._ainitialize_state(task_input)
 
         # Track execution metadata
         start_time = time.time()
@@ -498,6 +693,10 @@ class Agent:
             while not self.state.finished and self.state.current_step < self.state.max_steps:
                 if self.config.verbose:
                     print(f"\n--- Step {self.state.current_step + 1} ---")
+
+                # Check if we should re-evaluate the plan
+                if self._should_reevaluate_plan():
+                    await self._areevaluate_plan()
 
                 # Execute one step asynchronously
                 step_result = await self._aexecute_step(tool_choice, **kwargs)
@@ -511,12 +710,18 @@ class Agent:
 
                 self.state.current_step += 1
 
+            # Calculate execution time
+            execution_time = time.time() - start_time
+
             # Handle max steps termination
             if not self.state.finished:
-                return self._handle_max_steps(step_results)
+                result = self._handle_max_steps(step_results, execution_time)
+                # Save to memory even for partial results
+                if self.memory:
+                    self._save_to_memory()
+                return result
 
             # Build final result
-            execution_time = time.time() - start_time
             tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
 
             result = AgentResult(
@@ -559,6 +764,12 @@ class Agent:
         Returns:
             StepResult for this step
         """
+        # If we have a plan, include current step in context
+        if self.state.plan:
+            current_step_text = get_current_step(self.state.plan)
+            if current_step_text and self.config.verbose:
+                print(f"Current plan step: {current_step_text}")
+
         # Call provider asynchronously
         response = await self.provider.achat(
             messages=self.state.messages,
@@ -576,6 +787,15 @@ class Agent:
 
         # Check if this is a final answer
         is_finished = self._is_final_answer(response_text)
+
+        # Track step completion in plan
+        if self.state.plan and not is_finished:
+            # Check if step appears complete based on response
+            if self._is_step_complete(response_text):
+                mark_step_complete(self.state.plan, self.state.plan.current_step_index)
+                advance_to_next_step(self.state.plan)
+                if self.config.verbose:
+                    print(f"✓ Completed plan step {self.state.plan.current_step_index}")
 
         step_result = StepResult(
             index=self.state.current_step,
@@ -629,6 +849,29 @@ class Agent:
             # Create a tool wrapper for the agent
             # TODO: Implement in multi-agent collaboration task
             pass
+
+    def get_plan(self) -> Optional[Plan]:
+        """
+        Get the current execution plan.
+
+        Returns:
+            Current plan or None if no plan exists
+        """
+        if self.state and self.state.plan:
+            return self.state.plan
+        return None
+
+    def get_plan_display(self) -> str:
+        """
+        Get formatted plan for display.
+
+        Returns:
+            Formatted plan string or message if no plan exists
+        """
+        plan = self.get_plan()
+        if plan:
+            return format_plan_for_display(plan)
+        return "No plan available"
 
     def __repr__(self) -> str:
         return (
