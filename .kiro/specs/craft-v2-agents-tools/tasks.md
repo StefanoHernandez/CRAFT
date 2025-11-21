@@ -269,41 +269,41 @@ The plan follows an implementation-first approach: build features before writing
   - **Property 24: Async Stream Interface**
   - **Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5**
 
-- [ ] 8. Multi-Agent Collaboration
+- [x] 8. Multi-Agent Collaboration
   - Enable agents to call other agents as tools
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 8.1 Implement can_call() method
+- [x] 8.1 Implement can_call() method
   - Add can_call() to Agent class
   - Register other agents as callable tools
   - Create tool wrappers for agent calls
   - _Requirements: 7.1_
 
-- [ ] 8.2 Implement agent-to-agent calls
+- [x] 8.2 Implement agent-to-agent calls
   - Execute called agent and return result
   - Pass task input to called agent
   - Collect and format agent result
   - _Requirements: 7.2_
 
-- [ ] 8.3 Implement context isolation
+- [x] 8.3 Implement context isolation
   - Maintain separate execution contexts per agent
   - Prevent context leakage between agents
   - Preserve agent-specific configuration
   - _Requirements: 7.3_
 
-- [ ] 8.4 Implement recursion prevention
+- [x] 8.4 Implement recursion prevention
   - Track agent call hierarchy
   - Detect circular call patterns
   - Raise error on infinite recursion
   - _Requirements: 7.4_
 
-- [ ] 8.5 Implement result aggregation
+- [x] 8.5 Implement result aggregation
   - Collect results from all agents in collaboration
   - Aggregate metadata (steps, tools, timing)
   - Provide combined result to coordinator
   - _Requirements: 7.5_
 
-- [ ] 8.6 Write property tests for multi-agent
+- [x] 8.6 Write property tests for multi-agent
   - **Property 25: Agent Tool Registration**
   - **Property 26: Agent Call Execution**
   - **Property 27: Context Isolation**

@@ -182,6 +182,17 @@ class Agent:
 
         # Track callable agents (for multi-agent collaboration)
         self.callable_agents: Dict[str, "Agent"] = {}
+        
+        # Track agent call hierarchy to prevent infinite recursion
+        self._call_stack: List[str] = []
+        
+        # Track aggregated results from multi-agent collaboration
+        self._aggregated_results: Dict[str, Any] = {
+            'agent_calls': [],
+            'total_steps': 0,
+            'total_tools_used': set(),
+            'total_execution_time': 0.0,
+        }
 
     def _build_system_prompt(self) -> str:
         """
@@ -243,6 +254,9 @@ class Agent:
         """
         # Initialize execution state
         self._initialize_state(task_input)
+        
+        # Reset aggregated results for new execution
+        self._reset_aggregated_results()
 
         # Track execution metadata
         start_time = time.time()
@@ -284,15 +298,23 @@ class Agent:
             # Build final result
             tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
 
+            # Include aggregated results from multi-agent collaboration
+            metadata = {
+                "execution_time_seconds": execution_time,
+                "max_steps_reached": False,
+            }
+            
+            # Add aggregated results if any agent calls were made
+            aggregated = self.get_aggregated_results()
+            if aggregated['agent_calls']:
+                metadata['multi_agent_collaboration'] = aggregated
+
             result = AgentResult(
                 text=self.state.result or "",
                 steps=step_results,
                 total_steps=self.state.current_step + 1,
                 tools_used=tools_used_names,
-                metadata={
-                    "execution_time_seconds": execution_time,
-                    "max_steps_reached": False,
-                },
+                metadata=metadata,
             )
 
             # Save to memory if enabled
@@ -754,6 +776,9 @@ class Agent:
         """
         # Initialize execution state
         await self._ainitialize_state(task_input)
+        
+        # Reset aggregated results for new execution
+        self._reset_aggregated_results()
 
         # Track execution metadata
         start_time = time.time()
@@ -795,15 +820,23 @@ class Agent:
             # Build final result
             tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
 
+            # Include aggregated results from multi-agent collaboration
+            metadata = {
+                "execution_time_seconds": execution_time,
+                "max_steps_reached": False,
+            }
+            
+            # Add aggregated results if any agent calls were made
+            aggregated = self.get_aggregated_results()
+            if aggregated['agent_calls']:
+                metadata['multi_agent_collaboration'] = aggregated
+
             result = AgentResult(
                 text=self.state.result or "",
                 steps=step_results,
                 total_steps=self.state.current_step + 1,
                 tools_used=tools_used_names,
-                metadata={
-                    "execution_time_seconds": execution_time,
-                    "max_steps_reached": False,
-                },
+                metadata=metadata,
             )
 
             # Save to memory if enabled
@@ -983,15 +1016,150 @@ class Agent:
         """
         Register other agents as callable tools.
 
+        This allows the current agent to call other agents as if they were tools,
+        enabling multi-agent collaboration. Each agent is wrapped as a tool with
+        its name, role, and goal as metadata.
+
         Args:
             agents: List of agents to make callable
+
+        Example:
+            researcher = Agent(name="researcher", provider=provider, role="Researcher")
+            writer = Agent(name="writer", provider=provider, role="Writer")
+            coordinator = Agent(name="coordinator", provider=provider)
+            
+            coordinator.can_call([researcher, writer])
+            # Now coordinator can call researcher and writer as tools
         """
+        from craft.tools.base import Tool, ToolMetadata, ToolParameter
+        
         for agent in agents:
+            # Store agent reference
             self.callable_agents[agent.config.name] = agent
 
             # Create a tool wrapper for the agent
-            # TODO: Implement in multi-agent collaboration task
-            pass
+            agent_tool = self._create_agent_tool(agent)
+            
+            # Add to tools list and tool map
+            self.tools.append(agent_tool)
+            self.tool_map[agent_tool.name] = agent_tool
+            
+            # Rebuild system prompt to include new tool
+            self.system_prompt = self._build_system_prompt()
+
+    def _create_agent_tool(self, agent: "Agent") -> "Tool":
+        """
+        Create a tool wrapper for an agent.
+
+        Args:
+            agent: Agent to wrap as a tool
+
+        Returns:
+            Tool instance that calls the agent
+        """
+        from craft.tools.base import Tool, ToolMetadata, ToolParameter
+        
+        # Build description from agent's role and goal
+        description_parts = [f"Call the {agent.config.name} agent"]
+        if agent.config.role:
+            description_parts.append(f"(Role: {agent.config.role})")
+        if agent.config.goal:
+            description_parts.append(f"to {agent.config.goal}")
+        
+        description = " ".join(description_parts)
+        
+        # Create metadata for the agent tool
+        metadata = ToolMetadata(
+            name=agent.config.name,
+            description=description,
+            parameters=[
+                ToolParameter(
+                    name="task",
+                    type="str",
+                    description="The task or question to give to the agent",
+                    required=True,
+                )
+            ],
+            return_type="str",
+            json_schema={
+                "type": "function",
+                "function": {
+                    "name": agent.config.name,
+                    "description": description,
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "task": {
+                                "type": "string",
+                                "description": "The task or question to give to the agent",
+                            }
+                        },
+                        "required": ["task"],
+                    },
+                },
+            },
+        )
+        
+        # Create wrapper function that calls the agent
+        def agent_wrapper(task: str) -> str:
+            """Execute the agent with the given task."""
+            # Track call hierarchy to prevent recursion
+            if not hasattr(self, '_call_stack'):
+                self._call_stack = []
+            
+            # Initialize aggregated results tracking if not exists
+            if not hasattr(self, '_aggregated_results'):
+                self._aggregated_results = {
+                    'agent_calls': [],
+                    'total_steps': 0,
+                    'total_tools_used': set(),
+                    'total_execution_time': 0.0,
+                }
+            
+            # Check for circular calls
+            if agent.config.name in self._call_stack:
+                raise AgentExecutionError(
+                    f"Circular agent call detected: {' -> '.join(self._call_stack)} -> {agent.config.name}",
+                    details={
+                        "call_stack": self._call_stack,
+                        "attempted_agent": agent.config.name,
+                    }
+                )
+            
+            # Add to call stack
+            self._call_stack.append(agent.config.name)
+            
+            try:
+                # Execute the agent
+                result = agent.run(task)
+                
+                # Aggregate results from the called agent
+                self._aggregated_results['agent_calls'].append({
+                    'agent_name': agent.config.name,
+                    'task': task,
+                    'result': result.text,
+                    'steps': result.total_steps,
+                    'tools_used': result.tools_used,
+                    'metadata': result.metadata,
+                })
+                
+                # Aggregate metadata
+                self._aggregated_results['total_steps'] += result.total_steps
+                self._aggregated_results['total_tools_used'].update(result.tools_used)
+                self._aggregated_results['total_execution_time'] += result.metadata.get('execution_time_seconds', 0.0)
+                
+                return result.text
+            finally:
+                # Remove from call stack
+                self._call_stack.pop()
+        
+        # Create and return the tool
+        return Tool(
+            name=agent.config.name,
+            description=description,
+            func=agent_wrapper,
+            metadata=metadata,
+        )
 
     def get_plan(self) -> Optional[Plan]:
         """
@@ -1015,6 +1183,37 @@ class Agent:
         if plan:
             return format_plan_for_display(plan)
         return "No plan available"
+
+    def get_aggregated_results(self) -> Dict[str, Any]:
+        """
+        Get aggregated results from multi-agent collaboration.
+
+        Returns:
+            Dictionary containing aggregated metadata from all agent calls,
+            including total steps, tools used, execution time, and individual
+            agent call details.
+        """
+        if not hasattr(self, '_aggregated_results'):
+            return {
+                'agent_calls': [],
+                'total_steps': 0,
+                'total_tools_used': [],
+                'total_execution_time': 0.0,
+            }
+        
+        # Convert set to list for JSON serialization
+        results = self._aggregated_results.copy()
+        results['total_tools_used'] = list(results['total_tools_used'])
+        return results
+
+    def _reset_aggregated_results(self) -> None:
+        """Reset aggregated results for a new execution."""
+        self._aggregated_results = {
+            'agent_calls': [],
+            'total_steps': 0,
+            'total_tools_used': set(),
+            'total_execution_time': 0.0,
+        }
 
     def __repr__(self) -> str:
         return (

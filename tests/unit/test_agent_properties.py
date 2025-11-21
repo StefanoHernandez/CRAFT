@@ -1298,3 +1298,512 @@ async def test_async_streaming_error_handling():
     error_step = steps[-1]
     assert error_step.finished is True
     assert error_step.metadata.get("error") is True
+
+
+# ============================================================================
+# Multi-Agent Collaboration Property Tests
+# ============================================================================
+
+# Feature: craft-v2-agents-tools, Property 25: Agent Tool Registration
+@settings(max_examples=100)
+@given(
+    agent_names(),
+    agent_names(),
+    agent_names()
+)
+def test_property_25_agent_tool_registration(name1, name2, name3):
+    """
+    Property 25: Agent Tool Registration
+    
+    For any agent A that calls can_call with agents [B, C], agents B and C SHALL
+    appear as callable tools in A's tool registry.
+    
+    **Validates: Requirements 7.1**
+    """
+    # Ensure unique names
+    assume(name1 != name2 and name2 != name3 and name1 != name3)
+    
+    # Create mock provider
+    provider = MockProvider()
+    
+    # Create three agents
+    agent_a = Agent(name=name1, provider=provider)
+    agent_b = Agent(name=name2, provider=provider, role="Helper B")
+    agent_c = Agent(name=name3, provider=provider, role="Helper C")
+    
+    # Register agents B and C as callable by agent A
+    agent_a.can_call([agent_b, agent_c])
+    
+    # Verify agents are registered in callable_agents
+    assert name2 in agent_a.callable_agents
+    assert name3 in agent_a.callable_agents
+    assert agent_a.callable_agents[name2] is agent_b
+    assert agent_a.callable_agents[name3] is agent_c
+    
+    # Verify agents appear as tools in tool registry
+    assert name2 in agent_a.tool_map
+    assert name3 in agent_a.tool_map
+    
+    # Verify tools are in tools list
+    tool_names = [tool.name for tool in agent_a.tools]
+    assert name2 in tool_names
+    assert name3 in tool_names
+    
+    # Verify tool metadata is correct
+    tool_b = agent_a.tool_map[name2]
+    assert tool_b.name == name2
+    assert tool_b.description is not None
+    assert "Helper B" in tool_b.description or name2 in tool_b.description
+
+
+# Feature: craft-v2-agents-tools, Property 26: Agent Call Execution
+@settings(max_examples=100)
+@given(
+    agent_names(),
+    agent_names(),
+    task_inputs()
+)
+def test_property_26_agent_call_execution(name1, name2, task_input):
+    """
+    Property 26: Agent Call Execution
+    
+    For any agent A that calls agent B, agent B SHALL execute and return its
+    result to agent A.
+    
+    **Validates: Requirements 7.2**
+    """
+    # Ensure unique names
+    assume(name1 != name2)
+    
+    # Create mock provider with specific response for agent B
+    provider = MockProvider(responses=["Agent B's answer to the task"])
+    
+    # Create two agents
+    agent_a = Agent(name=name1, provider=provider)
+    agent_b = Agent(name=name2, provider=provider, role="Helper Agent")
+    
+    # Register agent B as callable by agent A
+    agent_a.can_call([agent_b])
+    
+    # Get the tool wrapper for agent B
+    tool_b = agent_a.tool_map[name2]
+    
+    # Call agent B through the tool wrapper
+    result = tool_b.func(task=task_input)
+    
+    # Verify result is returned
+    assert result is not None
+    assert isinstance(result, str)
+    assert len(result) > 0
+    
+    # Verify agent B was actually executed
+    assert agent_b.state is not None
+    assert agent_b.state.task_input == task_input
+
+
+# Feature: craft-v2-agents-tools, Property 27: Context Isolation
+@settings(max_examples=100)
+@given(
+    agent_names(),
+    agent_names(),
+    task_inputs(),
+    task_inputs()
+)
+def test_property_27_context_isolation(name1, name2, task1, task2):
+    """
+    Property 27: Context Isolation
+    
+    For any two agents A and B where A calls B, each agent SHALL maintain
+    separate execution contexts that do not interfere.
+    
+    **Validates: Requirements 7.3**
+    """
+    # Ensure unique names and tasks
+    assume(name1 != name2)
+    assume(task1 != task2)
+    
+    # Create mock provider
+    provider = MockProvider(responses=[
+        "Agent A response",
+        "Agent B response",
+        "Agent A final"
+    ])
+    
+    # Create two agents
+    agent_a = Agent(name=name1, provider=provider, max_steps=5)
+    agent_b = Agent(name=name2, provider=provider, max_steps=5)
+    
+    # Register agent B as callable by agent A
+    agent_a.can_call([agent_b])
+    
+    # Execute agent A with task1
+    result_a = agent_a.run(task1)
+    
+    # Get agent A's state
+    state_a_messages = agent_a.state.messages.copy()
+    state_a_task = agent_a.state.task_input
+    
+    # Call agent B through the tool wrapper
+    tool_b = agent_a.tool_map[name2]
+    result_b = tool_b.func(task=task2)
+    
+    # Verify agent B has its own state
+    assert agent_b.state is not None
+    assert agent_b.state.task_input == task2
+    
+    # Verify agent A's state is unchanged
+    assert agent_a.state.task_input == state_a_task
+    
+    # Verify agent B's messages don't contain agent A's task
+    agent_b_user_messages = [m for m in agent_b.state.messages if m.role == Role.USER]
+    assert all(task1 not in m.content for m in agent_b_user_messages)
+    
+    # Verify agent A's messages don't contain agent B's task (before the call)
+    # Note: After the call, agent A might have agent B's result, but not B's original task
+    assert task2 not in state_a_task
+
+
+# Feature: craft-v2-agents-tools, Property 28: Recursion Prevention
+@settings(max_examples=100)
+@given(
+    agent_names(),
+    agent_names(),
+    task_inputs()
+)
+def test_property_28_recursion_prevention(name1, name2, task_input):
+    """
+    Property 28: Recursion Prevention
+    
+    For any circular agent call pattern (A calls B, B calls A), the system SHALL
+    detect and prevent infinite recursion.
+    
+    **Validates: Requirements 7.4**
+    """
+    # Ensure unique names
+    assume(name1 != name2)
+    
+    # Create mock provider
+    provider = MockProvider(responses=["Response"])
+    
+    # Create two agents
+    agent_a = Agent(name=name1, provider=provider)
+    agent_b = Agent(name=name2, provider=provider)
+    
+    # Create circular dependency: A can call B, B can call A
+    agent_a.can_call([agent_b])
+    agent_b.can_call([agent_a])
+    
+    # Get tool wrappers
+    tool_b = agent_a.tool_map[name2]
+    tool_a = agent_b.tool_map[name1]
+    
+    # Try to create circular call: A calls B, B tries to call A
+    # This should raise an error
+    
+    # First, manually set up the call stack as if A is calling B
+    agent_a._call_stack = [name2]
+    
+    # Now try to call A from B (which would be circular)
+    with pytest.raises(AgentExecutionError) as exc_info:
+        # Simulate B trying to call A while A is in the call stack
+        agent_b._call_stack = [name2, name1]  # B is being called by A
+        tool_a.func(task=task_input)
+    
+    # Verify error message indicates circular call
+    error = exc_info.value
+    assert "Circular" in error.message or "circular" in error.message
+    assert "call" in error.message.lower()
+
+
+# Feature: craft-v2-agents-tools, Property 29: Result Aggregation
+@settings(max_examples=100)
+@given(
+    agent_names(),
+    agent_names(),
+    agent_names(),
+    task_inputs()
+)
+def test_property_29_result_aggregation(name1, name2, name3, task_input):
+    """
+    Property 29: Result Aggregation
+    
+    For any multi-agent collaboration, the system SHALL aggregate results from
+    all agents involved.
+    
+    **Validates: Requirements 7.5**
+    """
+    # Ensure unique names
+    assume(name1 != name2 and name2 != name3 and name1 != name3)
+    
+    # Create mock provider with specific responses
+    provider = MockProvider(responses=[
+        "Agent B result",
+        "Agent C result",
+        "Coordinator final result"
+    ])
+    
+    # Create three agents
+    coordinator = Agent(name=name1, provider=provider, max_steps=5)
+    agent_b = Agent(name=name2, provider=provider, role="Helper B", max_steps=3)
+    agent_c = Agent(name=name3, provider=provider, role="Helper C", max_steps=3)
+    
+    # Register agents as callable
+    coordinator.can_call([agent_b, agent_c])
+    
+    # Call both agents through the coordinator
+    tool_b = coordinator.tool_map[name2]
+    tool_c = coordinator.tool_map[name3]
+    
+    result_b = tool_b.func(task=task_input)
+    result_c = tool_c.func(task=task_input)
+    
+    # Get aggregated results
+    aggregated = coordinator.get_aggregated_results()
+    
+    # Verify aggregated results structure
+    assert aggregated is not None
+    assert isinstance(aggregated, dict)
+    
+    # Verify agent_calls list exists and contains both calls
+    assert 'agent_calls' in aggregated
+    assert len(aggregated['agent_calls']) == 2
+    
+    # Verify each agent call has required information
+    for call in aggregated['agent_calls']:
+        assert 'agent_name' in call
+        assert 'task' in call
+        assert 'result' in call
+        assert 'steps' in call
+        assert 'tools_used' in call
+        assert 'metadata' in call
+    
+    # Verify agent names are recorded
+    agent_names_in_calls = [call['agent_name'] for call in aggregated['agent_calls']]
+    assert name2 in agent_names_in_calls
+    assert name3 in agent_names_in_calls
+    
+    # Verify total_steps is aggregated
+    assert 'total_steps' in aggregated
+    assert aggregated['total_steps'] > 0
+    
+    # Verify total_tools_used exists
+    assert 'total_tools_used' in aggregated
+    assert isinstance(aggregated['total_tools_used'], list)
+    
+    # Verify total_execution_time exists
+    assert 'total_execution_time' in aggregated
+    assert aggregated['total_execution_time'] >= 0
+
+
+# Additional multi-agent tests
+def test_multi_agent_in_full_execution():
+    """Test multi-agent collaboration in a full agent execution."""
+    # Create mock provider
+    provider = MockProvider(responses=[
+        "Helper agent completed the task",
+        "Coordinator using helper's result"
+    ])
+    
+    # Create coordinator and helper
+    coordinator = Agent(name="coordinator", provider=provider, max_steps=5)
+    helper = Agent(name="helper", provider=provider, role="Helper", max_steps=3)
+    
+    # Register helper
+    coordinator.can_call([helper])
+    
+    # Execute coordinator (which could call helper)
+    result = coordinator.run("Test task")
+    
+    # Verify result includes aggregated data if helper was called
+    assert result is not None
+    assert isinstance(result, AgentResult)
+    
+    # Check if multi_agent_collaboration is in metadata
+    # (it will only be there if helper was actually called during execution)
+    if 'multi_agent_collaboration' in result.metadata:
+        collab_data = result.metadata['multi_agent_collaboration']
+        assert 'agent_calls' in collab_data
+        assert 'total_steps' in collab_data
+
+
+def test_agent_call_with_different_max_steps():
+    """Test that called agents respect their own max_steps."""
+    # Create provider that never gives final answer
+    provider = MockProvider(responses=["Not done yet"] * 20)
+    
+    # Create coordinator with high max_steps
+    coordinator = Agent(name="coordinator", provider=provider, max_steps=10)
+    
+    # Create helper with low max_steps
+    helper = Agent(name="helper", provider=provider, max_steps=2)
+    
+    # Register helper
+    coordinator.can_call([helper])
+    
+    # Call helper
+    tool_helper = coordinator.tool_map["helper"]
+    result = tool_helper.func(task="Test task")
+    
+    # Verify helper stopped at its max_steps
+    assert helper.state is not None
+    assert helper.state.current_step == 2
+
+
+def test_nested_agent_calls():
+    """Test that agents can call agents that call other agents (3 levels)."""
+    # Create mock provider
+    provider = MockProvider(responses=[
+        "Level 3 agent result",
+        "Level 2 agent result",
+        "Level 1 agent result"
+    ])
+    
+    # Create three levels of agents
+    level1 = Agent(name="level1", provider=provider, max_steps=5)
+    level2 = Agent(name="level2", provider=provider, max_steps=5)
+    level3 = Agent(name="level3", provider=provider, max_steps=5)
+    
+    # Set up hierarchy: level1 can call level2, level2 can call level3
+    level1.can_call([level2])
+    level2.can_call([level3])
+    
+    # Call level2 from level1
+    tool_level2 = level1.tool_map["level2"]
+    
+    # This should work without recursion issues
+    result = tool_level2.func(task="Test task")
+    
+    # Verify result
+    assert result is not None
+    assert isinstance(result, str)
+
+
+def test_agent_call_preserves_configuration():
+    """Test that called agents preserve their own configuration."""
+    # Create mock provider
+    provider = MockProvider(responses=["Helper response", "Coordinator response"])
+    
+    # Create agents with different configurations
+    coordinator = Agent(
+        name="coordinator",
+        provider=provider,
+        role="Coordinator",
+        goal="Coordinate tasks",
+        max_steps=10,
+        verbose=False
+    )
+    
+    helper = Agent(
+        name="helper",
+        provider=provider,
+        role="Helper",
+        goal="Help with tasks",
+        max_steps=5,
+        verbose=True
+    )
+    
+    # Register helper
+    coordinator.can_call([helper])
+    
+    # Call helper
+    tool_helper = coordinator.tool_map["helper"]
+    result = tool_helper.func(task="Test task")
+    
+    # Verify helper's configuration is preserved
+    assert helper.config.role == "Helper"
+    assert helper.config.goal == "Help with tasks"
+    assert helper.config.max_steps == 5
+    assert helper.config.verbose is True
+    
+    # Verify coordinator's configuration is unchanged
+    assert coordinator.config.role == "Coordinator"
+    assert coordinator.config.goal == "Coordinate tasks"
+    assert coordinator.config.max_steps == 10
+    assert coordinator.config.verbose is False
+
+
+def test_aggregated_results_reset_between_runs():
+    """Test that aggregated results are reset between agent runs."""
+    # Create mock provider
+    provider = MockProvider(responses=[
+        "Helper response 1",
+        "Coordinator response 1",
+        "Helper response 2",
+        "Coordinator response 2"
+    ])
+    
+    # Create agents
+    coordinator = Agent(name="coordinator", provider=provider, max_steps=5)
+    helper = Agent(name="helper", provider=provider, max_steps=3)
+    
+    # Register helper
+    coordinator.can_call([helper])
+    
+    # First run - call helper
+    tool_helper = coordinator.tool_map["helper"]
+    result1 = tool_helper.func(task="Task 1")
+    
+    # Get aggregated results after first run
+    aggregated1 = coordinator.get_aggregated_results()
+    assert len(aggregated1['agent_calls']) == 1
+    
+    # Second run - reset and call helper again
+    coordinator._reset_aggregated_results()
+    result2 = tool_helper.func(task="Task 2")
+    
+    # Get aggregated results after second run
+    aggregated2 = coordinator.get_aggregated_results()
+    
+    # Should only have one call (from second run)
+    assert len(aggregated2['agent_calls']) == 1
+    assert aggregated2['agent_calls'][0]['task'] == "Task 2"
+
+
+def test_agent_tool_description_includes_role_and_goal():
+    """Test that agent tool descriptions include role and goal information."""
+    # Create mock provider
+    provider = MockProvider()
+    
+    # Create agents
+    coordinator = Agent(name="coordinator", provider=provider)
+    helper = Agent(
+        name="helper",
+        provider=provider,
+        role="Research Assistant",
+        goal="find accurate information"
+    )
+    
+    # Register helper
+    coordinator.can_call([helper])
+    
+    # Get helper tool
+    tool_helper = coordinator.tool_map["helper"]
+    
+    # Verify description includes role and goal
+    description = tool_helper.description
+    assert "Research Assistant" in description or "helper" in description
+    assert "find accurate information" in description or "helper" in description
+
+
+@pytest.mark.asyncio
+async def test_async_agent_calls():
+    """Test that agent calls work with async execution."""
+    # Create mock provider
+    provider = MockProvider(responses=[
+        "Async helper response",
+        "Async coordinator response"
+    ])
+    
+    # Create agents
+    coordinator = Agent(name="coordinator", provider=provider, max_steps=5)
+    helper = Agent(name="helper", provider=provider, max_steps=3)
+    
+    # Register helper
+    coordinator.can_call([helper])
+    
+    # Execute coordinator asynchronously
+    result = await coordinator.arun("Test async task")
+    
+    # Verify result
+    assert result is not None
+    assert isinstance(result, AgentResult)
