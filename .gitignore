@@ -33,6 +33,7 @@ ENV/
 *~
 .kiro/
 .github/
+.github/
 
 # Environment variables
 .env
