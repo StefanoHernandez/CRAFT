@@ -268,86 +268,106 @@ class Agent:
         Raises:
             AgentExecutionError: If execution fails
         """
-        # Initialize execution state
-        self._initialize_state(task_input)
+        # Start trace
+        from craft.tracing import tracer
+        tracer.start_trace(f"agent.{self.name}")
         
-        # Reset aggregated results for new execution
-        self._reset_aggregated_results()
+        with tracer.span("agent.run", task=task_input, agent=self.name) as span:
+            # Initialize execution state
+            self._initialize_state(task_input)
+            
+            # Reset aggregated results for new execution
+            self._reset_aggregated_results()
 
-        # Track execution metadata
-        start_time = time.time()
-        step_results: List[StepResult] = []
+            # Track execution metadata
+            start_time = time.time()
+            step_results: List[StepResult] = []
 
-        try:
-            # Main execution loop
-            while not self.state.finished and self.state.current_step < self.state.max_steps:
-                if self.config.verbose:
-                    print(f"\n--- Step {self.state.current_step + 1} ---")
+            try:
+                # Main execution loop
+                while not self.state.finished and self.state.current_step < self.state.max_steps:
+                    if self.config.verbose:
+                        print(f"\n--- Step {self.state.current_step + 1} ---")
 
-                # Check if we should re-evaluate the plan
-                if self._should_reevaluate_plan():
-                    self._reevaluate_plan()
+                    # Check if we should re-evaluate the plan
+                    if self._should_reevaluate_plan():
+                        with tracer.span("agent.planning.reevaluate"):
+                            self._reevaluate_plan()
 
-                # Execute one step
-                step_result = self._execute_step(tool_choice, **kwargs)
-                step_results.append(step_result)
+                    # Execute one step
+                    with tracer.span(f"agent.step.{self.state.current_step + 1}"):
+                        step_result = self._execute_step(tool_choice, **kwargs)
+                    step_results.append(step_result)
 
-                # Check if finished
-                if step_result.finished:
-                    self.state.finished = True
-                    self.state.result = step_result.text
-                    break
+                    # Check if finished
+                    if step_result.finished:
+                        self.state.finished = True
+                        self.state.result = step_result.text
+                        break
 
-                self.state.current_step += 1
+                    self.state.current_step += 1
 
-            # Calculate execution time
-            execution_time = time.time() - start_time
+                # Calculate execution time
+                execution_time = time.time() - start_time
 
-            # Handle max steps termination
-            if not self.state.finished:
-                result = self._handle_max_steps(step_results, execution_time)
-                # Save to memory even for partial results
+                # Handle max steps termination
+                if not self.state.finished:
+                    result = self._handle_max_steps(step_results, execution_time)
+                    # Save to memory even for partial results
+                    if self.memory:
+                        with tracer.span("memory.save"):
+                            self._save_to_memory()
+                    
+                    # End trace
+                    tracer.end_trace()
+                    return result
+
+                # Build final result
+                tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
+
+                # Include aggregated results from multi-agent collaboration
+                metadata = {
+                    "execution_time_seconds": execution_time,
+                    "max_steps_reached": False,
+                }
+                
+                # Add aggregated results if any agent calls were made
+                aggregated = self.get_aggregated_results()
+                if aggregated['agent_calls']:
+                    metadata['multi_agent_collaboration'] = aggregated
+
+                result = AgentResult(
+                    text=self.state.result or "",
+                    steps=step_results,
+                    total_steps=self.state.current_step + 1,
+                    tools_used=tools_used_names,
+                    metadata=metadata,
+                )
+
+                # Save to memory if enabled
                 if self.memory:
-                    self._save_to_memory()
+                    with tracer.span("memory.save"):
+                        self._save_to_memory()
+
+                # Set span output
+                span.set_output(result=result.text)
+                
+                # End trace
+                tracer.end_trace()
                 return result
 
-            # Build final result
-            tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
-
-            # Include aggregated results from multi-agent collaboration
-            metadata = {
-                "execution_time_seconds": execution_time,
-                "max_steps_reached": False,
-            }
-            
-            # Add aggregated results if any agent calls were made
-            aggregated = self.get_aggregated_results()
-            if aggregated['agent_calls']:
-                metadata['multi_agent_collaboration'] = aggregated
-
-            result = AgentResult(
-                text=self.state.result or "",
-                steps=step_results,
-                total_steps=self.state.current_step + 1,
-                tools_used=tools_used_names,
-                metadata=metadata,
-            )
-
-            # Save to memory if enabled
-            if self.memory:
-                self._save_to_memory()
-
-            return result
-
-        except Exception as e:
-            raise AgentExecutionError(
-                f"Agent execution failed: {str(e)}",
-                details={
-                    "agent_name": self.config.name,
-                    "current_step": self.state.current_step,
-                    "task_input": task_input,
-                },
-            )
+            except Exception as e:
+                # End trace with error
+                tracer.end_trace()
+                
+                raise AgentExecutionError(
+                    f"Agent execution failed: {str(e)}",
+                    details={
+                        "agent_name": self.config.name,
+                        "current_step": self.state.current_step,
+                        "task_input": task_input,
+                    },
+                )
 
     def _initialize_state(self, task_input: str) -> None:
         """
@@ -790,86 +810,106 @@ class Agent:
         Returns:
             AgentResult with final answer and execution metadata
         """
-        # Initialize execution state
-        await self._ainitialize_state(task_input)
+        # Start trace
+        from craft.tracing import tracer
+        tracer.start_trace(f"agent.{self.name}")
         
-        # Reset aggregated results for new execution
-        self._reset_aggregated_results()
+        with tracer.span("agent.arun", task=task_input, agent=self.name) as span:
+            # Initialize execution state
+            await self._ainitialize_state(task_input)
+            
+            # Reset aggregated results for new execution
+            self._reset_aggregated_results()
 
-        # Track execution metadata
-        start_time = time.time()
-        step_results: List[StepResult] = []
+            # Track execution metadata
+            start_time = time.time()
+            step_results: List[StepResult] = []
 
-        try:
-            # Main execution loop
-            while not self.state.finished and self.state.current_step < self.state.max_steps:
-                if self.config.verbose:
-                    print(f"\n--- Step {self.state.current_step + 1} ---")
+            try:
+                # Main execution loop
+                while not self.state.finished and self.state.current_step < self.state.max_steps:
+                    if self.config.verbose:
+                        print(f"\n--- Step {self.state.current_step + 1} ---")
 
-                # Check if we should re-evaluate the plan
-                if self._should_reevaluate_plan():
-                    await self._areevaluate_plan()
+                    # Check if we should re-evaluate the plan
+                    if self._should_reevaluate_plan():
+                        with tracer.span("agent.planning.reevaluate"):
+                            await self._areevaluate_plan()
 
-                # Execute one step asynchronously
-                step_result = await self._aexecute_step(tool_choice, **kwargs)
-                step_results.append(step_result)
+                    # Execute one step asynchronously
+                    with tracer.span(f"agent.step.{self.state.current_step + 1}"):
+                        step_result = await self._aexecute_step(tool_choice, **kwargs)
+                    step_results.append(step_result)
 
-                # Check if finished
-                if step_result.finished:
-                    self.state.finished = True
-                    self.state.result = step_result.text
-                    break
+                    # Check if finished
+                    if step_result.finished:
+                        self.state.finished = True
+                        self.state.result = step_result.text
+                        break
 
-                self.state.current_step += 1
+                    self.state.current_step += 1
 
-            # Calculate execution time
-            execution_time = time.time() - start_time
+                # Calculate execution time
+                execution_time = time.time() - start_time
 
-            # Handle max steps termination
-            if not self.state.finished:
-                result = self._handle_max_steps(step_results, execution_time)
-                # Save to memory even for partial results
+                # Handle max steps termination
+                if not self.state.finished:
+                    result = self._handle_max_steps(step_results, execution_time)
+                    # Save to memory even for partial results
+                    if self.memory:
+                        with tracer.span("memory.save"):
+                            self._save_to_memory()
+                    
+                    # End trace
+                    tracer.end_trace()
+                    return result
+
+                # Build final result
+                tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
+
+                # Include aggregated results from multi-agent collaboration
+                metadata = {
+                    "execution_time_seconds": execution_time,
+                    "max_steps_reached": False,
+                }
+                
+                # Add aggregated results if any agent calls were made
+                aggregated = self.get_aggregated_results()
+                if aggregated['agent_calls']:
+                    metadata['multi_agent_collaboration'] = aggregated
+
+                result = AgentResult(
+                    text=self.state.result or "",
+                    steps=step_results,
+                    total_steps=self.state.current_step + 1,
+                    tools_used=tools_used_names,
+                    metadata=metadata,
+                )
+
+                # Save to memory if enabled
                 if self.memory:
-                    self._save_to_memory()
+                    with tracer.span("memory.save"):
+                        self._save_to_memory()
+
+                # Set span output
+                span.set_output(result=result.text)
+                
+                # End trace
+                tracer.end_trace()
                 return result
 
-            # Build final result
-            tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
-
-            # Include aggregated results from multi-agent collaboration
-            metadata = {
-                "execution_time_seconds": execution_time,
-                "max_steps_reached": False,
-            }
-            
-            # Add aggregated results if any agent calls were made
-            aggregated = self.get_aggregated_results()
-            if aggregated['agent_calls']:
-                metadata['multi_agent_collaboration'] = aggregated
-
-            result = AgentResult(
-                text=self.state.result or "",
-                steps=step_results,
-                total_steps=self.state.current_step + 1,
-                tools_used=tools_used_names,
-                metadata=metadata,
-            )
-
-            # Save to memory if enabled
-            if self.memory:
-                self._save_to_memory()
-
-            return result
-
-        except Exception as e:
-            raise AgentExecutionError(
-                f"Agent execution failed: {str(e)}",
-                details={
-                    "agent_name": self.config.name,
-                    "current_step": self.state.current_step,
-                    "task_input": task_input,
-                },
-            )
+            except Exception as e:
+                # End trace with error
+                tracer.end_trace()
+                
+                raise AgentExecutionError(
+                    f"Agent execution failed: {str(e)}",
+                    details={
+                        "agent_name": self.config.name,
+                        "current_step": self.state.current_step,
+                        "task_input": task_input,
+                    },
+                )
 
     async def _aexecute_step(
         self, tool_choice: Union[str, List[str]], **kwargs: Any

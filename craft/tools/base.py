@@ -61,32 +61,43 @@ class Tool(BaseModel):
             ToolValidationError: If argument validation fails
             ToolExecutionError: If tool execution fails
         """
-        try:
-            # Validate arguments before execution
-            validated_args = self.validate_args(**kwargs)
-        except ValueError as e:
-            # Convert validation errors to ToolValidationError
-            raise ToolValidationError(
-                tool_name=self.name,
-                validation_errors=[str(e)],
-                provided_args=kwargs,
-            )
+        from craft.tracing import tracer
         
-        try:
-            # Execute the tool
-            return self.func(**validated_args)
-        except Exception as e:
-            # Capture execution error with full context
-            error_details = {
-                "arguments": validated_args,
-                "stack_trace": traceback.format_exc(),
-            }
-            raise ToolExecutionError(
-                tool_name=self.name,
-                message=f"Tool execution failed: {str(e)}",
-                details=error_details,
-                original_exception=e,
-            )
+        with tracer.span(f"tool.{self.name}", tool=self.name, inputs=kwargs) as span:
+            try:
+                # Validate arguments before execution
+                validated_args = self.validate_args(**kwargs)
+            except ValueError as e:
+                # Convert validation errors to ToolValidationError
+                raise ToolValidationError(
+                    tool_name=self.name,
+                    validation_errors=[str(e)],
+                    provided_args=kwargs,
+                )
+            
+            try:
+                # Execute the tool
+                result = self.func(**validated_args)
+                
+                # Capture result in span (truncated if too long)
+                result_str = str(result)
+                if len(result_str) > 500:
+                    result_str = result_str[:500] + "..."
+                span.set_output(result=result_str)
+                
+                return result
+            except Exception as e:
+                # Capture execution error with full context
+                error_details = {
+                    "arguments": validated_args,
+                    "stack_trace": traceback.format_exc(),
+                }
+                raise ToolExecutionError(
+                    tool_name=self.name,
+                    message=f"Tool execution failed: {str(e)}",
+                    details=error_details,
+                    original_exception=e,
+                )
 
     def validate_args(self, **kwargs) -> Dict[str, Any]:
         """

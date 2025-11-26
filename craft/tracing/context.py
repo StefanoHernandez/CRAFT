@@ -44,6 +44,10 @@ class TraceSpan:
         self.end_time = time.time()
         self.status = status
         self.outputs.update(outputs)
+
+    def set_output(self, **outputs) -> None:
+        """Set output values without ending the span."""
+        self.outputs.update(outputs)
     
     @property
     def duration(self) -> float:
@@ -73,8 +77,8 @@ class TraceContext(BaseModel):
     start_time: float = Field(default_factory=time.time)
     end_time: Optional[float] = None
     
-    # Root span
-    root_span: Optional[TraceSpan] = None
+    # Root spans (forest)
+    roots: List[TraceSpan] = Field(default_factory=list)
     
     # Metadata
     metadata: Dict[str, Any] = Field(default_factory=dict)
@@ -92,10 +96,10 @@ class TraceContext(BaseModel):
             parent_span_id=parent.span_id if parent else None
         )
         
-        if not self.root_span:
-            self.root_span = span
-        elif parent:
+        if parent:
             parent.add_child(span)
+        else:
+            self.roots.append(span)
         
         return span
     
@@ -112,9 +116,6 @@ class TraceContext(BaseModel):
     
     def get_all_spans(self) -> List[TraceSpan]:
         """Get all spans in the trace (flattened)."""
-        if not self.root_span:
-            return []
-        
         spans = []
         
         def collect(span: TraceSpan):
@@ -122,7 +123,9 @@ class TraceContext(BaseModel):
             for child in span.children:
                 collect(child)
         
-        collect(self.root_span)
+        for root in self.roots:
+            collect(root)
+            
         return spans
     
     def get_summary(self) -> Dict[str, Any]:

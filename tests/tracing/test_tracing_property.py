@@ -24,7 +24,7 @@ class TestTraceContext:
         
         assert span.operation == "operation.test"
         assert span.inputs == {"key": "value"}
-        assert ctx.root_span == span
+        assert span in ctx.roots
     
     def test_nested_spans(self):
         """Test nested span creation."""
@@ -172,8 +172,7 @@ def test_trace_handles_arbitrary_operations(operations):
     
     assert ctx is not None
     all_spans = ctx.get_all_spans()
-    # At least one span should exist (they might be nested)
-    assert len(all_spans) >= 1
+    assert len(all_spans) == len(operations)
     
     # Cleanup
     del os.environ["CRAFT_TRACE_CLIENT_IO"]

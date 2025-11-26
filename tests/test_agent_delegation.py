@@ -25,7 +25,7 @@ class MockProvider(Provider):
     def chat(self, messages, stream=False, **kwargs):
         response = self._responses[min(self._call_count, len(self._responses) - 1)]
         self._call_count += 1
-        return ChatResponse(content=response, role=Role.ASSISTANT)
+        return ChatResponse(content=response, role=Role.ASSISTANT, model="mock")
     
     async def achat(self, messages, stream=False, **kwargs):
         return self.chat(messages, stream, **kwargs)

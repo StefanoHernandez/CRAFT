@@ -56,8 +56,9 @@ class TraceFormatter:
         lines.append(self._colorize(header, "bold"))
         
         # Root span tree
-        if context.root_span:
-            lines.extend(self._format_span_tree(context.root_span, prefix="", is_last=True))
+        for i, root in enumerate(context.roots):
+            is_last_root = (i == len(context.roots) - 1)
+            lines.extend(self._format_span_tree(root, prefix="", is_last=is_last_root))
         
         # Summary
         summary = context.get_summary()
