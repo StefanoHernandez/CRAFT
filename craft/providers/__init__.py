@@ -45,3 +45,9 @@ try:
     __all__.append("CohereProvider")
 except ImportError:
     pass
+
+try:
+    from craft.providers.ollama import OllamaProvider
+    __all__.append("OllamaProvider")  # Local LLM inference
+except ImportError:
+    pass
