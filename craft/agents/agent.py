@@ -20,6 +20,7 @@ from craft.agents.planning import (
     get_current_step,
     format_plan_for_display,
 )
+from craft.utils.validation import validate_tool_choice
 
 
 class ToolCall(BaseModel):
@@ -420,10 +421,20 @@ class Agent:
             if current_step_text and self.config.verbose:
                 print(f"Current plan step: {current_step_text}")
 
+        # Validate tool_choice
+        validate_tool_choice(tool_choice, self.tools)
+
+        # Filter tools if tool_choice is a list
+        active_tools = self.tools
+        if isinstance(tool_choice, list):
+            active_tools = [t for t in self.tools if t.name in tool_choice]
+
         # Call provider to get next action
         response = self.provider.chat(
             messages=self.state.messages,
             stream=False,
+            tools=active_tools,
+            tool_choice=tool_choice,
             **kwargs,
         )
 
@@ -930,10 +941,20 @@ class Agent:
             if current_step_text and self.config.verbose:
                 print(f"Current plan step: {current_step_text}")
 
+        # Validate tool_choice
+        validate_tool_choice(tool_choice, self.tools)
+
+        # Filter tools if tool_choice is a list
+        active_tools = self.tools
+        if isinstance(tool_choice, list):
+            active_tools = [t for t in self.tools if t.name in tool_choice]
+
         # Call provider asynchronously
         response = await self.provider.achat(
             messages=self.state.messages,
             stream=False,
+            tools=active_tools,
+            tool_choice=tool_choice,
             **kwargs,
         )
 

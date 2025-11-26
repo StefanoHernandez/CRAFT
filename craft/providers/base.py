@@ -84,6 +84,8 @@ class Provider(ABC):
         self,
         messages: List[Message],
         stream: bool = False,
+        tools: Optional[List["Tool"]] = None,
+        tool_choice: Union[str, List[str]] = "auto",
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """
@@ -92,6 +94,8 @@ class Provider(ABC):
         Args:
             messages: List of conversation messages
             stream: Whether to stream the response
+            tools: Optional list of tools available to the model
+            tool_choice: Tool choice control ("auto", "none", "required", tool name, or list)
             **kwargs: Additional provider-specific parameters
 
         Returns:
@@ -104,6 +108,8 @@ class Provider(ABC):
         self,
         messages: List[Message],
         stream: bool = False,
+        tools: Optional[List["Tool"]] = None,
+        tool_choice: Union[str, List[str]] = "auto",
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """
@@ -112,6 +118,8 @@ class Provider(ABC):
         Args:
             messages: List of conversation messages
             stream: Whether to stream the response
+            tools: Optional list of tools available to the model
+            tool_choice: Tool choice control ("auto", "none", "required", tool name, or list)
             **kwargs: Additional provider-specific parameters
 
         Returns:

@@ -76,6 +76,8 @@ class OpenAIProvider(Provider):
         self,
         messages: List[Message],
         stream: bool = False,
+        tools: Optional[List["Tool"]] = None,
+        tool_choice: Union[str, List[str]] = "auto",
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """
@@ -84,6 +86,8 @@ class OpenAIProvider(Provider):
         Args:
             messages: List of conversation messages
             stream: Whether to stream the response
+            tools: Optional list of tools available to the model
+            tool_choice: Tool choice control ("auto", "none", "required", tool name, or list)
             **kwargs: Additional OpenAI-specific parameters
 
         Returns:
@@ -98,6 +102,11 @@ class OpenAIProvider(Provider):
             "top_p": kwargs.get("top_p", self.config.top_p),
             "stream": stream,
         }
+
+        # Handle tools
+        if tools:
+            params["tools"] = [t.to_function_schema() for t in tools]
+            params["tool_choice"] = self._format_tool_choice(tool_choice)
 
         if self.config.max_tokens:
             params["max_tokens"] = kwargs.get("max_tokens", self.config.max_tokens)
@@ -147,6 +156,8 @@ class OpenAIProvider(Provider):
         self,
         messages: List[Message],
         stream: bool = False,
+        tools: Optional[List["Tool"]] = None,
+        tool_choice: Union[str, List[str]] = "auto",
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """
@@ -155,6 +166,8 @@ class OpenAIProvider(Provider):
         Args:
             messages: List of conversation messages
             stream: Whether to stream the response
+            tools: Optional list of tools available to the model
+            tool_choice: Tool choice control ("auto", "none", "required", tool name, or list)
             **kwargs: Additional OpenAI-specific parameters
 
         Returns:
@@ -169,6 +182,11 @@ class OpenAIProvider(Provider):
             "top_p": kwargs.get("top_p", self.config.top_p),
             "stream": stream,
         }
+
+        # Handle tools
+        if tools:
+            params["tools"] = [t.to_function_schema() for t in tools]
+            params["tool_choice"] = self._format_tool_choice(tool_choice)
 
         if self.config.max_tokens:
             params["max_tokens"] = kwargs.get("max_tokens", self.config.max_tokens)
