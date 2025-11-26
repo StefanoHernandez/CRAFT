@@ -35,6 +35,9 @@ dependencies = [
     "fastapi>=0.122.0",
     "uvicorn>=0.38.0",
     "websockets>=15.0.1",
+    "sse-starlette>=3.0.3",
+    "aiohttp>=3.13.2",
+    "flashrank>=0.2.10",
 ]
 
 [project.optional-dependencies]
