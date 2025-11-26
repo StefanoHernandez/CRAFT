@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, AsyncIterator, Dict, List, Optional, Union
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Role(str, Enum):
@@ -54,8 +54,7 @@ class ProviderConfig(BaseModel):
     timeout: int = Field(default=60, ge=1)
     max_retries: int = Field(default=3, ge=0)
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class Provider(ABC):

@@ -17,6 +17,7 @@ except ImportError:
     OpenAI = None
 
 from craft.providers.base import Provider, ProviderConfig, ChatResponse, Role
+from pydantic import ConfigDict
 
 
 logger = logging.getLogger(__name__)
@@ -31,8 +32,7 @@ class GroqConfig(ProviderConfig):
     max_tokens: Optional[int] = None
     top_p: float = 1.0
     
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class GroqProvider(Provider):

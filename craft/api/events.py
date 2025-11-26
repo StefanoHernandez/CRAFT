@@ -6,7 +6,7 @@ over WebSocket connections.
 
 from typing import Any, Dict, Optional, List, Literal
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from enum import Enum
 
 
@@ -52,10 +52,9 @@ class AgentEvent(BaseModel):
     data: Dict[str, Any] = Field(default_factory=dict)
     metadata: Dict[str, Any] = Field(default_factory=dict)
     
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat()
-        }
+        }, use_enum_values=True)
 
 
 class AgentStartEvent(AgentEvent):

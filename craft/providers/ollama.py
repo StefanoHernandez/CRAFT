@@ -26,6 +26,7 @@ except ImportError:
     aiohttp = None
 
 from craft.providers.base import Provider, ProviderConfig, ChatResponse
+from pydantic import ConfigDict
 
 
 logger = logging.getLogger(__name__)
@@ -43,8 +44,7 @@ class OllamaConfig(ProviderConfig):
     num_predict: int = -1  # Max tokens to generate (-1 = unlimited)
     stop: Optional[List[str]] = None
     
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class OllamaProvider(Provider):
