@@ -51,3 +51,15 @@ try:
     __all__.append("OllamaProvider")  # Local LLM inference
 except ImportError:
     pass
+
+try:
+    from craft.providers.groq import GroqProvider
+    __all__.append("GroqProvider")  # Ultra-fast inference
+except ImportError:
+    pass
+
+try:
+    from craft.providers.mistral import MistralProvider
+    __all__.append("MistralProvider")  # Mistral AI models
+except ImportError:
+    pass
