@@ -47,8 +47,9 @@ except ImportError:
     pass
 
 try:
-    from craft.providers.ollama import OllamaProvider
+    from craft.providers.ollama import OllamaProvider, OllamaConfig
     __all__.append("OllamaProvider")  # Local LLM inference
+    __all__.append("OllamaConfig")
 except ImportError:
     pass
 
@@ -60,6 +61,18 @@ except ImportError:
 
 try:
     from craft.providers.mistral import MistralProvider
-    __all__.append("MistralProvider")  # Mistral AI models
+    __all__.append("MistralProvider")  # European AI
+except ImportError:
+    pass
+
+try:
+    from craft.providers.openrouter import OpenRouterProvider
+    __all__.append("OpenRouterProvider")  # 400+ models aggregator
+except ImportError:
+    pass
+
+try:
+    from craft.providers.xai import xAIProvider
+    __all__.append("xAIProvider")  # Grok (xAI)
 except ImportError:
     pass

@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Document(BaseModel):
@@ -15,8 +15,7 @@ class Document(BaseModel):
     embedding: Optional[List[float]] = None
     score: Optional[float] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class VectorStoreConfig(BaseModel):
@@ -26,8 +25,7 @@ class VectorStoreConfig(BaseModel):
     embedding_dimension: Optional[int] = None
     distance_metric: str = Field(default="cosine")  # cosine, euclidean, dot
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class VectorStore(ABC):

@@ -5,7 +5,7 @@ import json
 import yaml
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Config(BaseModel):
@@ -36,8 +36,7 @@ class Config(BaseModel):
     log_level: str = Field(default="INFO")
     log_file: Optional[str] = Field(default=None)
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Config":

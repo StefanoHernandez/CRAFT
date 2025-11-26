@@ -62,3 +62,52 @@ export interface CraftChatProps {
   onMessageSent?: (message: string) => void
   onResponseReceived?: (response: ChatResponse) => void
 }
+
+// Agent Streaming Types
+
+export type AgentEventType =
+  | 'agent_start'
+  | 'agent_thought'
+  | 'tool_call'
+  | 'tool_result'
+  | 'agent_response'
+  | 'agent_finish'
+  | 'error'
+
+export interface AgentEvent {
+  type: AgentEventType
+  agent_name: string
+  timestamp: string
+  data: any
+  metadata?: Record<string, any>
+}
+
+export interface AgentToolCall {
+  tool_name: string
+  arguments: Record<string, any>
+  id?: string
+}
+
+export interface AgentToolResult {
+  tool_name: string
+  result: any
+  success: boolean
+  error?: string
+}
+
+export interface UseAgentStreamOptions {
+  agentId: string
+  wsUrl?: string // Defaults to ws://localhost:8000/ws
+  onEvent?: (event: AgentEvent) => void
+  onError?: (error: Error) => void
+  onFinish?: (result: string) => void
+}
+
+export interface AgentStreamState {
+  isConnected: boolean
+  isThinking: boolean
+  currentStep: number
+  toolCalls: AgentToolCall[]
+  messages: Message[]
+  error: Error | null
+}

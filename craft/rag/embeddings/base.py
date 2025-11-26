@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class EmbeddingConfig(BaseModel):
@@ -13,8 +13,7 @@ class EmbeddingConfig(BaseModel):
     batch_size: int = Field(default=32, ge=1)
     max_length: Optional[int] = None
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class EmbeddingProvider(ABC):

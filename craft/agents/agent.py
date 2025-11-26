@@ -2,7 +2,7 @@
 
 from typing import Any, AsyncIterator, Dict, Iterator, List, Optional, Union
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 import time
 
 from craft.providers.base import Provider, Message, Role, ChatResponse
@@ -32,8 +32,7 @@ class ToolCall(BaseModel):
     error: Optional[str] = None
     timestamp: datetime = Field(default_factory=datetime.now)
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 # Plan is now imported from craft.agents.planning
@@ -51,8 +50,7 @@ class AgentState(BaseModel):
     finished: bool = False
     result: Optional[str] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class StepResult(BaseModel):
@@ -64,8 +62,7 @@ class StepResult(BaseModel):
     finished: bool = False
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class AgentResult(BaseModel):
@@ -77,8 +74,7 @@ class AgentResult(BaseModel):
     tools_used: List[str] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class AgentConfig(BaseModel):
@@ -193,6 +189,26 @@ class Agent:
             'total_tools_used': set(),
             'total_execution_time': 0.0,
         }
+
+    @property
+    def name(self) -> str:
+        """Get agent name."""
+        return self.config.name
+
+    @property
+    def role(self) -> Optional[str]:
+        """Get agent role."""
+        return self.config.role
+
+    @property
+    def goal(self) -> Optional[str]:
+        """Get agent goal."""
+        return self.config.goal
+
+    @property
+    def backstory(self) -> Optional[str]:
+        """Get agent backstory."""
+        return self.config.backstory
 
     def _build_system_prompt(self) -> str:
         """

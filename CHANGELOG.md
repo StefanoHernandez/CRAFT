@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This release represents a massive step forward for CRAFT, adding the most advanced RAG system and unique real-time streaming capabilities not found in any competing framework.
 
+### Changed - Tech Stack Modernization (Task 14)
+- **Pydantic v2 Migration**: Updated all data models to use `model_config = ConfigDict(...)` instead of deprecated `class Config`.
+- **SDK Verification**: Audited OpenAI, Anthropic, and FastAPI usage to ensure latest best practices.
+- **Code Quality**: Removed deprecated patterns across the codebase.
+
+### Added - Agent Templates (Innovation)
+- **Template System**: New `TemplateAgent` base class for pre-configured agents.
+- **5 Built-in Agents**:
+  - `CustomerSupportAgent`: Specialized in user assistance.
+  - `CodeReviewAgent`: Focused on code quality and security.
+  - `DataAnalystAgent`: For data interpretation and insights.
+  - `ResearchAgent`: For comprehensive topic research.
+  - `ContentWriterAgent`: For engaging content creation.
+
+  - `ContentWriterAgent`: For engaging content creation.
+
+### Added - React Integration (Innovation)
+- **Streaming Hooks**: `useAgentStream` and `useAgentState` for real-time agent interaction.
+- **WebSocket Client**: Robust connection management with auto-reconnect.
+- **Type Safety**: Full TypeScript definitions for agent events and state.
+
 ### Added - Advanced RAG System
 
 #### Hybrid Search (Task 10)

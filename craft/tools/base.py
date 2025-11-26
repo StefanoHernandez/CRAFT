@@ -1,7 +1,7 @@
 """Base classes for the tool system."""
 
 from typing import Any, Callable, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 import traceback
 
 from craft.core.errors import ToolExecutionError, ToolValidationError
@@ -22,8 +22,7 @@ class ToolParameter(BaseModel):
     required: bool = True
     default: Any = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class ToolMetadata(BaseModel):
@@ -35,8 +34,7 @@ class ToolMetadata(BaseModel):
     return_type: str
     json_schema: Dict[str, Any]
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class Tool(BaseModel):
@@ -47,8 +45,7 @@ class Tool(BaseModel):
     func: Callable
     metadata: ToolMetadata
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def __call__(self, **kwargs) -> Any:
         """

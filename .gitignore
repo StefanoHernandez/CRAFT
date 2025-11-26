@@ -70,3 +70,6 @@ Thumbs.db
 # CRAFT specific
 craft_data/
 conversations/
+
+
+uv.lock

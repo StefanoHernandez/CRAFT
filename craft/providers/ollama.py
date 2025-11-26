@@ -129,6 +129,13 @@ class OllamaProvider(Provider):
         except Exception as e:
             logger.warning(f"Ollama connection test failed: {e}")
             logger.warning("Make sure Ollama is running: ollama serve")
+
+    def _validate_config(self) -> None:
+        """Validate Ollama configuration."""
+        if not self.config.base_url:
+            raise ValueError("Ollama base_url is required")
+        if not self.config.model:
+            raise ValueError("Ollama model is required")
     
     def _test_connection(self) -> bool:
         """Test connection to Ollama server."""
@@ -140,7 +147,7 @@ class OllamaProvider(Provider):
     
     def chat(
         self,
-        messages: List[Dict[str, str]],
+        messages: List[Any],  # Can be List[Message] or List[Dict]
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
         **kwargs
@@ -149,7 +156,7 @@ class OllamaProvider(Provider):
         Generate chat completion.
         
         Args:
-            messages: List of message dicts with 'role' and 'content'
+            messages: List of messages (Message objects or dicts)
             temperature: Override default temperature
             max_tokens: Max tokens to generate
             **kwargs: Additional Ollama options
@@ -157,10 +164,29 @@ class OllamaProvider(Provider):
         Returns:
             ChatResponse with generated text
         """
+        # Convert messages to dicts if needed
+        formatted_messages = []
+        for msg in messages:
+            if hasattr(msg, "model_dump"):
+                # Handle Pydantic v2 model
+                dump = msg.model_dump()
+                # Ensure role is string
+                if hasattr(dump.get("role"), "value"):
+                    dump["role"] = dump["role"].value
+                formatted_messages.append(dump)
+            elif isinstance(msg, dict):
+                formatted_messages.append(msg)
+            else:
+                # Handle Pydantic v1 or other objects
+                formatted_messages.append({
+                    "role": getattr(msg, "role", "user"),
+                    "content": getattr(msg, "content", "")
+                })
+
         # Prepare request
         payload = {
             "model": self.model,
-            "messages": messages,
+            "messages": formatted_messages,
             "stream": False,
             "options": {
                 "temperature": temperature or self.config.temperature,
@@ -215,7 +241,7 @@ class OllamaProvider(Provider):
     
     def stream(
         self,
-        messages: List[Dict[str, str]],
+        messages: List[Any],
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
         **kwargs
@@ -224,7 +250,7 @@ class OllamaProvider(Provider):
         Stream chat completion.
         
         Args:
-            messages: List of message dicts
+            messages: List of messages
             temperature: Override temperature
             max_tokens: Max tokens
             **kwargs: Additional options
@@ -232,9 +258,25 @@ class OllamaProvider(Provider):
         Yields:
             ChatResponse chunks
         """
+        # Convert messages to dicts if needed
+        formatted_messages = []
+        for msg in messages:
+            if hasattr(msg, "model_dump"):
+                dump = msg.model_dump()
+                if hasattr(dump.get("role"), "value"):
+                    dump["role"] = dump["role"].value
+                formatted_messages.append(dump)
+            elif isinstance(msg, dict):
+                formatted_messages.append(msg)
+            else:
+                formatted_messages.append({
+                    "role": getattr(msg, "role", "user"),
+                    "content": getattr(msg, "content", "")
+                })
+
         payload = {
             "model": self.model,
-            "messages": messages,
+            "messages": formatted_messages,
             "stream": True,
             "options": {
                 "temperature": temperature or self.config.temperature,
@@ -289,7 +331,7 @@ class OllamaProvider(Provider):
     
     async def achat(
         self,
-        messages: List[Dict[str, str]],
+        messages: List[Any],
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
         **kwargs
@@ -301,9 +343,25 @@ class OllamaProvider(Provider):
                 "Install it with: pip install aiohttp"
             )
         
+        # Convert messages to dicts if needed
+        formatted_messages = []
+        for msg in messages:
+            if hasattr(msg, "model_dump"):
+                dump = msg.model_dump()
+                if hasattr(dump.get("role"), "value"):
+                    dump["role"] = dump["role"].value
+                formatted_messages.append(dump)
+            elif isinstance(msg, dict):
+                formatted_messages.append(msg)
+            else:
+                formatted_messages.append({
+                    "role": getattr(msg, "role", "user"),
+                    "content": getattr(msg, "content", "")
+                })
+
         payload = {
             "model": self.model,
-            "messages": messages,
+            "messages": formatted_messages,
             "stream": False,
             "options": {
                 "temperature": temperature or self.config.temperature,
