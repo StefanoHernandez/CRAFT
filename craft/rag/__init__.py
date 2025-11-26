@@ -1,20 +1,24 @@
 """RAG (Retrieval-Augmented Generation) components."""
 
-from craft.rag.retrieval import RetrievalEngine, RetrievalConfig, RetrievedDocument
-from craft.rag.chunking import DocumentChunker, ChunkConfig, ChunkingStrategy
-
 __all__ = [
-    "RetrievalEngine",
-    "RetrievalConfig",
-    "RetrievedDocument",
-    "DocumentChunker",
-    "ChunkConfig",
-    "ChunkingStrategy",
+    "chunking",
+    "embeddings",
+    "retrieval",
+    "vectorstores",
+    "bm25",
+    "hybrid_search",
 ]
 
-# Advanced RAG features (optional)
+# Core modules
+from craft.rag import chunking, embeddings, retrieval, vectorstores
+
+# New hybrid search modules
+from craft.rag import bm25, hybrid_search
+
+# Try to import advanced (may fail if BeautifulSoup not installed)
 try:
     from craft.rag.advanced import HybridSearch, Reranker, QueryRewriter
     __all__.extend(["HybridSearch", "Reranker", "QueryRewriter"])
-except ImportError:
+except (ImportError, NameError) as e:
+    # advanced.py has dependencies that may not be available
     pass

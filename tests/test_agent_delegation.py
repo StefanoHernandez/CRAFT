@@ -126,8 +126,8 @@ def test_agent_tool_execution(coordinator_agent, mock_provider):
     # Get the tool
     tool = coordinator_agent.tool_map["specialist"]
     
-    # Execute the tool
-    result = tool.execute(task="test task")
+    # Execute the tool by calling its func
+    result = tool.func(task="test task")
     
     # Verify result
     assert "Specialist response" in result
@@ -160,7 +160,7 @@ def test_delegation_tracking(coordinator_agent, mock_provider):
     
     # Execute with delegation
     tool = coordinator_agent.tool_map["specialist"]
-    result = tool.execute(task="subtask")
+    result = tool.func(task="subtask")
     
     # Check aggregated results (note: this will be empty until coordinator.run() is called)
     # This test verifies the structure exists
