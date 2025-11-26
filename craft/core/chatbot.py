@@ -276,6 +276,13 @@ class Chatbot:
             self.conversation.add_system_message(self.system_prompt)
         self.logger.info("Conversation cleared")
 
+    def new_conversation(self) -> None:
+        """Start a new conversation."""
+        self.conversation = Conversation()
+        if self.system_prompt:
+            self.conversation.add_system_message(self.system_prompt)
+        self.logger.info("Started new conversation")
+
     def reset(self) -> None:
         """Reset chatbot to initial state."""
         self.conversation = Conversation()

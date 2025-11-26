@@ -92,7 +92,7 @@ def compare_formats():
     print("\n📦 TOOL RESULT COMPARISON\n")
     
     # Execute tool
-    results = search_products("laptop", category="electronics", max_price=1500)
+    results = search_products(query="laptop", category="electronics", max_price=1500.0)
     
     # JSON format
     json_result = json.dumps(results, indent=2)

@@ -3,7 +3,7 @@
 import pytest
 from pathlib import Path
 
-from craft.core.conversation import Conversation
+from craft.core.conversation import Conversation, Message
 from craft.storage import SQLiteStorage
 from craft.storage.base import StorageAdapter, ConversationModel
 
@@ -17,7 +17,7 @@ class TestSQLiteStorage:
         db_path = tmp_path / "test.db"
         storage = SQLiteStorage(database_path=str(db_path))
 
-        assert storage.db_path == str(db_path)
+        assert storage.database_path == str(db_path)
         assert Path(db_path).exists()
 
     def test_save_conversation(self, temp_sqlite_storage):
@@ -148,9 +148,10 @@ class TestSQLiteStorage:
 
         data = {
             "id": conv.id,
-            "messages": [msg.to_dict() for msg in conv.messages],
+            "messages": [msg.model_dump() for msg in conv.messages],
             "created_at": conv.created_at.isoformat(),
             "updated_at": conv.updated_at.isoformat(),
+            "metadata": {}
         }
 
         success = temp_sqlite_storage.import_conversation(data)
@@ -186,9 +187,10 @@ class TestConversationModel:
 
         model = ConversationModel(
             id=conv.id,
-            messages=[msg.to_dict() for msg in conv.messages],
+            messages=[msg.model_dump() for msg in conv.messages],
             created_at=conv.created_at,
             updated_at=conv.updated_at,
+            metadata={}
         )
 
         converted = model.to_conversation()

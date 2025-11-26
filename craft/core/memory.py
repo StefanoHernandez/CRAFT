@@ -174,6 +174,10 @@ class Memory:
     def __len__(self) -> int:
         return self.count()
 
+    def __bool__(self) -> bool:
+        """Always return True for Memory instance."""
+        return True
+
     def __repr__(self) -> str:
         backend = self.storage.name if self.storage else "in-memory"
         return f"Memory(backend={backend}, conversations={self.count()})"

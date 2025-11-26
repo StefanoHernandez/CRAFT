@@ -1047,6 +1047,150 @@ class Agent:
             # Rebuild system prompt to include new tool
             self.system_prompt = self._build_system_prompt()
 
+    def delegate_to(self, agents_map: Dict[str, "Agent"]) -> None:
+        """
+        Register agents with custom names for delegation.
+        
+        This is a convenience method similar to can_call() but allows
+        specifying custom tool names for agent delegation. Useful for
+        more descriptive delegation patterns.
+        
+        Args:
+            agents_map: Dictionary mapping tool names to Agent instances
+        
+        Example:
+            weather_agent = Agent(name="weather", provider=provider)
+            research_agent = Agent(name="research", provider=provider)
+            
+            coordinator.delegate_to({
+                "get_weather_forecast": weather_agent,
+                "search_information": research_agent
+            })
+            # Now coordinator can use more descriptive tool names
+        """
+        from craft.tools.base import Tool, ToolMetadata, ToolParameter
+        
+        for tool_name, agent in agents_map.items():
+            # Store agent reference with custom name
+            self.callable_agents[tool_name] = agent
+            
+            # Create a tool wrapper with custom name
+            agent_tool = self._create_agent_tool_with_name(agent, tool_name)
+            
+            # Add to tools list and tool map
+            self.tools.append(agent_tool)
+            self.tool_map[agent_tool.name] = agent_tool
+        
+        # Rebuild system prompt to include new tools
+        self.system_prompt = self._build_system_prompt()
+
+    def _create_agent_tool_with_name(self, agent: "Agent", tool_name: str) -> "Tool":
+        """
+        Create a tool wrapper for an agent with a custom name.
+        
+        Args:
+            agent: Agent to wrap as a tool
+            tool_name: Custom name for the tool
+        
+        Returns:
+            Tool instance that calls the agent
+        """
+        from craft.tools.base import Tool, ToolMetadata, ToolParameter
+        
+        # Build description from agent's role and goal
+        description_parts = [f"Delegate to {agent.config.name}"]
+        if agent.config.role:
+            description_parts.append(f"(Role: {agent.config.role})")
+        if agent.config.goal:
+            description_parts.append(f"to {agent.config.goal}")
+        
+        description = " ".join(description_parts)
+        
+        # Create metadata with custom tool name
+        metadata = ToolMetadata(
+            name=tool_name,
+            description=description,
+            parameters=[
+                ToolParameter(
+                    name="task",
+                    type="str",
+                    description="The task or question to give to the agent",
+                    required=True,
+                )
+            ],
+            return_type="str",
+            json_schema={
+                "type": "function",
+                "function": {
+                    "name": tool_name,
+                    "description": description,
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "task": {
+                                "type": "string",
+                                "description": "The task or question to give to the agent",
+                            }
+                        },
+                        "required": ["task"],
+                    },
+                },
+            },
+        )
+        
+        # Create wrapper function (reuse same logic as _create_agent_tool)
+        def agent_wrapper(task: str) -> str:
+            """Execute the agent with the given task."""
+            if not hasattr(self, '_call_stack'):
+                self._call_stack = []
+            
+            if not hasattr(self, '_aggregated_results'):
+                self._aggregated_results = {
+                    'agent_calls': [],
+                    'total_steps': 0,
+                    'total_tools_used': set(),
+                    'total_execution_time': 0.0,
+                }
+            
+            if agent.config.name in self._call_stack:
+                raise AgentExecutionError(
+                    f"Circular agent call detected: {' -> '.join(self._call_stack)} -> {agent.config.name}",
+                    details={
+                        "call_stack": self._call_stack,
+                        "attempted_agent": agent.config.name,
+                    }
+                )
+            
+            self._call_stack.append(agent.config.name)
+            
+            try:
+                result = agent.run(task)
+                
+                self._aggregated_results['agent_calls'].append({
+                    'agent_name': agent.config.name,
+                    'delegated_as': tool_name,  # Track custom name
+                    'task': task,
+                    'result': result.text,
+                    'steps': result.total_steps,
+                    'tools_used': result.tools_used,
+                    'metadata': result.metadata,
+                })
+                
+                self._aggregated_results['total_steps'] += result.total_steps
+                self._aggregated_results['total_tools_used'].update(result.tools_used)
+                self._aggregated_results['total_execution_time'] += result.metadata.get('execution_time_seconds', 0.0)
+                
+                return result.text
+            finally:
+                self._call_stack.pop()
+        
+        return Tool(
+            name=tool_name,
+            description=description,
+            func=agent_wrapper,
+            metadata=metadata,
+        )
+
     def _create_agent_tool(self, agent: "Agent") -> "Tool":
         """
         Create a tool wrapper for an agent.
