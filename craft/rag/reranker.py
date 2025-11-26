@@ -95,7 +95,10 @@ class FlashRankReranker:
         
         # Initialize ranker
         logger.info(f"Loading FlashRank model: {model}")
-        self.ranker = Ranker(model_name=model, cache_dir=cache_dir)
+        if cache_dir:
+            self.ranker = Ranker(model_name=model, cache_dir=cache_dir)
+        else:
+            self.ranker = Ranker(model_name=model)
         logger.info(f"FlashRank model loaded successfully")
     
     def rerank(
