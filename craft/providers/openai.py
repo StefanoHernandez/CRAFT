@@ -72,7 +72,7 @@ class OpenAIProvider(Provider):
                 "Set OPENAI_API_KEY environment variable or pass api_key parameter."
             )
 
-    def chat(
+    def _chat(
         self,
         messages: List[Message],
         stream: bool = False,
@@ -81,17 +81,7 @@ class OpenAIProvider(Provider):
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """
-        Send chat request to OpenAI.
-
-        Args:
-            messages: List of conversation messages
-            stream: Whether to stream the response
-            tools: Optional list of tools available to the model
-            tool_choice: Tool choice control ("auto", "none", "required", tool name, or list)
-            **kwargs: Additional OpenAI-specific parameters
-
-        Returns:
-            ChatResponse or iterator of StreamChunk if streaming
+        Internal chat request to OpenAI.
         """
         formatted_messages = self.format_messages(messages)
 
@@ -152,7 +142,7 @@ class OpenAIProvider(Provider):
                 if chunk.choices[0].finish_reason:
                     yield StreamChunk(content="", finished=True)
 
-    async def achat(
+    async def _achat(
         self,
         messages: List[Message],
         stream: bool = False,
@@ -161,17 +151,7 @@ class OpenAIProvider(Provider):
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """
-        Async chat request to OpenAI.
-
-        Args:
-            messages: List of conversation messages
-            stream: Whether to stream the response
-            tools: Optional list of tools available to the model
-            tool_choice: Tool choice control ("auto", "none", "required", tool name, or list)
-            **kwargs: Additional OpenAI-specific parameters
-
-        Returns:
-            ChatResponse or async iterator of StreamChunk if streaming
+        Internal async chat request to OpenAI.
         """
         formatted_messages = self.format_messages(messages)
 

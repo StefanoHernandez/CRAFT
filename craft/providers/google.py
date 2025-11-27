@@ -92,22 +92,14 @@ class GoogleProvider(Provider):
 
         return system_instruction, formatted_messages
 
-    def chat(
+    def _chat(
         self,
         messages: List[Message],
         stream: bool = False,
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """
-        Send chat request to Google.
-
-        Args:
-            messages: List of conversation messages
-            stream: Whether to stream the response
-            **kwargs: Additional Google-specific parameters
-
-        Returns:
-            ChatResponse or iterator of StreamChunk if streaming
+        Internal chat request to Google.
         """
         system_instruction, formatted_messages = self.format_messages(messages)
 
@@ -188,29 +180,18 @@ class GoogleProvider(Provider):
         # Signal end of stream
         yield StreamChunk(content="", finished=True)
 
-    async def achat(
+    async def _achat(
         self,
         messages: List[Message],
         stream: bool = False,
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """
-        Async chat request to Google.
-
-        Note: Google's SDK doesn't have native async support,
-        so we use the sync methods. For true async, consider using httpx directly.
-
-        Args:
-            messages: List of conversation messages
-            stream: Whether to stream the response
-            **kwargs: Additional Google-specific parameters
-
-        Returns:
-            ChatResponse or async iterator of StreamChunk if streaming
+        Internal async chat request to Google.
         """
         # For now, delegate to sync implementation
         # In production, you might want to use asyncio.to_thread or implement native async
-        return self.chat(messages, stream, **kwargs)
+        return self._chat(messages, stream, **kwargs)
 
     async def _acomplete(self, chat: Any, message: str, generation_config: Dict[str, Any]) -> ChatResponse:
         """Async complete - delegates to sync for now."""

@@ -6,24 +6,37 @@ from typing import Any, Dict, Optional
 class CRAFTError(Exception):
     """Base exception for CRAFT errors."""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, 
+        message: str, 
+        details: Optional[Dict[str, Any]] = None,
+        recovery_suggestion: Optional[str] = None
+    ):
         """
         Initialize CRAFT error.
 
         Args:
             message: Error message
             details: Optional dictionary with error details
+            recovery_suggestion: Optional suggestion for recovering from the error
         """
         self.message = message
         self.details = details or {}
+        self.recovery_suggestion = recovery_suggestion
         super().__init__(self.message)
 
     def __str__(self) -> str:
         """String representation of error."""
+        parts = [self.message]
+        
+        if self.recovery_suggestion:
+            parts.append(f"Suggestion: {self.recovery_suggestion}")
+            
         if self.details:
             details_str = "\n".join(f"  {k}: {v}" for k, v in self.details.items())
-            return f"{self.message}\nDetails:\n{details_str}"
-        return self.message
+            parts.append(f"Details:\n{details_str}")
+            
+        return "\n".join(parts)
 
 
 class ToolExecutionError(CRAFTError):
@@ -35,6 +48,7 @@ class ToolExecutionError(CRAFTError):
         message: str,
         details: Optional[Dict[str, Any]] = None,
         original_exception: Optional[Exception] = None,
+        recovery_suggestion: Optional[str] = None,
     ):
         """
         Initialize tool execution error.
@@ -44,6 +58,7 @@ class ToolExecutionError(CRAFTError):
             message: Error message
             details: Optional error details
             original_exception: Original exception if any
+            recovery_suggestion: Optional recovery suggestion
         """
         self.tool_name = tool_name
         self.original_exception = original_exception
@@ -55,7 +70,7 @@ class ToolExecutionError(CRAFTError):
             error_details["exception_type"] = type(original_exception).__name__
             error_details["exception_message"] = str(original_exception)
 
-        super().__init__(message, error_details)
+        super().__init__(message, error_details, recovery_suggestion)
 
 
 class ToolValidationError(ToolExecutionError):
@@ -80,7 +95,8 @@ class ToolValidationError(ToolExecutionError):
             "validation_errors": validation_errors,
             "provided_arguments": list(provided_args.keys()),
         }
-        super().__init__(tool_name, message, details)
+        suggestion = f"Check the arguments for '{tool_name}' against its schema. Errors: {', '.join(validation_errors)}"
+        super().__init__(tool_name, message, details, recovery_suggestion=suggestion)
 
 
 class AgentExecutionError(CRAFTError):
@@ -98,6 +114,7 @@ class ProviderError(CRAFTError):
         message: str,
         details: Optional[Dict[str, Any]] = None,
         retryable: bool = False,
+        recovery_suggestion: Optional[str] = None,
     ):
         """
         Initialize provider error.
@@ -107,6 +124,7 @@ class ProviderError(CRAFTError):
             message: Error message
             details: Optional error details
             retryable: Whether the error is retryable
+            recovery_suggestion: Optional recovery suggestion
         """
         self.provider_name = provider_name
         self.retryable = retryable
@@ -115,7 +133,7 @@ class ProviderError(CRAFTError):
         error_details["provider"] = provider_name
         error_details["retryable"] = retryable
 
-        super().__init__(message, error_details)
+        super().__init__(message, error_details, recovery_suggestion)
 
 
 class MCPError(CRAFTError):

@@ -1,6 +1,6 @@
 """Memory management for conversations."""
 
-from typing import Dict, Optional, TYPE_CHECKING
+from typing import Dict, Optional, TYPE_CHECKING, Any, List
 from craft.core.conversation import Conversation
 
 if TYPE_CHECKING:
@@ -28,6 +28,7 @@ class Memory:
         self,
         storage: Optional["StorageAdapter"] = None,
         max_messages: Optional[int] = None,
+        max_tokens: Optional[int] = None,
     ) -> None:
         """
         Initialize memory.
@@ -37,10 +38,49 @@ class Memory:
                      If None, uses in-memory storage.
             max_messages: Optional limit on conversation messages.
                          Older messages are trimmed when limit is reached.
+            max_tokens: Optional limit on total tokens in conversation.
         """
         self.storage = storage
         self.max_messages = max_messages
+        self.max_tokens = max_tokens
         self._conversations: Dict[str, Conversation] = {}
+
+    def trim_messages(self, messages: List[Any]) -> List[Any]:
+        """
+        Trim messages to fit within limits.
+
+        Args:
+            messages: List of messages to trim
+
+        Returns:
+            Trimmed list of messages
+        """
+        if not messages:
+            return messages
+
+        # Always keep system prompt if present (usually first message)
+        system_msg = None
+        if messages[0].role == "system":
+            system_msg = messages[0]
+            messages_to_trim = messages[1:]
+        else:
+            messages_to_trim = messages
+
+        # Trim by count
+        if self.max_messages and len(messages_to_trim) > self.max_messages:
+            messages_to_trim = messages_to_trim[-self.max_messages :]
+
+        # Trim by tokens (simple estimation: 1 token ~= 4 chars)
+        if self.max_tokens:
+            current_tokens = sum(len(m.content) for m in messages_to_trim) // 4
+            while current_tokens > self.max_tokens and messages_to_trim:
+                removed = messages_to_trim.pop(0)
+                current_tokens -= len(removed.content) // 4
+
+        # Reconstruct
+        if system_msg:
+            return [system_msg] + messages_to_trim
+        return messages_to_trim
 
     def save(self, conversation: Conversation) -> bool:
         """
@@ -53,8 +93,7 @@ class Memory:
             True if saved successfully
         """
         # Trim messages if needed
-        if self.max_messages and len(conversation.messages) > self.max_messages:
-            conversation.messages = conversation.messages[-self.max_messages :]
+        conversation.messages = self.trim_messages(conversation.messages)
 
         if self.storage:
             # Save to persistent storage

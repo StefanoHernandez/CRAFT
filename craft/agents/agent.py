@@ -253,6 +253,7 @@ class Agent:
         self,
         task_input: str,
         tool_choice: Union[str, List[str]] = "auto",
+        conversation_id: Optional[str] = None,
         **kwargs: Any,
     ) -> AgentResult:
         """
@@ -275,7 +276,7 @@ class Agent:
         
         with tracer.span("agent.run", task=task_input, agent=self.name) as span:
             # Initialize execution state
-            self._initialize_state(task_input)
+            self._initialize_state(task_input, conversation_id)
             
             # Reset aggregated results for new execution
             self._reset_aggregated_results()
@@ -317,7 +318,7 @@ class Agent:
                     # Save to memory even for partial results
                     if self.memory:
                         with tracer.span("memory.save"):
-                            self._save_to_memory()
+                            self._save_to_memory(conversation_id)
                     
                     # End trace
                     tracer.end_trace()
@@ -348,7 +349,7 @@ class Agent:
                 # Save to memory if enabled
                 if self.memory:
                     with tracer.span("memory.save"):
-                        self._save_to_memory()
+                        self._save_to_memory(conversation_id)
 
                 # Set span output
                 span.set_output(result=result.text)
@@ -370,18 +371,32 @@ class Agent:
                     },
                 )
 
-    def _initialize_state(self, task_input: str) -> None:
+    def _initialize_state(self, task_input: str, conversation_id: Optional[str] = None) -> None:
         """
         Initialize agent state for new execution.
 
         Args:
             task_input: Task description
+            conversation_id: Optional ID to resume conversation
         """
-        # Create initial messages with system prompt
-        messages = [
-            Message(role=Role.SYSTEM, content=self.system_prompt),
-            Message(role=Role.USER, content=task_input),
-        ]
+        messages = []
+        
+        # Try to load existing conversation
+        if conversation_id and self.memory:
+            conversation = self.memory.load(conversation_id)
+            if conversation:
+                if self.config.verbose:
+                    print(f"Resuming conversation {conversation_id} with {len(conversation.messages)} messages")
+                messages = conversation.messages
+                # Append new user message
+                messages.append(Message(role=Role.USER, content=task_input))
+        
+        # If no existing conversation or failed to load, start fresh
+        if not messages:
+            messages = [
+                Message(role=Role.SYSTEM, content=self.system_prompt),
+                Message(role=Role.USER, content=task_input),
+            ]
 
         # Generate initial plan if planning is enabled
         plan = None
@@ -663,7 +678,7 @@ class Agent:
             },
         )
 
-    def _save_to_memory(self) -> None:
+    def _save_to_memory(self, conversation_id: Optional[str] = None) -> None:
         """Save current execution to memory."""
         if not self.memory or not self.state:
             return
@@ -671,7 +686,10 @@ class Agent:
         # Create a conversation from the current state
         from craft.core.conversation import Conversation
 
-        conversation = Conversation(id=f"{self.config.name}_{int(time.time())}")
+        # Use provided ID or generate new one
+        conv_id = conversation_id or f"{self.config.name}_{int(time.time())}"
+        
+        conversation = Conversation(id=conv_id)
         conversation.messages = self.state.messages
 
         self.memory.save(conversation)
@@ -680,6 +698,7 @@ class Agent:
         self,
         task_input: str,
         tool_choice: Union[str, List[str]] = "auto",
+        conversation_id: Optional[str] = None,
         **kwargs: Any,
     ) -> Iterator[StepResult]:
         """
@@ -694,7 +713,7 @@ class Agent:
             StepResult objects for each execution step
         """
         # Initialize execution state
-        self._initialize_state(task_input)
+        self._initialize_state(task_input, conversation_id)
 
         # Track execution metadata
         start_time = time.time()

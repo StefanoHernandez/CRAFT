@@ -1,258 +1,197 @@
-"""SQLite storage adapter."""
+"""SQLite storage adapter for conversation persistence."""
 
 import sqlite3
 import json
-from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
-
-from craft.storage.base import StorageAdapter, ConversationModel
 from craft.core.conversation import Conversation
-from craft.utils.logging import get_logger
-
+from craft.storage.base import StorageAdapter, ConversationModel
 
 class SQLiteStorage(StorageAdapter):
     """
-    SQLite storage adapter for conversations.
-
-    Perfect for development and small-scale applications.
+    SQLite storage adapter.
+    
+    Stores conversations in a local SQLite database file.
     """
-
-    def __init__(self, database_path: str = "./craft_conversations.db"):
+    
+    def __init__(self, db_path: str = "craft.db"):
         """
         Initialize SQLite storage.
-
+        
         Args:
-            database_path: Path to SQLite database file
+            db_path: Path to SQLite database file
         """
-        self.database_path = database_path
-        self.logger = get_logger("craft.storage.sqlite")
-
-        # Create database and tables
-        self._init_database()
-
-    def _init_database(self) -> None:
-        """Initialize database and create tables."""
-        # Ensure directory exists
-        Path(self.database_path).parent.mkdir(parents=True, exist_ok=True)
-
-        conn = sqlite3.connect(self.database_path)
-        cursor = conn.cursor()
-
-        # Create conversations table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS conversations (
-                id TEXT PRIMARY KEY,
-                messages TEXT NOT NULL,
-                metadata TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            )
-        """)
-
-        # Create index for faster searches
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_updated_at
-            ON conversations(updated_at DESC)
-        """)
-
-        conn.commit()
-        conn.close()
-
-        self.logger.info(f"SQLite database initialized at {self.database_path}")
-
-    def _get_connection(self) -> sqlite3.Connection:
-        """Get database connection."""
-        return sqlite3.connect(self.database_path)
-
-    def save(self, conversation: Conversation) -> bool:
-        """Save conversation to SQLite."""
-        try:
-            model = ConversationModel.from_conversation(conversation)
-
-            conn = self._get_connection()
-            cursor = conn.cursor()
-
-            cursor.execute("""
-                INSERT OR REPLACE INTO conversations
-                (id, messages, metadata, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?)
-            """, (
-                model.id,
-                json.dumps([msg.model_dump() for msg in conversation.messages]),
-                json.dumps(model.metadata),
-                model.created_at.isoformat(),
-                model.updated_at.isoformat(),
-            ))
-
-            conn.commit()
-            conn.close()
-
-            self.logger.debug(f"Saved conversation {conversation.id}")
-            return True
-
-        except Exception as e:
-            self.logger.error(f"Error saving conversation: {e}")
-            return False
-
-    def load(self, conversation_id: str) -> Optional[Conversation]:
-        """Load conversation from SQLite."""
-        try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-
-            cursor.execute("""
-                SELECT id, messages, metadata, created_at, updated_at
-                FROM conversations
-                WHERE id = ?
-            """, (conversation_id,))
-
-            row = cursor.fetchone()
-            conn.close()
-
-            if row:
-                model = ConversationModel(
-                    id=row[0],
-                    messages=json.loads(row[1]),
-                    metadata=json.loads(row[2]),
-                    created_at=datetime.fromisoformat(row[3]),
-                    updated_at=datetime.fromisoformat(row[4]),
+        self.db_path = db_path
+        self._init_db()
+        
+    def _init_db(self):
+        """Initialize database schema."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS conversations (
+                    id TEXT PRIMARY KEY,
+                    messages TEXT NOT NULL,
+                    metadata TEXT,
+                    created_at TIMESTAMP,
+                    updated_at TIMESTAMP
                 )
-                return model.to_conversation()
-
-            return None
-
-        except Exception as e:
-            self.logger.error(f"Error loading conversation: {e}")
-            return None
-
-    def delete(self, conversation_id: str) -> bool:
-        """Delete conversation from SQLite."""
+            """)
+            
+    def save(self, conversation: Conversation) -> bool:
+        """Save a conversation."""
+        model = ConversationModel.from_conversation(conversation)
+        
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-
-            cursor.execute("""
-                DELETE FROM conversations WHERE id = ?
-            """, (conversation_id,))
-
-            deleted = cursor.rowcount > 0
-            conn.commit()
-            conn.close()
-
-            if deleted:
-                self.logger.debug(f"Deleted conversation {conversation_id}")
-
-            return deleted
-
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO conversations 
+                    (id, messages, metadata, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        model.id,
+                        json.dumps(model.messages), # Already serialized dicts
+                        json.dumps(model.metadata),
+                        model.created_at.isoformat(),
+                        model.updated_at.isoformat()
+                    )
+                )
+                conn.commit()
+            return True
         except Exception as e:
-            self.logger.error(f"Error deleting conversation: {e}")
+            print(f"Error saving conversation: {e}")
             return False
-
+            
+    def load(self, conversation_id: str) -> Optional[Conversation]:
+        """Load a conversation by ID."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute(
+                    "SELECT id, messages, metadata, created_at, updated_at FROM conversations WHERE id = ?",
+                    (conversation_id,)
+                )
+                row = cursor.fetchone()
+                
+                if not row:
+                    return None
+                    
+                id, messages_json, metadata_json, created_at, updated_at = row
+                
+                # Reconstruct model data
+                model_data = {
+                    "id": id,
+                    "messages": json.loads(messages_json),
+                    "metadata": json.loads(metadata_json) if metadata_json else {},
+                    "created_at": datetime.fromisoformat(created_at),
+                    "updated_at": datetime.fromisoformat(updated_at)
+                }
+                
+                model = ConversationModel(**model_data)
+                return model.to_conversation()
+        except Exception as e:
+            print(f"Error loading conversation: {e}")
+            return None
+            
+    def delete(self, conversation_id: str) -> bool:
+        """Delete a conversation."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute(
+                    "DELETE FROM conversations WHERE id = ?",
+                    (conversation_id,)
+                )
+                conn.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            print(f"Error deleting conversation: {e}")
+            return False
+            
     def list_conversations(
         self,
         limit: Optional[int] = None,
         offset: int = 0,
     ) -> List[ConversationModel]:
-        """List conversations from SQLite."""
+        """List conversations."""
+        query = "SELECT id, messages, metadata, created_at, updated_at FROM conversations ORDER BY updated_at DESC"
+        params = []
+        
+        if limit is not None:
+            query += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+            
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-
-            query = """
-                SELECT id, messages, metadata, created_at, updated_at
-                FROM conversations
-                ORDER BY updated_at DESC
-            """
-
-            if limit:
-                query += f" LIMIT {limit} OFFSET {offset}"
-
-            cursor.execute(query)
-            rows = cursor.fetchall()
-            conn.close()
-
-            conversations = []
-            for row in rows:
-                model = ConversationModel(
-                    id=row[0],
-                    messages=json.loads(row[1]),
-                    metadata=json.loads(row[2]),
-                    created_at=datetime.fromisoformat(row[3]),
-                    updated_at=datetime.fromisoformat(row[4]),
-                )
-                conversations.append(model)
-
-            return conversations
-
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute(query, params)
+                rows = cursor.fetchall()
+                
+                models = []
+                for row in rows:
+                    id, messages_json, metadata_json, created_at, updated_at = row
+                    model_data = {
+                        "id": id,
+                        "messages": json.loads(messages_json), # Load messages to satisfy model, though inefficient for list
+                        "metadata": json.loads(metadata_json) if metadata_json else {},
+                        "created_at": datetime.fromisoformat(created_at),
+                        "updated_at": datetime.fromisoformat(updated_at)
+                    }
+                    models.append(ConversationModel(**model_data))
+                return models
         except Exception as e:
-            self.logger.error(f"Error listing conversations: {e}")
+            print(f"Error listing conversations: {e}")
             return []
-
+            
     def count(self) -> int:
         """Get total number of conversations."""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT COUNT(*) FROM conversations")
-            count = cursor.fetchone()[0]
-
-            conn.close()
-            return count
-
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("SELECT COUNT(*) FROM conversations")
+                return cursor.fetchone()[0]
         except Exception as e:
-            self.logger.error(f"Error counting conversations: {e}")
+            print(f"Error counting conversations: {e}")
             return 0
-
+            
     def clear(self) -> bool:
         """Clear all conversations."""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-
-            cursor.execute("DELETE FROM conversations")
-            conn.commit()
-            conn.close()
-
-            self.logger.info("Cleared all conversations")
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("DELETE FROM conversations")
             return True
-
         except Exception as e:
-            self.logger.error(f"Error clearing conversations: {e}")
+            print(f"Error clearing conversations: {e}")
             return False
-
-    def search(self, query: str, limit: int = 10) -> List[ConversationModel]:
+            
+    def search(
+        self,
+        query: str,
+        limit: int = 10,
+    ) -> List[ConversationModel]:
         """Search conversations by content."""
+        # Simple LIKE search on messages JSON string
+        sql_query = """
+            SELECT id, messages, metadata, created_at, updated_at 
+            FROM conversations 
+            WHERE messages LIKE ? 
+            ORDER BY updated_at DESC 
+            LIMIT ?
+        """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-
-            # Simple text search in messages
-            cursor.execute("""
-                SELECT id, messages, metadata, created_at, updated_at
-                FROM conversations
-                WHERE messages LIKE ?
-                ORDER BY updated_at DESC
-                LIMIT ?
-            """, (f"%{query}%", limit))
-
-            rows = cursor.fetchall()
-            conn.close()
-
-            conversations = []
-            for row in rows:
-                model = ConversationModel(
-                    id=row[0],
-                    messages=json.loads(row[1]),
-                    metadata=json.loads(row[2]),
-                    created_at=datetime.fromisoformat(row[3]),
-                    updated_at=datetime.fromisoformat(row[4]),
-                )
-                conversations.append(model)
-
-            return conversations
-
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute(sql_query, (f"%{query}%", limit))
+                rows = cursor.fetchall()
+                
+                models = []
+                for row in rows:
+                    id, messages_json, metadata_json, created_at, updated_at = row
+                    model_data = {
+                        "id": id,
+                        "messages": json.loads(messages_json),
+                        "metadata": json.loads(metadata_json) if metadata_json else {},
+                        "created_at": datetime.fromisoformat(created_at),
+                        "updated_at": datetime.fromisoformat(updated_at)
+                    }
+                    models.append(ConversationModel(**model_data))
+                return models
         except Exception as e:
-            self.logger.error(f"Error searching conversations: {e}")
+            print(f"Error searching conversations: {e}")
             return []

@@ -110,8 +110,8 @@ class OpenRouterProvider(Provider):
                 "Set OPENROUTER_API_KEY or pass api_key parameter."
             )
     
-    def chat(self, messages: List[Any], **kwargs) -> ChatResponse:
-        """Generate chat completion via OpenRouter."""
+    def _chat(self, messages: List[Any], **kwargs) -> ChatResponse:
+        """Internal chat completion via OpenRouter."""
         # Convert messages to dicts if needed
         formatted_messages = self._format_messages(messages)
         
@@ -134,8 +134,8 @@ class OpenRouterProvider(Provider):
             }
         )
     
-    async def achat(self, messages: List[Any], **kwargs) -> ChatResponse:
-        """Async chat completion via OpenRouter."""
+    async def _achat(self, messages: List[Any], **kwargs) -> ChatResponse:
+        """Internal async chat completion via OpenRouter."""
         formatted_messages = self._format_messages(messages)
         
         response = await self.async_client.chat.completions.create(

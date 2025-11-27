@@ -93,22 +93,14 @@ class AnthropicProvider(Provider):
 
         return system_prompt, formatted_messages
 
-    def chat(
+    def _chat(
         self,
         messages: List[Message],
         stream: bool = False,
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """
-        Send chat request to Anthropic.
-
-        Args:
-            messages: List of conversation messages
-            stream: Whether to stream the response
-            **kwargs: Additional Anthropic-specific parameters
-
-        Returns:
-            ChatResponse or iterator of StreamChunk if streaming
+        Internal chat request to Anthropic.
         """
         system_prompt, formatted_messages = self.format_messages(messages)
 
@@ -158,22 +150,14 @@ class AnthropicProvider(Provider):
                     elif event.type == "message_stop":
                         yield StreamChunk(content="", finished=True)
 
-    async def achat(
+    async def _achat(
         self,
         messages: List[Message],
         stream: bool = False,
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """
-        Async chat request to Anthropic.
-
-        Args:
-            messages: List of conversation messages
-            stream: Whether to stream the response
-            **kwargs: Additional Anthropic-specific parameters
-
-        Returns:
-            ChatResponse or async iterator of StreamChunk if streaming
+        Internal async chat request to Anthropic.
         """
         system_prompt, formatted_messages = self.format_messages(messages)
 

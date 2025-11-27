@@ -145,7 +145,7 @@ class OllamaProvider(Provider):
         except Exception:
             return False
     
-    def chat(
+    def _chat(
         self,
         messages: List[Any],  # Can be List[Message] or List[Dict]
         temperature: Optional[float] = None,
@@ -153,16 +153,7 @@ class OllamaProvider(Provider):
         **kwargs
     ) -> ChatResponse:
         """
-        Generate chat completion.
-        
-        Args:
-            messages: List of messages (Message objects or dicts)
-            temperature: Override default temperature
-            max_tokens: Max tokens to generate
-            **kwargs: Additional Ollama options
-        
-        Returns:
-            ChatResponse with generated text
+        Internal chat completion.
         """
         # Convert messages to dicts if needed
         formatted_messages = []
@@ -329,14 +320,14 @@ class OllamaProvider(Provider):
             logger.error(f"Ollama streaming failed: {e}")
             raise RuntimeError(f"Ollama streaming error: {e}")
     
-    async def achat(
+    async def _achat(
         self,
         messages: List[Any],
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
         **kwargs
     ) -> ChatResponse:
-        """Async chat completion."""
+        """Internal async chat completion."""
         if not HAS_AIOHTTP:
             raise ImportError(
                 "aiohttp is required for async Ollama. "
