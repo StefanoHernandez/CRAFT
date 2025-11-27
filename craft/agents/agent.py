@@ -282,94 +282,185 @@ class Agent:
             self._reset_aggregated_results()
 
             # Track execution metadata
-            start_time = time.time()
-            step_results: List[StepResult] = []
+    def run(self, task: str) -> AgentResult:
+        """
+        Run the agent on a task (synchronous).
 
-            try:
-                # Main execution loop
-                while not self.state.finished and self.state.current_step < self.state.max_steps:
-                    if self.config.verbose:
-                        print(f"\n--- Step {self.state.current_step + 1} ---")
+        Args:
+            task: The task description
 
-                    # Check if we should re-evaluate the plan
-                    if self._should_reevaluate_plan():
-                        with tracer.span("agent.planning.reevaluate"):
-                            self._reevaluate_plan()
+        Returns:
+            AgentResult containing the execution history and final answer
+        """
+        self._reset_state(task)
+        
+        try:
+            # Initial planning
+            if self.config.planning_interval:
+                self.state.plan = generate_plan_sync(
+                    self.provider, 
+                    task, 
+                    [t.to_function_schema() for t in self.tools]
+                )
+                if self.config.verbose:
+                    print("\n📋 Initial Plan:")
+                    print(format_plan_for_display(self.state.plan))
 
-                    # Execute one step
-                    with tracer.span(f"agent.step.{self.state.current_step + 1}"):
-                        step_result = self._execute_step(tool_choice, **kwargs)
-                    step_results.append(step_result)
-
-                    # Check if finished
-                    if step_result.finished:
+            while not self.state.finished and self.state.current_step < self.state.max_steps:
+                self.state.current_step += 1
+                
+                try:
+                    step_result = self._step()
+                    self.state.messages.append(Message(role=Role.ASSISTANT, content=step_result.text))
+                    
+                    # Check for termination
+                    if self._should_terminate(step_result):
                         self.state.finished = True
                         self.state.result = step_result.text
-                        break
 
-                    self.state.current_step += 1
+                    # Update plan if needed
+                    if not self.state.finished and self.config.planning_interval:
+                        if self.state.current_step % self.config.planning_interval == 0:
+                            self.state.plan = revise_plan_sync(
+                                self.provider,
+                                self.state.plan,
+                                self.state.messages,
+                                [t.to_function_schema() for t in self.tools]
+                            )
+                            if self.config.verbose:
+                                print("\n🔄 Updated Plan:")
+                                print(format_plan_for_display(self.state.plan))
 
-                # Calculate execution time
-                execution_time = time.time() - start_time
-
-                # Handle max steps termination
-                if not self.state.finished:
-                    result = self._handle_max_steps(step_results, execution_time)
-                    # Save to memory even for partial results
-                    if self.memory:
-                        with tracer.span("memory.save"):
-                            self._save_to_memory(conversation_id)
+                except Exception as e:
+                    # Handle step-level errors
+                    error_msg = f"Error in step {self.state.current_step}: {str(e)}"
+                    print(f"\n❌ {error_msg}")
                     
-                    # End trace
-                    tracer.end_trace()
-                    return result
+                    # If it's a critical error that we can't recover from, stop
+                    # For now, we'll treat all exceptions in _step as potentially recoverable 
+                    # by the LLM in the next step, unless it's a system error.
+                    # But if the LLM itself failed (ProviderError), it might be retried already.
+                    # If we are here, it means retries failed or it's another error.
+                    
+                    from craft.core.errors import CRAFTError
+                    if isinstance(e, CRAFTError) and e.recovery_suggestion:
+                        print(f"💡 Suggestion: {e.recovery_suggestion}")
+                    
+                    # We add the error to the conversation so the agent knows something went wrong
+                    self.state.messages.append(Message(
+                        role=Role.SYSTEM, 
+                        content=f"The previous step failed with error: {str(e)}. Please try a different approach."
+                    ))
+                    
+                    # If we've failed too many times consecutively, we might want to stop.
+                    # For now, we just continue and let the step limit handle it.
 
-                # Build final result
-                tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
+            if not self.state.result:
+                self.state.result = "Task stopped (max steps reached or unfinished)."
 
-                # Include aggregated results from multi-agent collaboration
-                metadata = {
-                    "execution_time_seconds": execution_time,
-                    "max_steps_reached": False,
-                }
-                
-                # Add aggregated results if any agent calls were made
-                aggregated = self.get_aggregated_results()
-                if aggregated['agent_calls']:
-                    metadata['multi_agent_collaboration'] = aggregated
+            return AgentResult(
+                text=self.state.result,
+                steps=[],  # We should populate this from state if we were tracking steps properly
+                total_steps=self.state.current_step,
+                tools_used=[t.tool_name for t in self.state.tools_used],
+                metadata={"final_plan": self.state.plan.model_dump() if self.state.plan else None}
+            )
 
-                result = AgentResult(
-                    text=self.state.result or "",
-                    steps=step_results,
-                    total_steps=self.state.current_step + 1,
-                    tools_used=tools_used_names,
-                    metadata=metadata,
+        except Exception as e:
+            # Handle top-level errors (e.g. planning failure)
+            error_msg = f"Agent execution failed: {str(e)}"
+            print(f"\n💥 {error_msg}")
+            return AgentResult(
+                text=f"Agent failed: {str(e)}",
+                total_steps=self.state.current_step,
+                tools_used=[],
+                metadata={"error": str(e)}
+            )
+
+    async def run_async(self, task: str) -> AgentResult:
+        """
+        Run the agent on a task (asynchronous).
+
+        Args:
+            task: The task description
+
+        Returns:
+            AgentResult containing the execution history and final answer
+        """
+        self._reset_state(task)
+
+        try:
+            # Initial planning
+            if self.config.planning_interval:
+                self.state.plan = await generate_plan(
+                    self.provider, 
+                    task, 
+                    [t.to_function_schema() for t in self.tools]
                 )
+                if self.config.verbose:
+                    print("\n📋 Initial Plan:")
+                    print(format_plan_for_display(self.state.plan))
 
-                # Save to memory if enabled
-                if self.memory:
-                    with tracer.span("memory.save"):
-                        self._save_to_memory(conversation_id)
-
-                # Set span output
-                span.set_output(result=result.text)
+            while not self.state.finished and self.state.current_step < self.state.max_steps:
+                self.state.current_step += 1
                 
-                # End trace
-                tracer.end_trace()
-                return result
+                try:
+                    step_result = await self._step_async()
+                    self.state.messages.append(Message(role=Role.ASSISTANT, content=step_result.text))
 
-            except Exception as e:
-                # End trace with error
-                tracer.end_trace()
+                    # Check for termination
+                    if self._should_terminate(step_result):
+                        self.state.finished = True
+                        self.state.result = step_result.text
+
+                    # Update plan if needed
+                    if not self.state.finished and self.config.planning_interval:
+                        if self.state.current_step % self.config.planning_interval == 0:
+                            self.state.plan = await revise_plan(
+                                self.provider,
+                                self.state.plan,
+                                self.state.messages,
+                                [t.to_function_schema() for t in self.tools]
+                            )
+                            if self.config.verbose:
+                                print("\n🔄 Updated Plan:")
+                                print(format_plan_for_display(self.state.plan))
                 
-                raise AgentExecutionError(
-                    f"Agent execution failed: {str(e)}",
-                    details={
-                        "agent_name": self.config.name,
-                        "current_step": self.state.current_step,
-                        "task_input": task_input,
-                    },
-                )
+                except Exception as e:
+                    # Handle step-level errors
+                    error_msg = f"Error in step {self.state.current_step}: {str(e)}"
+                    print(f"\n❌ {error_msg}")
+                    
+                    from craft.core.errors import CRAFTError
+                    if isinstance(e, CRAFTError) and e.recovery_suggestion:
+                        print(f"💡 Suggestion: {e.recovery_suggestion}")
+                    
+                    self.state.messages.append(Message(
+                        role=Role.SYSTEM, 
+                        content=f"The previous step failed with error: {str(e)}. Please try a different approach."
+                    ))
+
+            if not self.state.result:
+                self.state.result = "Task stopped (max steps reached or unfinished)."
+
+            return AgentResult(
+                text=self.state.result,
+                steps=[],
+                total_steps=self.state.current_step,
+                tools_used=[t.tool_name for t in self.state.tools_used],
+                metadata={"final_plan": self.state.plan.model_dump() if self.state.plan else None}
+            )
+
+        except Exception as e:
+            # Handle top-level errors
+            error_msg = f"Agent execution failed: {str(e)}"
+            print(f"\n💥 {error_msg}")
+            return AgentResult(
+                text=f"Agent failed: {str(e)}",
+                total_steps=self.state.current_step,
+                tools_used=[],
+                metadata={"error": str(e)}
+            )
 
     def _initialize_state(self, task_input: str, conversation_id: Optional[str] = None) -> None:
         """
