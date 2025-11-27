@@ -65,9 +65,17 @@
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@monaco-editor/react": "^4.7.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.0",
+    "@react-three/postprocessing": "^3.0.4",
+    "@types/three": "^0.181.0",
+    "framer-motion": "^12.23.24",
     "lucide-react": "^0.555.0",
+    "maath": "^0.10.8",
+    "postprocessing": "^6.38.0",
     "react-hook-form": "^7.66.1",
     "reactflow": "^11.11.4",
+    "three": "^0.181.2",
     "zod": "^4.1.13",
     "zustand": "^5.0.8"
   }
