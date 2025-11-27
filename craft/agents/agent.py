@@ -249,6 +249,30 @@ class Agent:
 
         return "\n\n".join(prompt_parts)
 
+    def _reset_state(self, task_input: str) -> None:
+        """
+        Reset agent state for a new execution.
+
+        Args:
+            task_input: The task description
+        """
+        self.state = AgentState(
+            task_input=task_input,
+            max_steps=self.config.max_steps,
+            messages=[
+                Message(role=Role.SYSTEM, content=self.system_prompt),
+                Message(role=Role.USER, content=task_input),
+            ],
+        )
+        
+        # Load memory if available
+        if self.memory:
+            history = self.memory.load()
+            if history:
+                # Append history to messages, but keep system prompt first
+                # This is a simplified integration; real memory mgmt might be more complex
+                self.state.messages.extend(history)
+
     def run(
         self,
         task_input: str,
