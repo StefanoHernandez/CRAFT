@@ -48,7 +48,7 @@ def main():
     print("5. Creating chatbot with RAG enabled...")
     chatbot = Chatbot(
         provider=AnthropicProvider(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4.5",
             api_key=os.getenv("ANTHROPIC_API_KEY")
         ),
         rag=rag,

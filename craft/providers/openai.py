@@ -23,7 +23,7 @@ from craft.providers.base import (
 class OpenAIConfig(ProviderConfig):
     """OpenAI-specific configuration."""
 
-    model: str = Field(default="gpt-4-turbo-preview")
+    model: str = Field(default="gpt-4o")
     api_key: Optional[str] = Field(default_factory=lambda: os.getenv("OPENAI_API_KEY"))
     max_tokens: Optional[int] = Field(default=None)
     base_url: Optional[str] = Field(default=None)

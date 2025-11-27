@@ -105,7 +105,7 @@ class Agent:
         from craft.providers import AnthropicProvider
         from craft.tools.builtin import search_web
 
-        provider = AnthropicProvider(api_key="...", model="claude-3-sonnet")
+        provider = AnthropicProvider(api_key="...", model="claude-sonnet-4.5")
         agent = Agent(
             name="research_agent",
             provider=provider,

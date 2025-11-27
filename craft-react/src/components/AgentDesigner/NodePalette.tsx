@@ -28,7 +28,7 @@ const nodeTemplates: NodeTemplate[] = [
         label: 'Provider',
         icon: <Cpu className="w-5 h-5" />,
         description: 'LLM provider (OpenAI, Anthropic, etc.)',
-        defaultConfig: { type: 'openai', model: 'gpt-4' },
+        defaultConfig: { type: 'openai', model: 'gpt-4o' },
     },
     {
         type: 'tool',

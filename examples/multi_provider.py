@@ -35,7 +35,7 @@ def main():
     if os.getenv("ANTHROPIC_API_KEY"):
         try:
             provider = AnthropicProvider(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-sonnet-4.5",
                 temperature=0.7
             )
             chat_with_provider("Anthropic Claude", provider, question)
@@ -48,7 +48,7 @@ def main():
     if os.getenv("OPENAI_API_KEY"):
         try:
             provider = OpenAIProvider(
-                model="gpt-4-turbo-preview",
+                model="gpt-4o",
                 temperature=0.7
             )
             chat_with_provider("OpenAI GPT-4", provider, question)
@@ -61,7 +61,7 @@ def main():
     if os.getenv("GOOGLE_API_KEY"):
         try:
             provider = GoogleProvider(
-                model="gemini-1.5-pro",
+                model="gemini-2.5-pro",
                 temperature=0.7
             )
             chat_with_provider("Google Gemini", provider, question)

@@ -65,7 +65,7 @@ def manual_metrics():
     # Record request
     exporter.record_request(
         provider="anthropic",
-        model="claude-3-sonnet",
+        model="claude-sonnet-4.5",
         status="success",
     )
 

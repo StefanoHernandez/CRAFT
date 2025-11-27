@@ -280,7 +280,7 @@ class QueryRewriter:
         >>> from craft.chatbot import Chatbot
         >>> from craft.rag import QueryRewriter
         >>>
-        >>> chatbot = Chatbot(provider="openai", model="gpt-4")
+        >>> chatbot = Chatbot(provider="openai", model="gpt-4o")
         >>> rewriter = QueryRewriter(chatbot=chatbot)
         >>>
         >>> # Expand query

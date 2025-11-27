@@ -25,7 +25,7 @@ from craft.providers.base import (
 class AWSBedrockConfig(ProviderConfig):
     """AWS Bedrock-specific configuration."""
 
-    model: str = Field(default="anthropic.claude-3-sonnet-20240229-v1:0")
+    model: str = Field(default="anthropic.claude-sonnet-4.5-20240229-v1:0")
     aws_access_key_id: Optional[str] = Field(
         default_factory=lambda: os.getenv("AWS_ACCESS_KEY_ID")
     )
@@ -56,7 +56,7 @@ class AWSBedrockProvider(Provider):
         >>> from craft.providers import AWSBedrockProvider, Message, Role
         >>>
         >>> config = AWSBedrockConfig(
-        ...     model="anthropic.claude-3-sonnet-20240229-v1:0",
+        ...     model="anthropic.claude-sonnet-4.5-20240229-v1:0",
         ...     region_name="us-east-1"
         ... )
         >>> provider = AWSBedrockProvider(config)

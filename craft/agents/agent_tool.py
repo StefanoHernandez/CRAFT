@@ -23,7 +23,7 @@ class AgentTool(Tool):
         from craft.agents.agent_tool import AgentTool
         from craft.providers import OpenAIProvider
         
-        provider = OpenAIProvider(api_key="...", model="gpt-4")
+        provider = OpenAIProvider(api_key="...", model="gpt-4o")
         
         # Create specialist agent
         weather_expert = Agent(

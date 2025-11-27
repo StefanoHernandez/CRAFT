@@ -45,7 +45,7 @@ def main():
     # Create tool-enabled chatbot
     chatbot = ToolEnabledChatbot(
         provider=AnthropicProvider(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4.5",
             api_key=os.getenv("ANTHROPIC_API_KEY"),
         ),
         system_prompt="You are a helpful assistant with access to tools. Use them when needed.",

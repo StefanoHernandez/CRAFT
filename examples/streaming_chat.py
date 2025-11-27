@@ -10,7 +10,7 @@ def main():
     # Create chatbot with streaming enabled
     chatbot = Chatbot(
         provider=AnthropicProvider(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4.5",
             api_key=os.getenv("ANTHROPIC_API_KEY")
         ),
         system_prompt="You are a helpful assistant that provides detailed explanations.",

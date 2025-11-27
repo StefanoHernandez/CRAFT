@@ -55,7 +55,7 @@ async def main():
     # Strategist: Claude 3.5 Sonnet (Anthropic's best - Oct 2024)
     strategist = Agent(
         name="Strategist",
-        provider=MockProvider("anthropic/claude-3.5-sonnet-20241022"),
+        provider=MockProvider("anthropic/claude-sonnet-4.5"),
         role="Strategic Analyst",
         goal="Provide deep analysis"
     )

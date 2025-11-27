@@ -16,7 +16,7 @@ def example_1_azure_openai_basic():
     # Setup Azure OpenAI
     chatbot = Chatbot(
         provider="azure_openai",
-        model="gpt-4",  # Your Azure deployment name
+        model="gpt-4o",  # Your Azure deployment name
         azure_endpoint="https://your-resource.openai.azure.com/",
         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
         api_version="2024-02-15-preview"
@@ -51,7 +51,7 @@ def example_3_aws_bedrock_claude():
     # AWS Bedrock with Claude 3 Sonnet
     chatbot = Chatbot(
         provider="aws_bedrock",
-        model="anthropic.claude-3-sonnet-20240229-v1:0",
+        model="anthropic.claude-sonnet-4.5-20240229-v1:0",
         region_name="us-east-1",
         # AWS credentials from environment or IAM role
     )
@@ -80,7 +80,7 @@ def example_5_aws_bedrock_conversation():
 
     chatbot = Chatbot(
         provider="aws_bedrock",
-        model="anthropic.claude-3-sonnet-20240229-v1:0",
+        model="anthropic.claude-sonnet-4.5-20240229-v1:0",
         region_name="us-east-1"
     )
 
@@ -164,9 +164,9 @@ def example_9_provider_switching():
     print("\n=== Example 9: Provider Switching ===\n")
 
     providers = [
-        ("openai", "gpt-4-turbo-preview"),
-        ("azure_openai", "gpt-4"),
-        ("aws_bedrock", "anthropic.claude-3-sonnet-20240229-v1:0"),
+        ("openai", "gpt-4o"),
+        ("azure_openai", "gpt-4o"),
+        ("aws_bedrock", "anthropic.claude-sonnet-4.5-20240229-v1:0"),
         ("cohere", "command")
     ]
 
@@ -199,7 +199,7 @@ def example_10_compare_models():
 
     models = [
         ("openai", "gpt-3.5-turbo"),
-        ("aws_bedrock", "anthropic.claude-3-haiku-20240307-v1:0"),
+        ("aws_bedrock", "anthropic.claude-haiku-4.5-20240307-v1:0"),
         ("cohere", "command-light")
     ]
 

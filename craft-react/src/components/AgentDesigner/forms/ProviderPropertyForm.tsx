@@ -33,12 +33,12 @@ export function ProviderPropertyForm({ nodeId, config }: ProviderPropertyFormPro
     ];
 
     const models: Record<string, string[]> = {
-        openai: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'],
-        anthropic: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'],
-        google: ['gemini-pro', 'gemini-pro-vision'],
-        ollama: ['llama2', 'mistral', 'codellama'],
-        groq: ['mixtral-8x7b-32768', 'llama2-70b-4096'],
-        mistral: ['mistral-medium', 'mistral-small', 'mistral-tiny'],
+        openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'],
+        anthropic: ['claude-opus-4.5', 'claude-sonnet-4.5', 'claude-haiku-4.5'],
+        google: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-pro'],
+        ollama: ['llama3.2', 'mistral', 'codellama', 'qwen2.5'],
+        groq: ['llama-3.1-70b-versatile', 'mixtral-8x7b-32768', 'gemma2-9b-it'],
+        mistral: ['mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest'],
     };
 
     return (

@@ -24,7 +24,7 @@ from craft.providers.base import (
 class AnthropicConfig(ProviderConfig):
     """Anthropic-specific configuration."""
 
-    model: str = Field(default="claude-3-5-sonnet-20241022")
+    model: str = Field(default="claude-sonnet-4.5")
     api_key: Optional[str] = Field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY"))
     max_tokens: int = Field(default=4096)
 
@@ -33,7 +33,7 @@ class AnthropicProvider(Provider):
     """
     Anthropic (Claude) provider implementation.
 
-    Supports Claude 3 models with streaming.
+    Supports Claude 4.5 models (Opus, Sonnet, Haiku) with streaming.
     """
 
     def __init__(self, config: Optional[AnthropicConfig] = None, **kwargs: Any):

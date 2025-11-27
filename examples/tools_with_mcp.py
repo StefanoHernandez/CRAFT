@@ -52,7 +52,7 @@ def main():
     chatbot = Chatbot(
         provider=AnthropicProvider(
             api_key="your-api-key",
-            model="claude-3-5-sonnet-20241022"
+            model="claude-sonnet-4.5"
         ),
         system_prompt="You are a helpful assistant with access to tools."
     )

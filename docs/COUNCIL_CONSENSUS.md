@@ -45,7 +45,7 @@ chairman = Agent(
 # Members: Different providers!
 strategist = Agent(
     name="Strategist",
-    provider=AnthropicProvider(model="claude-3.5-sonnet-20241022"),
+    provider=AnthropicProvider(model="claude-sonnet-4.5"),
     role="Strategic Analyst"
 )
 
@@ -131,7 +131,7 @@ provider = GoogleProvider(model="gemini-2.0-flash-exp")
 ```python
 from craft.providers import AnthropicProvider
 
-provider = AnthropicProvider(model="claude-3.5-sonnet-20241022")
+provider = AnthropicProvider(model="claude-sonnet-4.5")
 ```
 
 ### 🔵 OpenAI GPT

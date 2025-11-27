@@ -157,10 +157,10 @@ for chunk in chatbot.chat("Explain quantum computing", stream=True):
 from craft.providers import OpenAIProvider, GoogleProvider
 
 # OpenAI
-chatbot = Chatbot(provider=OpenAIProvider(model="gpt-4-turbo-preview"))
+chatbot = Chatbot(provider=OpenAIProvider(model="gpt-4o"))
 
 # Google Gemini
-chatbot = Chatbot(provider=GoogleProvider(model="gemini-1.5-pro"))
+chatbot = Chatbot(provider=GoogleProvider(model="gemini-2.5-pro"))
 
 # That's it! Same API, different providers
 ```
@@ -423,7 +423,7 @@ from craft import Chatbot
 from craft.providers import AnthropicProvider
 
 chatbot = Chatbot(
-    provider=AnthropicProvider(model="claude-3-5-sonnet-20241022"),
+    provider=AnthropicProvider(model="claude-sonnet-4.5"),
     memory=True
 )
 
@@ -442,7 +442,7 @@ print(response.content)  # Will reference your "Hello!"
 ```yaml
 provider: anthropic
 provider_config:
-  model: claude-3-5-sonnet-20241022
+  model: claude-sonnet-4.5
   temperature: 0.7
 
 streaming: true
@@ -466,9 +466,9 @@ from craft import Chatbot
 from craft.providers import AnthropicProvider, OpenAIProvider, GoogleProvider
 
 providers = [
-    AnthropicProvider(model="claude-3-5-sonnet-20241022"),
-    OpenAIProvider(model="gpt-4-turbo-preview"),
-    GoogleProvider(model="gemini-1.5-pro"),
+    AnthropicProvider(model="claude-sonnet-4.5"),
+    OpenAIProvider(model="gpt-4o"),
+    GoogleProvider(model="gemini-2.5-pro"),
 ]
 
 question = "What is the future of AI?"
@@ -858,7 +858,7 @@ config = Config(
     memory_enabled=True,
     log_level="DEBUG",
     provider_config={
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "claude-sonnet-4.5",
         "temperature": 0.8,
         "max_tokens": 4096,
     }
@@ -875,7 +875,7 @@ config = Config(
 from craft.providers import AnthropicProvider
 
 provider = AnthropicProvider(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-4.5",
     api_key="your-key",
     temperature=0.7,
     max_tokens=4096,
@@ -883,10 +883,10 @@ provider = AnthropicProvider(
 ```
 
 **Supported Models:**
-- `claude-3-5-sonnet-20241022` (recommended)
-- `claude-3-opus-20240229`
-- `claude-3-sonnet-20240229`
-- `claude-3-haiku-20240307`
+- `claude-sonnet-4.5` (recommended)
+- `claude-opus-4.5-20240229`
+- `claude-sonnet-4.5-20240229`
+- `claude-haiku-4.5-20240307`
 
 ### OpenAI GPT
 
@@ -894,15 +894,15 @@ provider = AnthropicProvider(
 from craft.providers import OpenAIProvider
 
 provider = OpenAIProvider(
-    model="gpt-4-turbo-preview",
+    model="gpt-4o",
     api_key="your-key",
     temperature=0.7,
 )
 ```
 
 **Supported Models:**
-- `gpt-4-turbo-preview`
-- `gpt-4`
+- `gpt-4o`
+- `gpt-4o`
 - `gpt-3.5-turbo`
 
 ### Google Gemini
@@ -911,15 +911,15 @@ provider = OpenAIProvider(
 from craft.providers import GoogleProvider
 
 provider = GoogleProvider(
-    model="gemini-1.5-pro",
+    model="gemini-2.5-pro",
     api_key="your-key",
     temperature=0.7,
 )
 ```
 
 **Supported Models:**
-- `gemini-1.5-pro`
-- `gemini-1.5-flash`
+- `gemini-2.5-pro`
+- `gemini-2.5-flash`
 - `gemini-pro`
 
 ---

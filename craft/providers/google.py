@@ -23,7 +23,7 @@ from craft.providers.base import (
 class GoogleConfig(ProviderConfig):
     """Google (Gemini) specific configuration."""
 
-    model: str = Field(default="gemini-1.5-pro")
+    model: str = Field(default="gemini-2.5-pro")
     api_key: Optional[str] = Field(default_factory=lambda: os.getenv("GOOGLE_API_KEY"))
     max_tokens: Optional[int] = Field(default=8192)
 
@@ -32,7 +32,7 @@ class GoogleProvider(Provider):
     """
     Google (Gemini) provider implementation.
 
-    Supports Gemini Pro and other Google models with streaming.
+    Supports Gemini 2.5 Pro/Flash and Gemini 3 Pro (preview) with streaming.
     """
 
     def __init__(self, config: Optional[GoogleConfig] = None, **kwargs: Any):

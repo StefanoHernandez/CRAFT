@@ -23,7 +23,7 @@ from craft.providers.base import (
 class AzureOpenAIConfig(ProviderConfig):
     """Azure OpenAI-specific configuration."""
 
-    model: str = Field(default="gpt-4")  # Azure deployment name
+    model: str = Field(default="gpt-4o")  # Azure deployment name
     api_key: Optional[str] = Field(default_factory=lambda: os.getenv("AZURE_OPENAI_API_KEY"))
     azure_endpoint: Optional[str] = Field(default_factory=lambda: os.getenv("AZURE_OPENAI_ENDPOINT"))
     api_version: str = Field(default="2024-02-15-preview")
