@@ -76,3 +76,21 @@ try:
     __all__.append("xAIProvider")  # Grok (xAI)
 except ImportError:
     pass
+
+try:
+    from craft.providers.huggingface import HuggingFaceProvider
+    __all__.append("HuggingFaceProvider")
+except ImportError:
+    pass
+
+try:
+    from craft.providers.together import TogetherAIProvider
+    __all__.append("TogetherAIProvider")
+except ImportError:
+    pass
+
+try:
+    from craft.providers.replicate import ReplicateProvider
+    __all__.append("ReplicateProvider")
+except ImportError:
+    pass

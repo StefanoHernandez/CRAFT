@@ -8,6 +8,8 @@
 ## ✨ Features
 
 ### Core Framework
+- 🤖 **Agent System**: Autonomous agents with roles, goals, and backstories (v2.0) ✅
+- 🛠️ **Tool System**: Type-safe tools with auto-generated schemas (v2.0) ✅
 - 🔌 **Provider-Agnostic**: Switch between 6+ LLM providers with one line of code ✅
   - Anthropic Claude, OpenAI GPT, Google Gemini
   - **NEW in v1.4**: Azure OpenAI, AWS Bedrock, Cohere ✅
@@ -17,11 +19,10 @@
 - 🐳 **Docker Ready**: Full Docker Compose setup included
 - 🎯 **TOON Format**: 30-60% fewer tokens than JSON for LLM communication ✅
 
-### RAG Capabilities
+### Advanced Capabilities
+- 🤝 **Multi-Agent Collaboration**: Council and Debate strategies (v2.0) ✅
 - 🧠 **Complete RAG System**: Embeddings, vector stores, and retrieval ✅
 - 📚 **Multiple Vector Stores**: ChromaDB, FAISS, Pinecone support ✅
-- 🎯 **Smart Document Chunking**: Fixed-size, sentence, paragraph, semantic strategies ✅
-- 📄 **Document Loaders**: PDF, CSV, Web scraping (v1.4) ✅
 - 🔍 **Hybrid Search**: Dense + sparse retrieval with RRF (v1.4) ✅
 - 🎯 **Reranking**: Cross-encoder models for better results (v1.4) ✅
 - ✍️ **Query Rewriting**: Expansion, decomposition, HyDE (v1.4) ✅
@@ -29,8 +30,11 @@
 ### Production & Integration
 - 🌐 **Easy Integration**: REST API, WebSocket, and React widget ✅
 - 🛠️ **MCP Support**: Full Model Context Protocol integration ✅
-- 🔍 **Production Observability**: Langfuse, Prometheus, OpenTelemetry, Sentry ✅
+- 🔍 **Observability**: Built-in tracing and OpenTelemetry support (v2.0) ✅
 - 📊 **Enterprise Ready**: Azure OpenAI, AWS Bedrock support (v1.4) ✅
+
+> [!IMPORTANT]
+> **Migrating from v1.x?** Check out the [Migration Guide](./MIGRATION.md) for breaking changes and new features.
 
 ---
 
@@ -113,22 +117,30 @@ pip install -e ".[all]"
 
 ## 🚀 Quick Start
 
-### Basic Example
-
+### Basic Agent Example
 ```python
-from craft import Chatbot
+from craft.agents import Agent
 from craft.providers import AnthropicProvider
+from craft.tools import tool
 
-# Create a chatbot in 3 lines
-chatbot = Chatbot(
-    provider=AnthropicProvider(api_key="your-api-key"),
-    system_prompt="You are a helpful assistant.",
-    memory=True
+# 1. Define a tool
+@tool
+def get_weather(location: str) -> str:
+    """Get the weather for a location."""
+    return f"Sunny in {location}"
+
+# 2. Create an agent
+agent = Agent(
+    name="WeatherBot",
+    role="Assistant",
+    goal="Help users with weather info",
+    provider=AnthropicProvider(api_key="..."),
+    tools=[get_weather]
 )
 
-# Chat!
-response = chatbot.chat("What is CRAFT?")
-print(response.content)
+# 3. Run the agent
+result = agent.run("What's the weather in London?")
+print(result.text)
 ```
 
 ### Streaming Example
