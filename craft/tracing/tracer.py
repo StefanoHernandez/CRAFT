@@ -25,6 +25,15 @@ class CraftTracer:
         self._current_span: Optional[TraceSpan] = None
         self._trace_level = int(os.getenv("CRAFT_TRACE_CLIENT_IO", "0"))
         self.formatter = TraceFormatter()
+        
+        # Initialize OpenTelemetry bridge if configured
+        self._otel_bridge = None
+        if os.getenv("OTEL_EXPORTER_TYPE"):
+            try:
+                from craft.tracing.otel_bridge import get_otel_bridge
+                self._otel_bridge = get_otel_bridge()
+            except ImportError:
+                pass  # OTel not installed, continue with CRAFT-only tracing
     
     @property
     def enabled(self) -> bool:
@@ -93,12 +102,12 @@ class CraftTracer:
             yield None
             return
         
-        # Create span
+        # Create CRAFT span
         if not self._current_context:
             self._current_context = TraceContext(name="auto")
         
         parent = self._current_span
-        span = self._current_context.start_span(
+        craft_span = self._current_context.start_span(
             operation=operation,
             parent=parent,
             **inputs
@@ -106,13 +115,27 @@ class CraftTracer:
         
         # Set as current
         old_span = self._current_span
-        self._current_span = span
+        self._current_span = craft_span
+        
+        # Also create OTel span if bridge is available
+        otel_span_context = None
+        if self._otel_bridge and self._otel_bridge.enabled:
+            otel_span_context = self._otel_bridge.start_span(operation, **inputs)
+            otel_span = otel_span_context.__enter__()
         
         try:
-            yield span
-            span.end(status=SpanStatus.SUCCESS)
+            yield craft_span
+            craft_span.end(status=SpanStatus.SUCCESS)
+            if otel_span_context:
+                otel_span_context.__exit__(None, None, None)
         except Exception as e:
-            span.end(status=SpanStatus.ERROR, error=str(e))
+            craft_span.end(status=SpanStatus.ERROR, error=str(e))
+            if otel_span_context:
+                # Set error status on OTel span
+                if otel_span:
+                    from opentelemetry.trace import StatusCode
+                    otel_span.set_status(StatusCode.ERROR, str(e))
+                otel_span_context.__exit__(type(e), e, e.__traceback__)
             raise
         finally:
             self._current_span = old_span
