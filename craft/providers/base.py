@@ -26,6 +26,8 @@ class StreamChunk(BaseModel):
     """Streaming response chunk."""
 
     content: str
+    role: Optional[Role] = None
+    model: Optional[str] = None
     finished: bool = False
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
@@ -36,6 +38,7 @@ class ChatResponse(BaseModel):
     content: str
     role: Role = Role.ASSISTANT
     model: str
+    finish_reason: Optional[str] = None
     usage: Optional[Dict[str, int]] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
@@ -104,30 +107,30 @@ class Provider(ABC):
         if stream:
             return self._chat(messages, stream=True, tools=tools, tool_choice=tool_choice, **kwargs)
 
-        from craft.utils.retry import retry_with_backoff
+        # Custom retry logic to respect 'retryable' flag
         from craft.core.errors import ProviderError
-
-        # Define a retry strategy that only retries if the error is marked as retryable
-        # or if it's a generic exception (network issues often look like generic errors initially)
-        # Ideally, providers should raise ProviderError(retryable=True)
+        import random
         
-        @retry_with_backoff(
-            retries=self.config.max_retries,
-            retry_on=(Exception,), # We catch all and check retryable flag or type
-        )
-        def _execute_with_retry():
+        attempt = 0
+        while True:
             try:
                 return self._chat(messages, stream=False, tools=tools, tool_choice=tool_choice, **kwargs)
             except ProviderError as e:
-                if not e.retryable:
-                    raise e # Don't retry non-retryable errors
-                raise e # Retry retryable errors
+                # Stop immediately if not retryable
+                if not e.retryable or attempt >= self.config.max_retries:
+                    raise e
+                
+                attempt += 1
+                delay = (2 ** attempt) + random.uniform(0, 1)
+                time.sleep(delay)
             except Exception as e:
-                # For unknown exceptions, we assume they might be transient network issues
-                # unless we want to be strict. For now, let's retry.
-                raise e
-
-        return _execute_with_retry()
+                # For generic exceptions, we assume they might be transient
+                if attempt >= self.config.max_retries:
+                    raise e
+                
+                attempt += 1
+                delay = (2 ** attempt) + random.uniform(0, 1)
+                time.sleep(delay)
 
     @abstractmethod
     def _chat(
@@ -168,24 +171,31 @@ class Provider(ABC):
         if stream:
             return await self._achat(messages, stream=True, tools=tools, tool_choice=tool_choice, **kwargs)
 
-        from craft.utils.retry import retry_with_backoff
+        # Custom async retry logic to respect 'retryable' flag
         from craft.core.errors import ProviderError
-
-        @retry_with_backoff(
-            retries=self.config.max_retries,
-            retry_on=(Exception,),
-        )
-        async def _execute_with_retry():
+        import random
+        import asyncio
+        
+        attempt = 0
+        while True:
             try:
                 return await self._achat(messages, stream=False, tools=tools, tool_choice=tool_choice, **kwargs)
             except ProviderError as e:
-                if not e.retryable:
+                # Stop immediately if not retryable
+                if not e.retryable or attempt >= self.config.max_retries:
                     raise e
-                raise e
+                
+                attempt += 1
+                delay = (2 ** attempt) + random.uniform(0, 1)
+                await asyncio.sleep(delay)
             except Exception as e:
-                raise e
-
-        return await _execute_with_retry()
+                # For generic exceptions, we assume they might be transient
+                if attempt >= self.config.max_retries:
+                    raise e
+                
+                attempt += 1
+                delay = (2 ** attempt) + random.uniform(0, 1)
+                await asyncio.sleep(delay)
 
     @abstractmethod
     async def _achat(

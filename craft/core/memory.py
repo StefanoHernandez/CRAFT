@@ -2,6 +2,7 @@
 
 from typing import Dict, Optional, TYPE_CHECKING, Any, List
 from craft.core.conversation import Conversation
+from craft.providers.base import Role
 
 if TYPE_CHECKING:
     from craft.storage.base import StorageAdapter
@@ -60,7 +61,7 @@ class Memory:
 
         # Always keep system prompt if present (usually first message)
         system_msg = None
-        if messages[0].role == "system":
+        if messages[0].role in (Role.SYSTEM, Role.SYSTEM.value):
             system_msg = messages[0]
             messages_to_trim = messages[1:]
         else:
@@ -70,12 +71,23 @@ class Memory:
         if self.max_messages and len(messages_to_trim) > self.max_messages:
             messages_to_trim = messages_to_trim[-self.max_messages :]
 
-        # Trim by tokens (simple estimation: 1 token ~= 4 chars)
+        # Trim by tokens with improved heuristic
+        # Average English word is 4.7 characters, plus space = ~5.7
+        # LLM tokens are typically ~0.75 words. 
+        # So 1 token ~= 4 characters is a decent floor, but 1 token ~= 3.5 is safer.
         if self.max_tokens:
-            current_tokens = sum(len(m.content) for m in messages_to_trim) // 4
+            def estimate_tokens(text: str) -> int:
+                # Better heuristic: max(chars/3.5, words/0.75)
+                # This accounts for both long words and many short words
+                char_count = len(text)
+                word_count = len(text.split())
+                return int(max(char_count / 3.5, word_count / 0.75))
+
+            current_tokens = sum(estimate_tokens(m.content) for m in messages_to_trim)
+            
             while current_tokens > self.max_tokens and messages_to_trim:
                 removed = messages_to_trim.pop(0)
-                current_tokens -= len(removed.content) // 4
+                current_tokens -= estimate_tokens(removed.content)
 
         # Reconstruct
         if system_msg:
