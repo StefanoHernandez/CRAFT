@@ -8,7 +8,7 @@ from typing import Dict, Set, Optional, Any
 import asyncio
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -70,7 +70,7 @@ class ConnectionManager:
             "status": "connected",
             "connection_id": connection_id,
             "subscribed_to": agent_name or "all",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }, connection_id)
     
     def disconnect(self, connection_id: str) -> None:
@@ -193,7 +193,7 @@ def create_websocket_app(
         """Health check endpoint."""
         return {
             "status": "healthy",
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "connections": len(manager.active_connections)
         }
     
@@ -256,7 +256,7 @@ def create_websocket_app(
                     if data.get("type") == "ping":
                         await manager.send_personal_message({
                             "type": "pong",
-                            "timestamp": datetime.now().isoformat()
+                            "timestamp": datetime.now(timezone.utc).isoformat()
                         }, connection_id)
                     
                     elif data.get("type") == "subscribe":

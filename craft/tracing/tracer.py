@@ -23,7 +23,10 @@ class CraftTracer:
     def __init__(self):
         self._current_context: Optional[TraceContext] = None
         self._current_span: Optional[TraceSpan] = None
-        self._trace_level = int(os.getenv("CRAFT_TRACE_CLIENT_IO", "0"))
+        try:
+            self._trace_level = int(os.getenv("CRAFT_TRACE_CLIENT_IO", "0"))
+        except ValueError:
+            self._trace_level = 0  # Default to disabled if env var is invalid
         self.formatter = TraceFormatter()
         
         # Initialize OpenTelemetry bridge if configured
