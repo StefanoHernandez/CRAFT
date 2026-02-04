@@ -5,7 +5,7 @@ import os
 from typing import Generator
 from unittest.mock import Mock, AsyncMock
 
-from craft.providers.base import Provider, ChatResponse, StreamChunk, Message, Role
+from craft.providers.base import Provider, ProviderConfig, ChatResponse, StreamChunk, Message, Role
 from craft.core.conversation import Conversation
 from craft.storage import SQLiteStorage
 
@@ -15,8 +15,9 @@ class MockProvider(Provider):
     """Mock provider for testing."""
 
     def __init__(self, name: str = "mock", model: str = "mock-model"):
+        config = ProviderConfig(api_key="mock-key", model=model)
+        super().__init__(config)
         self._name = name
-        self.model = model
         self._call_count = 0
         self._responses = []
         self._should_fail = False
@@ -25,23 +26,11 @@ class MockProvider(Provider):
     def name(self) -> str:
         return self._name
 
-    def chat(self, messages: list[Message], stream: bool = False, **kwargs):
-        """Mock chat implementation."""
-        self._call_count += 1
-
-        if self._should_fail:
-            raise Exception("Mock provider error")
-
-        if stream:
-            return self._mock_stream_sync()
-        else:
-            return self._mock_response(messages)
-
     def _mock_stream_sync(self):
         """Create mock sync stream."""
         chunks = ["Mock ", "streaming ", "response"]
         for text in chunks:
-            yield StreamChunk(content=text, role=Role.ASSISTANT, model=self.model)
+            yield StreamChunk(content=text, role=Role.ASSISTANT, model=self.config.model)
 
     def _mock_response(self, messages: list[Message]) -> ChatResponse:
         """Create mock response."""
@@ -53,7 +42,7 @@ class MockProvider(Provider):
         return ChatResponse(
             content=content,
             role=Role.ASSISTANT,
-            model=self.model,
+            model=self.config.model,
             finish_reason="stop",
             usage={"input_tokens": 10, "output_tokens": 20},
         )
@@ -62,26 +51,32 @@ class MockProvider(Provider):
         """Create mock stream."""
         chunks = ["Mock ", "streaming ", "response"]
         for text in chunks:
-            yield StreamChunk(content=text, role=Role.ASSISTANT, model=self.model)
+            yield StreamChunk(content=text, role=Role.ASSISTANT, model=self.config.model)
 
     def _validate_config(self) -> None:
         """Validate config."""
         pass
 
-    async def achat(self, messages: list[Message], stream: bool = False, **kwargs):
+    def _chat(self, messages: list[Message], stream: bool = False, **kwargs):
+        """Mock sync chat implementation."""
+        self._call_count += 1
+        if self._should_fail:
+            raise Exception("Mock provider error")
+        if stream:
+            return self._mock_stream_sync()
+        return self._mock_response(messages)
+
+    async def _achat(self, messages: list[Message], stream: bool = False, **kwargs):
         """Mock async chat implementation."""
         self._call_count += 1
         if self._should_fail:
             raise Exception("Mock provider error")
-        
         if stream:
-            # For async generator, we need to define an async generator function
             async def async_gen():
                 async for chunk in self._mock_stream():
                     yield chunk
             return async_gen()
-        else:
-            return self._mock_response(messages)
+        return self._mock_response(messages)
 
     def set_responses(self, responses: list[str]):
         """Set predefined responses."""

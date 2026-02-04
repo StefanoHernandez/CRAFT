@@ -3,14 +3,12 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from craft.agents import Agent
-from craft.providers.base import Provider, ChatResponse, Role
+from craft.providers.base import Provider, ProviderConfig, ChatResponse, Role
 from craft.tools.base import Tool, ToolMetadata, ToolParameter
 
 class MockProvider(Provider):
     def __init__(self):
-        super().__init__(config=MagicMock())
-        self.config.model = "mock-model"
-        self.config.api_key = "mock-key"
+        super().__init__(config=ProviderConfig(api_key="mock-key", model="mock-model"))
         self._chat_mock = MagicMock(return_value=ChatResponse(content="test", role=Role.ASSISTANT, model="mock"))
         self._achat_mock = AsyncMock(return_value=ChatResponse(content="test", role=Role.ASSISTANT, model="mock"))
         
@@ -21,10 +19,10 @@ class MockProvider(Provider):
     def name(self):
         return "mock"
 
-    def chat(self, messages, stream=False, **kwargs):
+    def _chat(self, messages, stream=False, **kwargs):
         return self._chat_mock(messages, stream=stream, **kwargs)
 
-    async def achat(self, messages, stream=False, **kwargs):
+    async def _achat(self, messages, stream=False, **kwargs):
         return await self._achat_mock(messages, stream=stream, **kwargs)
 
 def create_mock_tool(name):

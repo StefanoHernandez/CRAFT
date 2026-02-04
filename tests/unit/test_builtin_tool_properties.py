@@ -229,7 +229,7 @@ def test_sql_injection_attempts_are_neutralized():
 
 
 # Feature: craft-v2-agents-tools, Property 7: HTTP Request Configuration
-@settings(max_examples=100)
+@settings(max_examples=100, deadline=None)
 @given(
     st.sampled_from(["GET", "POST", "PUT", "DELETE", "PATCH"]),
     st.dictionaries(

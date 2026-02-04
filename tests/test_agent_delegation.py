@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from craft.agents.agent import Agent, AgentResult
-from craft.providers.base import Provider, ChatResponse, Role
+from craft.providers.base import Provider, ProviderConfig, ChatResponse, Role
 from craft.core.errors import AgentExecutionError
 
 
@@ -12,6 +12,7 @@ class MockProvider(Provider):
     """Mock provider for testing."""
     
     def __init__(self, responses: list[str] | None = None):
+        super().__init__(config=ProviderConfig(api_key="mock-key", model="mock-model"))
         self._responses = responses or ["Task completed successfully"]
         self._call_count = 0
     
@@ -22,13 +23,13 @@ class MockProvider(Provider):
     def _validate_config(self) -> None:
         pass
     
-    def chat(self, messages, stream=False, **kwargs):
+    def _chat(self, messages, stream=False, **kwargs):
         response = self._responses[min(self._call_count, len(self._responses) - 1)]
         self._call_count += 1
         return ChatResponse(content=response, role=Role.ASSISTANT, model="mock")
     
-    async def achat(self, messages, stream=False, **kwargs):
-        return self.chat(messages, stream, **kwargs)
+    async def _achat(self, messages, stream=False, **kwargs):
+        return self._chat(messages, stream, **kwargs)
 
 
 @pytest.fixture

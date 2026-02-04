@@ -3,10 +3,11 @@
 import os
 import pytest
 from hypothesis import given, strategies as st
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, MagicMock, patch
 
 from craft.tracing import tracer
 from craft.tracing.context import TraceContext, SpanStatus
+from craft.tracing.otel_bridge import OTEL_AVAILABLE
 
 
 class TestOTelIntegration:
@@ -32,7 +33,7 @@ class TestOTelIntegration:
         # Mock OTel bridge
         mock_otel_bridge = Mock()
         mock_otel_bridge.enabled = True
-        mock_otel_context = Mock()
+        mock_otel_context = MagicMock()
         mock_otel_span = Mock()
         mock_otel_bridge.start_span.return_value = mock_otel_context
         mock_otel_context.__enter__.return_value = mock_otel_span
@@ -136,7 +137,7 @@ class TestOTelIntegration:
         tracer._trace_level = 1
         
         mock_otel_span = Mock()
-        mock_otel_context = Mock()
+        mock_otel_context = MagicMock()
         mock_otel_context.__enter__ = Mock(return_value=mock_otel_span)
         mock_otel_context.__exit__ = Mock(return_value=None)
         
@@ -196,6 +197,7 @@ class TestOTelIntegration:
 
 
 @pytest.mark.integration
+@pytest.mark.skipif(not OTEL_AVAILABLE, reason="OpenTelemetry not installed")
 class TestOTelExporters:
     """Integration tests for OTel exporters."""
     
