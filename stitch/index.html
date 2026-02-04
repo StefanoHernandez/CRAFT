@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>CRAFT // NEXUS HUB</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0da6f2",
+                        "background-dark": "#0a1014",
+                        "surface-dark": "#111a1e",
+                        "panel-dark": "#162024",
+                        "border-dark": "#253238",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        /* Animated background grid */
+        .bg-cyber-grid {
+            background-image:
+                linear-gradient(rgba(13, 166, 242, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(13, 166, 242, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 50px 50px;
+            }
+        }
+
+        /* Glow effect */
+        .glow-card {
+            transition: all 0.3s ease;
+        }
+
+        .glow-card:hover {
+            box-shadow: 0 0 30px rgba(13, 166, 242, 0.2), 0 0 60px rgba(13, 166, 242, 0.1);
+            transform: translateY(-4px);
+        }
+
+        /* Scan line effect */
+        .scanline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #0da6f2, transparent);
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-background-dark text-white font-display min-h-screen overflow-x-hidden">
+    <!-- Background effects -->
+    <div class="fixed inset-0 bg-cyber-grid pointer-events-none z-0"></div>
+    <div
+        class="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-primary/5 rounded-full blur-[150px] pointer-events-none">
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="border-b border-border-dark bg-surface-dark/80 backdrop-blur-xl sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <div
+                            class="size-12 rounded-xl bg-gradient-to-br from-primary to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(13,166,242,0.4)]">
+                            <span class="material-symbols-outlined text-white text-2xl">hub</span>
+                        </div>
+                        <div
+                            class="absolute -bottom-1 -right-1 size-4 rounded-full bg-emerald-500 border-2 border-surface-dark animate-pulse">
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight">CRAFT<span class="text-primary">//</span>NEXUS
+                        </h1>
+                        <p class="text-xs font-mono text-slate-500">AUTONOMOUS AGENT ORCHESTRATOR v2.4.0</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div
+                        class="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-panel-dark border border-border-dark">
+                        <div class="size-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span class="text-xs font-mono text-emerald-400">10 MODULES ONLINE</span>
+                    </div>
+                    <button
+                        class="p-2.5 rounded-lg bg-panel-dark border border-border-dark hover:border-primary/50 transition-colors">
+                        <span class="material-symbols-outlined text-slate-400 hover:text-primary">settings</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="py-16 px-6 text-center">
+            <h2 class="text-4xl md:text-5xl font-black tracking-tight mb-4">
+                <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-cyan-300 to-primary">Mission
+                    Control</span>
+            </h2>
+            <p class="text-slate-400 text-lg max-w-2xl mx-auto">
+                Unified command center for autonomous agent orchestration, workflow design, and system monitoring.
+            </p>
+        </section>
+
+        <!-- Module Grid -->
+        <main class="flex-1 max-w-7xl mx-auto px-6 pb-20 w-full">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Dashboard Card -->
+                <a href="craft_mission_control_dashboard/code.html"
+                    class="group glow-card relative overflow-hidden rounded-2xl bg-panel-dark border border-border-dark p-6 scanline">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="p-3 rounded-xl bg-primary/10 border border-primary/20">
+                            <span class="material-symbols-outlined text-primary text-2xl">dashboard</span>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-slate-600 group-hover:text-primary transition-colors">arrow_outward</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Mission Control</h3>
+                    <p class="text-sm text-slate-400 mb-4">Real-time monitoring dashboard with live agent communication
+                        and system metrics.</p>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 rounded bg-primary/10 text-primary text-[10px] font-mono">LIVE</span>
+                        <span class="px-2 py-1 rounded bg-white/5 text-slate-400 text-[10px] font-mono">METRICS</span>
+                    </div>
+                </a>
+
+                <!-- Workflow Builder Card -->
+                <a href="craft_workflow_builder/code.html"
+                    class="group glow-card relative overflow-hidden rounded-2xl bg-panel-dark border border-border-dark p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                            <span class="material-symbols-outlined text-amber-400 text-2xl">account_tree</span>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-slate-600 group-hover:text-amber-400 transition-colors">arrow_outward</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-amber-400 transition-colors">Workflow Builder
+                    </h3>
+                    <p class="text-sm text-slate-400 mb-4">Visual node editor for designing and connecting AI agents,
+                        tools, and data flows.</p>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 text-[10px] font-mono">DRAG &
+                            DROP</span>
+                        <span class="px-2 py-1 rounded bg-white/5 text-slate-400 text-[10px] font-mono">VISUAL</span>
+                    </div>
+                </a>
+
+                <!-- Agent Fleet Card -->
+                <a href="craft_agent_fleet_management/code.html"
+                    class="group glow-card relative overflow-hidden rounded-2xl bg-panel-dark border border-border-dark p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                            <span class="material-symbols-outlined text-purple-400 text-2xl">smart_toy</span>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-slate-600 group-hover:text-purple-400 transition-colors">arrow_outward</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-purple-400 transition-colors">Agent Fleet</h3>
+                    <p class="text-sm text-slate-400 mb-4">Manage and monitor all deployed agents with health status and
+                        resource usage.</p>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">12
+                            ACTIVE</span>
+                        <span class="px-2 py-1 rounded bg-white/5 text-slate-400 text-[10px] font-mono">FLEET</span>
+                    </div>
+                </a>
+
+                <!-- Thought Log Card -->
+                <a href="craft_agent_thought_log/code.html"
+                    class="group glow-card relative overflow-hidden rounded-2xl bg-panel-dark border border-border-dark p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="p-3 rounded-xl bg-pink-500/10 border border-pink-500/20">
+                            <span class="material-symbols-outlined text-pink-400 text-2xl">psychology</span>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-slate-600 group-hover:text-pink-400 transition-colors">arrow_outward</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-pink-400 transition-colors">Thought Log</h3>
+                    <p class="text-sm text-slate-400 mb-4">Debug agent reasoning with step-by-step thought process
+                        visualization.</p>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 rounded bg-pink-500/10 text-pink-400 text-[10px] font-mono">DEBUG</span>
+                        <span class="px-2 py-1 rounded bg-white/5 text-slate-400 text-[10px] font-mono">TRACE</span>
+                    </div>
+                </a>
+
+                <!-- Knowledge Base Card -->
+                <a href="craft_knowledge_base_rag/code.html"
+                    class="group glow-card relative overflow-hidden rounded-2xl bg-panel-dark border border-border-dark p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                            <span class="material-symbols-outlined text-emerald-400 text-2xl">database</span>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-slate-600 group-hover:text-emerald-400 transition-colors">arrow_outward</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-emerald-400 transition-colors">Knowledge Base
+                    </h3>
+                    <p class="text-sm text-slate-400 mb-4">RAG-powered document management with vector storage and
+                        semantic search.</p>
+                    <div class="flex gap-2">
+                        <span
+                            class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">RAG</span>
+                        <span class="px-2 py-1 rounded bg-white/5 text-slate-400 text-[10px] font-mono">VECTORS</span>
+                    </div>
+                </a>
+
+                <!-- Live Execution Card -->
+                <a href="craft_live_workflow_execution/code.html"
+                    class="group glow-card relative overflow-hidden rounded-2xl bg-panel-dark border border-border-dark p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                            <span class="material-symbols-outlined text-red-400 text-2xl">play_circle</span>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-slate-600 group-hover:text-red-400 transition-colors">arrow_outward</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-red-400 transition-colors">Live Execution</h3>
+                    <p class="text-sm text-slate-400 mb-4">Watch workflows execute in real-time with animated data flow
+                        visualization.</p>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 rounded bg-red-500/10 text-red-400 text-[10px] font-mono animate-pulse">●
+                            LIVE</span>
+                        <span class="px-2 py-1 rounded bg-white/5 text-slate-400 text-[10px] font-mono">STREAM</span>
+                    </div>
+                </a>
+
+                <!-- Quick Deploy Card -->
+                <a href="craft_quick_deploy_wizard/code.html"
+                    class="group glow-card relative overflow-hidden rounded-2xl bg-panel-dark border border-border-dark p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20">
+                            <span class="material-symbols-outlined text-sky-400 text-2xl">rocket_launch</span>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-slate-600 group-hover:text-sky-400 transition-colors">arrow_outward</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-sky-400 transition-colors">Quick Deploy</h3>
+                    <p class="text-sm text-slate-400 mb-4">Wizard-driven deployment for rapid agent creation and
+                        configuration.</p>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 rounded bg-sky-500/10 text-sky-400 text-[10px] font-mono">WIZARD</span>
+                        <span class="px-2 py-1 rounded bg-white/5 text-slate-400 text-[10px] font-mono">FAST</span>
+                    </div>
+                </a>
+
+                <!-- Health Monitor Card -->
+                <a href="craft_system_health_monitor/code.html"
+                    class="group glow-card relative overflow-hidden rounded-2xl bg-panel-dark border border-border-dark p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="p-3 rounded-xl bg-lime-500/10 border border-lime-500/20">
+                            <span class="material-symbols-outlined text-lime-400 text-2xl">monitoring</span>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-slate-600 group-hover:text-lime-400 transition-colors">arrow_outward</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-lime-400 transition-colors">Health Monitor</h3>
+                    <p class="text-sm text-slate-400 mb-4">Infrastructure status with provider latency, error rates, and
+                        system logs.</p>
+                    <div class="flex gap-2">
+                        <span
+                            class="px-2 py-1 rounded bg-lime-500/10 text-lime-400 text-[10px] font-mono">TELEMETRY</span>
+                        <span class="px-2 py-1 rounded bg-white/5 text-slate-400 text-[10px] font-mono">OTEL</span>
+                    </div>
+                </a>
+
+                <!-- Task History Card -->
+                <a href="craft_task_history_&_archive/code.html"
+                    class="group glow-card relative overflow-hidden rounded-2xl bg-panel-dark border border-border-dark p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                            <span class="material-symbols-outlined text-orange-400 text-2xl">history</span>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-slate-600 group-hover:text-orange-400 transition-colors">arrow_outward</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-orange-400 transition-colors">Task History</h3>
+                    <p class="text-sm text-slate-400 mb-4">Browse archived task executions with detailed logs and
+                        performance data.</p>
+                    <div class="flex gap-2">
+                        <span
+                            class="px-2 py-1 rounded bg-orange-500/10 text-orange-400 text-[10px] font-mono">ARCHIVE</span>
+                        <span class="px-2 py-1 rounded bg-white/5 text-slate-400 text-[10px] font-mono">LOGS</span>
+                    </div>
+                </a>
+
+                <!-- Settings Card -->
+                <a href="craft_global_settings_&_api/code.html"
+                    class="group glow-card relative overflow-hidden rounded-2xl bg-panel-dark border border-border-dark p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="p-3 rounded-xl bg-slate-500/10 border border-slate-500/20">
+                            <span class="material-symbols-outlined text-slate-400 text-2xl">settings</span>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-slate-600 group-hover:text-white transition-colors">arrow_outward</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-white transition-colors">Settings & API</h3>
+                    <p class="text-sm text-slate-400 mb-4">Configure providers, API keys, and system-wide preferences.
+                    </p>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">10
+                            PROVIDERS</span>
+                        <span class="px-2 py-1 rounded bg-white/5 text-slate-400 text-[10px] font-mono">CONFIG</span>
+                    </div>
+                </a>
+
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-border-dark bg-surface-dark/50 backdrop-blur py-6 px-6">
+            <div
+                class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-lg">hub</span>
+                    <span class="font-mono">CRAFT Framework © 2026</span>
+                </div>
+                <div class="flex items-center gap-6 font-mono text-xs">
+                    <span>Built with <span class="text-primary">Google Stitch</span></span>
+                    <span class="text-slate-600">|</span>
+                    <span>Powered by <span class="text-emerald-400">Tailwind CSS</span></span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>
