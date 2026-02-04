@@ -1,6 +1,6 @@
 """Core agent implementation for autonomous task execution."""
 
-from typing import Any, AsyncIterator, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 import time
 
 from pydantic import BaseModel, Field, ConfigDict
@@ -8,20 +8,19 @@ from pydantic import BaseModel, Field, ConfigDict
 from craft.providers.base import Provider, Message, Role, ChatResponse
 from craft.tools.base import Tool
 from craft.core.memory import Memory
-from craft.core.errors import AgentExecutionError, ToolExecutionError
+from craft.core.errors import AgentExecutionError
 from craft.core.execution_engine import ExecutionEngine
-from craft.agents.types import StepResult, AgentResult, ToolCall
+from craft.agents.types import StepResult, AgentResult, ToolCall, AgentError
 from craft.agents.planning import (
     Plan,
-    generate_plan,
     generate_plan_sync,
-    revise_plan,
     revise_plan_sync,
     mark_step_complete,
     advance_to_next_step,
     get_current_step,
     format_plan_for_display,
 )
+from craft.agents.collaboration import CollaborationManager
 from craft.utils.validation import validate_tool_choice
 from craft.tracing import tracer
 
@@ -86,10 +85,14 @@ class Agent:
         )
 
         self.provider = provider
-        self.tools = tools or []
-        self.tool_map = {tool.name: tool for tool in self.tools}
+        self.tools: List[Tool] = tools or []
+        self.tool_map: Dict[str, Tool] = {tool.name: tool for tool in self.tools}
 
+        # Execution engine responsabile del loop di passi
         self.execution_engine = ExecutionEngine(max_steps=max_steps)
+
+        # Gestore collaborazione multi-agente (delegation/can_call)
+        self._collaboration = CollaborationManager(owner=self)
 
         # Set up memory
         if memory is True:
@@ -104,14 +107,6 @@ class Agent:
 
         # State for current execution
         self.state: Optional[AgentState] = None
-        
-        # Track aggregated results from multi-agent collaboration
-        self._aggregated_results: Dict[str, Any] = {
-            'agent_calls': [],
-            'total_steps': 0,
-            'total_tools_used': set(),
-            'total_execution_time': 0.0,
-        }
 
     # ... [Type system properties: name, role, goal, backstory - Keeping them]
     @property
@@ -184,7 +179,7 @@ class Agent:
         )
 
     def _should_continue(self) -> bool:
-        return not self.state.finished
+        return bool(self.state) and not self.state.finished
 
     def run(
         self,
@@ -201,39 +196,59 @@ class Agent:
 
             start_time = time.time()
             
-            # Use ExecutionEngine
+            # Usa l'ExecutionEngine per gestire il loop di passi
             try:
                 step_results = self.execution_engine.run_loop(
                     step_executor=lambda: self._execute_step(tool_choice, **kwargs),
                     should_continue=self._should_continue,
-                    on_step_complete=self._on_step_complete
-                )
-                
-                execution_time = time.time() - start_time
-                return self._finalize_result(step_results, execution_time, conversation_id, span)
-            
-            except AgentExecutionError:
-                 tracer.end_trace(print_output=False)
-                 raise
-            except Exception as e:
-                 tracer.end_trace(print_output=False)
-                 return AgentResult(
-                    text=f"Agent failed: {str(e)}",
-                    total_steps=self.state.current_step if self.state else 0,
-                    tools_used=[],
-                    metadata={"error": str(e)},
+                    on_step_complete=self._on_step_complete,
                 )
 
-    async def arun(self, task_input: str, **kwargs) -> AgentResult:
-        """Async version of run. For now just wraps run in async, assuming provider supports it or we're mocking."""
-        # In a real full refactor we'd implement async loop in ExecutionEngine too
-        # For this refactor step we keep it simple or delegate to run
-        # But wait, our API needs arun. 
-        # Let's implementation a simple async wrapper for now as Provider calls are the main async point
-        # Ideally _execute_step should be async.
-        
-        # NOTE: This is a partial async implementation for compatibility
-        return self.run(task_input, **kwargs)
+                execution_time = time.time() - start_time
+                return self._finalize_result(step_results, execution_time, conversation_id, span)
+
+            except AgentExecutionError:
+                tracer.end_trace(print_output=False)
+                raise
+            except Exception as e:
+                # Cattura come errore strutturato invece di semplice stringa
+                error = AgentError(
+                    code="unhandled_exception",
+                    message=str(e),
+                    details={
+                        "agent_name": self.config.name,
+                        "current_step": self.state.current_step if self.state else 0,
+                        "tool_choice": tool_choice,
+                    },
+                )
+                tracer.end_trace(print_output=False)
+                return AgentResult(
+                    text=f"Agent failed: {error.message}",
+                    steps=[],
+                    total_steps=self.state.current_step if self.state else 0,
+                    tools_used=[],
+                    metadata={"error": error.model_dump()},
+                )
+
+    async def arun(
+        self,
+        task_input: str,
+        tool_choice: Union[str, List[str]] = "auto",
+        conversation_id: Optional[str] = None,
+        **kwargs: Any,
+    ) -> AgentResult:
+        """
+        Async version of run.
+
+        Nota: per ora deleghiamo all'implementazione sincrona. Un refactor
+        futuro potrà introdurre un ExecutionEngine async e _aexecute_step.
+        """
+        return self.run(
+            task_input=task_input,
+            tool_choice=tool_choice,
+            conversation_id=conversation_id,
+            **kwargs,
+        )
 
     def _on_step_complete(self, step_result: StepResult):
         if step_result.finished:
@@ -241,23 +256,29 @@ class Agent:
             self.state.result = step_result.text
         self.state.current_step += 1
 
-    def _finalize_result(self, step_results, execution_time, conversation_id, span):
-        if not self.state.finished:
-             if self.memory:
-                 with tracer.span("memory.save"):
-                     self._save_to_memory(conversation_id)
-             tracer.end_trace(print_output=False)
-             # Handle max steps result construction
-             return self._handle_max_steps(step_results, execution_time)
+    def _finalize_result(
+        self,
+        step_results: List[StepResult],
+        execution_time: float,
+        conversation_id: Optional[str],
+        span,
+    ) -> AgentResult:
+        """Costruisce l'AgentResult finale e gestisce salvataggio/tracing."""
+        if not self.state or not self.state.finished:
+            if self.memory:
+                with tracer.span("memory.save"):
+                    self._save_to_memory(conversation_id)
+            tracer.end_trace(print_output=False)
+            return self._handle_max_steps(step_results, execution_time)
 
-        tools_used_names = list(set(tc.tool_name for tc in self.state.tools_used))
-        metadata = {
+        tools_used_names = list({tc.tool_name for tc in self.state.tools_used})
+        metadata: Dict[str, Any] = {
             "execution_time_seconds": execution_time,
             "max_steps_reached": False,
         }
-        
+
         aggregated = self.get_aggregated_results()
-        if aggregated["agent_calls"]:
+        if aggregated.get("agent_calls"):
             metadata["multi_agent_collaboration"] = aggregated
 
         result = AgentResult(
@@ -279,48 +300,46 @@ class Agent:
     def _execute_step(
         self, tool_choice: Union[str, List[str]], **kwargs: Any
     ) -> StepResult:
-        # Same logic as before, just ensuring uses self.state
-        if self.state.plan:
-             current_step_text = get_current_step(self.state.plan)
-             if current_step_text and self.config.verbose:
-                 print(f"Current plan step: {current_step_text}")
+        # Esecuzione di un singolo step usando il provider
+        if self.state and self.state.plan:
+            current_step_text = get_current_step(self.state.plan)
+            if current_step_text and self.config.verbose:
+                print(f"Current plan step: {current_step_text}")
 
-        # ... (validation omitted for brevity, assumed standard) ...
         try:
-             validate_tool_choice(tool_choice, self.tools)
+            validate_tool_choice(tool_choice, self.tools)
         except ValueError as e:
-             raise AgentExecutionError(f"Invalid tool_choice: {str(e)}")
+            raise AgentExecutionError(f"Invalid tool_choice: {str(e)}") from e
 
         active_tools = self.tools
         if isinstance(tool_choice, list):
-             active_tools = [t for t in self.tools if t.name in tool_choice]
+            active_tools = [t for t in self.tools if t.name in tool_choice]
 
-        # Call provider
         response = self.provider.chat(
-             messages=self.state.messages,
-             stream=False,
-             tools=active_tools,
-             tool_choice=tool_choice,
-             **kwargs,
+            messages=self.state.messages if self.state else [],
+            stream=False,
+            tools=active_tools,
+            tool_choice=tool_choice,
+            **kwargs,
         )
-        
+
         response_text = response.content if isinstance(response, ChatResponse) else str(response)
-        self.state.messages.append(Message(role=Role.ASSISTANT, content=response_text))
-        
+        if self.state:
+            self.state.messages.append(Message(role=Role.ASSISTANT, content=response_text))
+
         is_finished = self._is_final_answer(response_text)
-        
-        # Plan updating logic
-        if self.state.plan and not is_finished:
-             if self._is_step_complete(response_text):
-                 mark_step_complete(self.state.plan, self.state.plan.current_step_index)
-                 advance_to_next_step(self.state.plan)
+
+        if self.state and self.state.plan and not is_finished:
+            if self._is_step_complete(response_text):
+                mark_step_complete(self.state.plan, self.state.plan.current_step_index)
+                advance_to_next_step(self.state.plan)
 
         return StepResult(
-             index=self.state.current_step,
-             text=response_text,
-             tools_used=[],
-             finished=is_finished,
-             metadata={},
+            index=self.state.current_step if self.state else 0,
+            text=response_text,
+            tools_used=[],
+            finished=is_finished,
+            metadata={},
         )
 
     def _is_final_answer(self, text: str) -> bool:
@@ -336,39 +355,70 @@ class Agent:
         return len(text.strip()) > 50
 
     def _is_step_complete(self, text: str) -> bool:
-         # Same heuristic
-         return "completed" in text.lower() or "done" in text.lower()
+        """Heuristica semplice per determinare il completamento di uno step del piano."""
+        lower = text.lower()
+        return "completed" in lower or "done" in lower
 
-    # ... Helper methods like _reset_aggregated_results, get_aggregated_results, _save_to_memory, _handle_max_steps ...
-    # We keep them to maintain compatibility but they are cleaner now.
+    # ------------------------------------------------------------------
+    # Aggregazione risultati multi-agente & memoria
+    # ------------------------------------------------------------------
+    def _reset_aggregated_results(self) -> None:
+        self._collaboration.reset()
 
-    def _reset_aggregated_results(self):
-        self._aggregated_results = {
-            'agent_calls': [],
-            'total_steps': 0,
-            'total_tools_used': set(),
-            'total_execution_time': 0.0,
-        }
+    def get_aggregated_results(self) -> Dict[str, Any]:
+        return self._collaboration.get_aggregated_results()
 
-    def get_aggregated_results(self):
-        return self._aggregated_results
-    
-    def _handle_max_steps(self, step_results, execution_time):
-         # Same logic
-         last_text = step_results[-1].text if step_results else "No results generated"
-         return AgentResult(
-            text=f"Task incomplete: Max steps reached. Partial: {last_text}",
+    def _handle_max_steps(
+        self,
+        step_results: List[StepResult],
+        execution_time: float,
+    ) -> AgentResult:
+        """Costruisce un risultato parziale quando si raggiunge max_steps."""
+        last_text = step_results[-1].text if step_results else "No results generated"
+        return AgentResult(
+            text=f"Task incomplete: Maximum steps ({self.config.max_steps}) reached.\n\nPartial result:\n{last_text}",
             steps=step_results,
-            total_steps=self.state.current_step,
+            total_steps=self.state.current_step if self.state else 0,
             tools_used=[],
-            metadata={"max_steps_reached": True, "partial": True}
-         )
-    
-    def _save_to_memory(self, conversation_id: Optional[str] = None):
-         # Same logic
-         if not self.memory or not self.state: return
-         from craft.core.conversation import Conversation
-         conv_id = conversation_id or f"{self.config.name}_{int(time.time())}"
-         conversation = Conversation(id=conv_id)
-         conversation.messages = self.state.messages
-         self.memory.save(conversation)
+            metadata={
+                "execution_time_seconds": execution_time,
+                "max_steps_reached": True,
+                "terminated": "max_steps",
+                "partial": True,
+            },
+        )
+
+    def _save_to_memory(self, conversation_id: Optional[str] = None) -> None:
+        """Persistenza conversazione corrente nella Memory (se abilitata)."""
+        if not self.memory or not self.state:
+            return
+
+        from craft.core.conversation import Conversation
+
+        conv_id = conversation_id or f"{self.config.name}_{int(time.time())}"
+        conversation = Conversation(id=conv_id)
+        conversation.messages = self.state.messages
+        self.memory.save(conversation)
+
+    # ------------------------------------------------------------------
+    # API di collaborazione multi-agente (compatibile con versione precedente)
+    # ------------------------------------------------------------------
+    def can_call(self, agents: List["Agent"]) -> None:
+        """
+        Registra altri agenti come strumenti delegabili, usando il loro nome come nome tool.
+        """
+        new_tools = self._collaboration.register_agents(agents)
+        self.tools.extend(new_tools)
+        self.tool_map.update({tool.name: tool for tool in new_tools})
+        # Il system prompt deve includere i nuovi tool
+        self.system_prompt = self._build_system_prompt()
+
+    def delegate_to(self, agents_map: Dict[str, "Agent"]) -> None:
+        """
+        Registra agenti con nomi di tool personalizzati per la delega.
+        """
+        new_tools = self._collaboration.register_agents_map(agents_map)
+        self.tools.extend(new_tools)
+        self.tool_map.update({tool.name: tool for tool in new_tools})
+        self.system_prompt = self._build_system_prompt()
+

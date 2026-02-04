@@ -2,6 +2,15 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 from pydantic import BaseModel, Field, ConfigDict
 
+
+class AgentError(BaseModel):
+    """Structured error information for agent failures."""
+
+    code: str
+    message: str
+    details: Dict[str, Any] = Field(default_factory=dict)
+
+
 class ToolCall(BaseModel):
     """Record of a tool invocation."""
     tool_name: str

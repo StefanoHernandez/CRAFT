@@ -37,6 +37,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New "Bento Grid" layout (`stitch/designs/nexus_dashboard_v2.pen`).
   - Dark, terminal-inspired aesthetic for the Mission Control dashboard.
 
+### Changed - Agent Collaboration & Observability
+- **Multi-Agent Collaboration Refactor**:
+  - Introduced `CollaborationManager` (`craft/agents/collaboration.py`) to encapsulate agents-as-tools delegation, call stack tracking and aggregated results.
+  - `Agent.can_call()` and `Agent.delegate_to()` now delegate to `CollaborationManager`, keeping the public API intact while simplifying `Agent` responsibilities.
+- **Execution Loop Extraction**:
+  - `ExecutionEngine` (`craft/core/execution_engine.py`) is now fully wired into `Agent.run()` as the single place handling the step loop and `max_steps` termination.
+- **Final Answer Heuristics**:
+  - `_is_final_answer` now supports an explicit `<FINAL_ANSWER>` tag emitted by the LLM, falling back to legacy text heuristics for backward compatibility.
+- **Structured Agent Errors**:
+  - New `AgentError` (`craft/agents/types.py`) captures `code`, `message` and `details` for failures.
+  - `Agent.run()` returns `metadata["error"]` as a structured `AgentError` payload, improving downstream observability and debugging.
+
 ## [2.0.0] - 2025-11-26
 
 ### 🎉 Major Release - Complete RAG Stack + Real-time Streaming
