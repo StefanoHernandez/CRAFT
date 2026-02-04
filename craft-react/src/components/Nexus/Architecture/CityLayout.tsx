@@ -114,8 +114,8 @@ export function CityLayout() {
 
             {/* Flying Cars / Data Packets */}
             <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-                <mesh position={[2, 3, 2]}>
-                    <coneGeometry args={[0.1, 0.3, 4]} rotation={[Math.PI / 2, 0, 0]} />
+                <mesh position={[2, 3, 2]} rotation={[Math.PI / 2, 0, 0]}>
+                    <coneGeometry args={[0.1, 0.3, 4]} />
                     <meshBasicMaterial color="#fbbf24" />
                 </mesh>
             </Float>
