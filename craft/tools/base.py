@@ -44,6 +44,7 @@ class Tool(BaseModel):
     description: str
     func: Callable
     metadata: ToolMetadata
+    timeout: Optional[float] = Field(default=None, description="Timeout in seconds for tool execution")
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -61,6 +62,7 @@ class Tool(BaseModel):
             ToolValidationError: If argument validation fails
             ToolExecutionError: If tool execution fails
         """
+        import concurrent.futures
         from craft.tracing import tracer
         
         with tracer.span(f"tool.{self.name}", tool=self.name, inputs=kwargs) as span:
@@ -76,8 +78,20 @@ class Tool(BaseModel):
                 )
             
             try:
-                # Execute the tool
-                result = self.func(**validated_args)
+                # Execute the tool with optional timeout
+                if self.timeout:
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                        future = executor.submit(self.func, **validated_args)
+                        try:
+                            result = future.result(timeout=self.timeout)
+                        except concurrent.futures.TimeoutError:
+                            raise ToolExecutionError(
+                                tool_name=self.name,
+                                message=f"Tool execution timed out after {self.timeout}s",
+                                details={"timeout": self.timeout}
+                            )
+                else:
+                    result = self.func(**validated_args)
                 
                 # Capture result in span (truncated if too long)
                 result_str = str(result)
@@ -87,6 +101,9 @@ class Tool(BaseModel):
                 
                 return result
             except Exception as e:
+                if isinstance(e, ToolExecutionError):
+                    raise e
+                    
                 # Capture execution error with full context
                 error_details = {
                     "arguments": validated_args,
@@ -96,6 +113,53 @@ class Tool(BaseModel):
                     tool_name=self.name,
                     message=f"Tool execution failed: {str(e)}",
                     details=error_details,
+                    original_exception=e,
+                )
+
+    async def acall(self, **kwargs) -> Any:
+        """
+        Execute the tool asynchronously.
+        """
+        import asyncio
+        from craft.tracing import tracer
+        
+        with tracer.span(f"tool.{self.name}.async", tool=self.name, inputs=kwargs) as span:
+            try:
+                validated_args = self.validate_args(**kwargs)
+            except ValueError as e:
+                raise ToolValidationError(
+                    tool_name=self.name,
+                    validation_errors=[str(e)],
+                    provided_args=kwargs,
+                )
+            
+            try:
+                # Wrap sync/async call
+                if asyncio.iscoroutinefunction(self.func):
+                    coro = self.func(**validated_args)
+                else:
+                    coro = asyncio.to_thread(self.func, **validated_args)
+                
+                # Execute with timeout
+                if self.timeout:
+                    try:
+                        result = await asyncio.wait_for(coro, timeout=self.timeout)
+                    except asyncio.TimeoutError:
+                        raise ToolExecutionError(
+                            tool_name=self.name,
+                            message=f"Tool execution timed out after {self.timeout}s",
+                            details={"timeout": self.timeout}
+                        )
+                else:
+                    result = await coro
+                
+                return result
+            except Exception as e:
+                if isinstance(e, ToolExecutionError):
+                    raise e
+                raise ToolExecutionError(
+                    tool_name=self.name,
+                    message=f"Async tool execution failed: {str(e)}",
                     original_exception=e,
                 )
 
