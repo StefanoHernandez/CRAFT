@@ -1,135 +1,45 @@
-import os
-import asyncio
 import logging
-import random
 import uvicorn
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import asyncio
+import random
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime, timezone
-from craft.api.websocket import manager, broadcast_agent_events
-from craft.api.events import get_global_emitter, emit_agent_start, emit_thought, emit_tool_call_start, emit_tool_call_end, emit_agent_end
+from fastapi import WebSocket, WebSocketDisconnect
+
+from craft.api.server import create_app
+from craft.api.schemas import RunNodeRequest, ExportWorkflowRequest
+from craft.services.execution import ExecutionService
+from craft.api.websocket import manager
+from craft.api.events import get_global_emitter, emit_thought
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nexus.hub")
 
-app = FastAPI(title="CRAFT Nexus Integrated Hub")
+app = create_app()
 
-# Enable CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# WebSocket statistics endpoint
+# API Endpoints
 @app.get("/stats")
 async def get_stats():
     return manager.get_stats()
 
-# Code Export Endpoint
 @app.post("/api/export")
-async def export_workflow_code(workflow: dict):
+async def export_workflow_code(request: ExportWorkflowRequest):
     from stitch.graph_parser import GraphParser
     try:
-        parser = GraphParser(workflow)
+        # Compatibility adapter for GraphParser which expects dict
+        workflow_dict = request.workflow.model_dump()
+        parser = GraphParser(workflow_dict)
         code = parser.generate_code()
         return {"success": True, "code": code}
     except Exception as e:
         logger.error(f"Error exporting code: {e}")
         return {"success": False, "error": str(e)}
 
-        return {"success": False, "error": str(e)}
-
-# Partial Execution Endpoint
 @app.post("/api/run_node")
-async def run_single_node(payload: dict):
-    from craft.agents import Agent
-    from craft.providers import OpenAIProvider
-    try:
-        node = payload.get("node")
-        user_input = payload.get("input", "")
-        
-        if not node:
-            raise ValueError("No node data provided")
-            
-        if node.get("type") == "agent":
-            # Instantiate a temporary agent
-            # In a real app, strict DI and caching would be used
-            agent_name = node.get("name", "TempAgent")
-            role = node.get("data", {}).get("role", "Assistant")
-            goal = node.get("data", {}).get("goal", "Help the user")
-            
-            # Use OpenAI by default for now
-            provider = OpenAIProvider()
-            
-            agent = Agent(
-                name=agent_name,
-                role=role,
-                goal=goal,
-                provider=provider
-            )
-            
-            # Execute
-            result = await agent.arun(user_input)
-            return {"success": True, "output": result.result}
-            
-        elif node.get("type") == "tool":
-            return {"success": True, "output": f"Tool execution for '{node.get('name')}' mock successful with input: {user_input}"}
-            
-        else:
-            return {"success": False, "error": f"Unknown node type: {node.get('type')}"}
-            
-    except Exception as e:
-        logger.error(f"Error running node: {e}")
-        return {"success": False, "error": str(e)}
+async def run_single_node(payload: RunNodeRequest):
+    return await ExecutionService.run_single_node(payload.node, payload.input)
 
-# Partial Execution Endpoint
-@app.post("/api/run_node")
-async def run_single_node(payload: dict):
-    from craft.agents import Agent
-    from craft.providers import OpenAIProvider
-    try:
-        node = payload.get("node")
-        user_input = payload.get("input", "")
-        
-        if not node:
-            raise ValueError("No node data provided")
-            
-        if node.get("type") == "agent":
-            # Instantiate a temporary agent
-            # In a real app, strict DI and caching would be used
-            agent_name = node.get("name", "TempAgent")
-            role = node.get("data", {}).get("role", "Assistant")
-            goal = node.get("data", {}).get("goal", "Help the user")
-            
-            # Use OpenAI by default for now
-            provider = OpenAIProvider()
-            
-            agent = Agent(
-                name=agent_name,
-                role=role,
-                goal=goal,
-                provider=provider
-            )
-            
-            # Execute
-            result = await agent.arun(user_input)
-            return {"success": True, "output": result.result}
-            
-        elif node.get("type") == "tool":
-            return {"success": True, "output": f"Tool execution for '{node.get('name')}' mock successful with input: {user_input}"}
-            
-        else:
-            return {"success": False, "error": f"Unknown node type: {node.get('type')}"}
-            
-    except Exception as e:
-        logger.error(f"Error running node: {e}")
-        return {"success": False, "error": str(e)}
-
+# File Persistence (Simplified)
 WORKFLOWS_FILE = "stitch/workflows.json"
 
 def save_workflow(data):
@@ -161,38 +71,13 @@ async def websocket_endpoint(websocket: WebSocket, connection_id: str):
             elif data.get("type") == "run_workflow":
                 # Start a simulated execution loop for the nodes
                 nodes = data.get("data", {}).get("nodes", [])
-                asyncio.create_task(simulate_workflow_execution(nodes, connection_id))
+                asyncio.create_task(ExecutionService.simulate_workflow_execution(nodes, connection_id))
                 
     except WebSocketDisconnect:
         manager.disconnect(connection_id)
 
-async def simulate_workflow_execution(nodes, connection_id):
-    """Simulates node-by-node execution for visual feedback."""
-    for node in nodes:
-        # 1. Update node status to 'executing'
-        await manager.send_personal_message({
-            "type": "node_status",
-            "node_id": node['id'],
-            "status": "executing"
-        }, connection_id)
-        
-        # 2. Simulate work
-        await asyncio.sleep(2)
-        
-        # 3. Update node status to 'completed'
-        await manager.send_personal_message({
-            "type": "node_status",
-            "node_id": node['id'],
-            "status": "completed"
-        }, connection_id)
-        
-        # 4. Emit a thought for the terminal
-        emitter = get_global_emitter()
-        await emit_thought("nexus_worker", f"Processed node {node['name']} ({node['id']}) successfully.")
-
 # Background task to emit random metrics and simulated agent events
 async def background_simulator():
-    emitter = get_global_emitter()
     agent_name = "nexus_orchestrator"
     
     while True:
@@ -226,18 +111,12 @@ async def background_simulator():
         await asyncio.sleep(3)
 
 @app.on_event("startup")
-async def startup():
-    # Start event broadcaster
-    emitter = get_global_emitter()
-    asyncio.create_task(broadcast_agent_events(emitter))
-    # Start background simulator
+async def startup_tasks():
+    # Additional startup tasks if any (event broadcaster is in lifespan)
     asyncio.create_task(background_simulator())
-    logger.info("🚀 CRAFT Nexus Integrated Server Ready")
 
 # Mount static files AFTER routes
-# This serves everything in the current directory (stitch/)
 app.mount("/", StaticFiles(directory="stitch", html=True), name="static")
 
 if __name__ == "__main__":
-    # In a real app, you would use 'uvicorn serve:app'
     uvicorn.run(app, host="0.0.0.0", port=8000)
