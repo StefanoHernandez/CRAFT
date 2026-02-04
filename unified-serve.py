@@ -30,6 +30,106 @@ app.add_middleware(
 async def get_stats():
     return manager.get_stats()
 
+# Code Export Endpoint
+@app.post("/api/export")
+async def export_workflow_code(workflow: dict):
+    from stitch.graph_parser import GraphParser
+    try:
+        parser = GraphParser(workflow)
+        code = parser.generate_code()
+        return {"success": True, "code": code}
+    except Exception as e:
+        logger.error(f"Error exporting code: {e}")
+        return {"success": False, "error": str(e)}
+
+        return {"success": False, "error": str(e)}
+
+# Partial Execution Endpoint
+@app.post("/api/run_node")
+async def run_single_node(payload: dict):
+    from craft.agents import Agent
+    from craft.providers import OpenAIProvider
+    try:
+        node = payload.get("node")
+        user_input = payload.get("input", "")
+        
+        if not node:
+            raise ValueError("No node data provided")
+            
+        if node.get("type") == "agent":
+            # Instantiate a temporary agent
+            # In a real app, strict DI and caching would be used
+            agent_name = node.get("name", "TempAgent")
+            role = node.get("data", {}).get("role", "Assistant")
+            goal = node.get("data", {}).get("goal", "Help the user")
+            
+            # Use OpenAI by default for now
+            provider = OpenAIProvider()
+            
+            agent = Agent(
+                name=agent_name,
+                role=role,
+                goal=goal,
+                provider=provider
+            )
+            
+            # Execute
+            result = await agent.arun(user_input)
+            return {"success": True, "output": result.result}
+            
+        elif node.get("type") == "tool":
+            return {"success": True, "output": f"Tool execution for '{node.get('name')}' mock successful with input: {user_input}"}
+            
+        else:
+            return {"success": False, "error": f"Unknown node type: {node.get('type')}"}
+            
+    except Exception as e:
+        logger.error(f"Error running node: {e}")
+        return {"success": False, "error": str(e)}
+
+# Partial Execution Endpoint
+@app.post("/api/run_node")
+async def run_single_node(payload: dict):
+    from craft.agents import Agent
+    from craft.providers import OpenAIProvider
+    try:
+        node = payload.get("node")
+        user_input = payload.get("input", "")
+        
+        if not node:
+            raise ValueError("No node data provided")
+            
+        if node.get("type") == "agent":
+            # Instantiate a temporary agent
+            # In a real app, strict DI and caching would be used
+            agent_name = node.get("name", "TempAgent")
+            role = node.get("data", {}).get("role", "Assistant")
+            goal = node.get("data", {}).get("goal", "Help the user")
+            
+            # Use OpenAI by default for now
+            provider = OpenAIProvider()
+            
+            agent = Agent(
+                name=agent_name,
+                role=role,
+                goal=goal,
+                provider=provider
+            )
+            
+            # Execute
+            result = await agent.arun(user_input)
+            return {"success": True, "output": result.result}
+            
+        elif node.get("type") == "tool":
+            return {"success": True, "output": f"Tool execution for '{node.get('name')}' mock successful with input: {user_input}"}
+            
+        else:
+            return {"success": False, "error": f"Unknown node type: {node.get('type')}"}
+            
+    except Exception as e:
+        logger.error(f"Error running node: {e}")
+        return {"success": False, "error": str(e)}
+
 WORKFLOWS_FILE = "stitch/workflows.json"
 
 def save_workflow(data):

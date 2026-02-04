@@ -170,7 +170,85 @@ class WorkflowEngine {
             }
         };
 
+        // Context Menu (Right Click)
+        div.oncontextmenu = (e) => {
+            e.preventDefault();
+            this.showContextMenu(e, node);
+        };
+
         this.canvas.appendChild(div);
+    }
+
+    showContextMenu(e, node) {
+        // Remove existing context menus
+        const existing = document.getElementById('context-menu');
+        if (existing) existing.remove();
+
+        const menu = document.createElement('div');
+        menu.id = 'context-menu';
+        menu.className = 'fixed bg-surface-dark border border-border-dark shadow-xl rounded-lg py-1 z-50 min-w-[160px] animate-in fade-in zoom-in duration-100';
+        menu.style.left = `${e.clientX}px`;
+        menu.style.top = `${e.clientY}px`;
+
+        const items = [
+            { icon: 'play_arrow', label: 'Run Node', action: () => this.runNode(node), color: 'text-primary' },
+            { icon: 'edit', label: 'Edit', action: () => this.selectNode(node) },
+            { icon: 'content_copy', label: 'Duplicate', action: () => console.log('Duplicate', node.id) },
+            { icon: 'delete', label: 'Delete', action: () => console.log('Delete', node.id), color: 'text-red-400' }
+        ];
+
+        menu.innerHTML = items.map(item => `
+            <button class="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors" onclick="this.parentElement.action_${item.label.replace(' ', '')}()">
+                <span class="material-symbols-outlined text-[18px] ${item.color || ''}">${item.icon}</span>
+                ${item.label}
+            </button>
+        `).join('');
+
+        // Attach actions
+        items.forEach(item => {
+            menu[`action_${item.label.replace(' ', '')}`] = () => {
+                item.action();
+                menu.remove();
+            };
+        });
+
+        // Close on click outside
+        const closeMenu = () => {
+            menu.remove();
+            window.removeEventListener('click', closeMenu);
+        };
+        setTimeout(() => window.addEventListener('click', closeMenu), 0);
+
+        document.body.appendChild(menu);
+    }
+
+    async runNode(node) {
+        const input = prompt(`Enter input for ${node.name}:`, "Explain quantum physics");
+        if (input === null) return;
+
+        this.showToast(`Running ${node.name}...`, 'info');
+        this.updateNodeStatus(node.id, 'executing');
+
+        try {
+            const response = await fetch('/api/run_node', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ node, input })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                this.updateNodeStatus(node.id, 'completed');
+                // Show result in a modal/alert for now
+                alert(`Output from ${node.name}:\n\n${data.output}`);
+            } else {
+                this.updateNodeStatus(node.id, 'error'); // Need to handle error status visually
+                this.showToast('Error: ' + data.error, 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            this.showToast('Network Error', 'error');
+        }
     }
 
     startDrag(node, element, e) {
@@ -262,5 +340,64 @@ class WorkflowEngine {
             window.nexus.send({ type: 'save_workflow', data: state });
         }
         return state;
+    }
+
+    async exportCode() {
+        const state = {
+            nodes: this.nodes,
+            connections: this.connections
+        };
+
+        try {
+            const response = await fetch('/api/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(state)
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                this.showCodeModal(data.code);
+            } else {
+                this.showToast('Export failed: ' + data.error, 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            this.showToast('Export error: ' + e.message, 'error');
+        }
+    }
+
+    showCodeModal(code) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-8';
+        modal.innerHTML = `
+            <div class="bg-surface-dark w-full max-w-4xl h-[80vh] rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div class="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
+                    <h3 class="font-medium text-white flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">code</span>
+                        Generated Python Logic
+                    </h3>
+                    <div class="flex gap-2">
+                        <button class="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors" onclick="navigator.clipboard.writeText(this.closest('.flex-col').querySelector('pre').innerText); this.innerHTML='<span class=\\'material-symbols-outlined\\'>check</span>'">
+                            <span class="material-symbols-outlined">content_copy</span>
+                        </button>
+                        <button class="p-2 hover:bg-red-500/20 rounded-lg text-slate-400 hover:text-red-400 transition-colors" onclick="this.closest('.fixed').remove()">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto p-4 bg-[#1e1e1e]">
+                    <pre class="font-mono text-sm text-green-400 leading-relaxed theme-atom-one-dark">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                </div>
+                <div class="p-4 border-t border-white/10 bg-white/5 flex justify-end gap-3">
+                    <button class="px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors" onclick="this.closest('.fixed').remove()">Close</button>
+                    <button class="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg shadow-lg shadow-primary/20 flex items-center gap-2" onclick="navigator.clipboard.writeText(this.closest('.flex-col').querySelector('pre').innerText)">
+                        <span class="material-symbols-outlined text-[18px]">download</span>
+                        Copy Code
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
     }
 }

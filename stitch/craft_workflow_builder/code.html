@@ -282,6 +282,11 @@
                 <div class="flex items-center gap-3">
                     <span class="text-xs text-slate-400 font-mono">Status: <span
                             class="text-emerald-400">Ready</span></span>
+                    <button id="export-btn"
+                        class="flex items-center gap-2 bg-surface-dark hover:bg-white/10 text-slate-300 hover:text-white px-4 py-2 rounded-lg text-sm font-medium border border-border-dark transition-all">
+                        <span class="material-symbols-outlined text-[20px]">code</span>
+                        Export Code
+                    </button>
                     <button
                         class="flex items-center gap-2 bg-primary hover:bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(13,166,242,0.3)] transition-all">
                         <span class="material-symbols-outlined text-[20px] fill-1">rocket_launch</span>
@@ -506,6 +511,9 @@ Output Format: JSON.</textarea>
             if (playBtn) playBtn.onclick = () => {
                 window.engine.runWorkflow();
             };
+
+            const exportBtn = document.getElementById('export-btn');
+            if (exportBtn) exportBtn.onclick = () => window.engine.exportCode();
         });
     </script>
 </body>
