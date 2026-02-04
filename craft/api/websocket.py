@@ -113,23 +113,17 @@ class ConnectionManager:
         event_dict = event.model_dump(mode='json')
         event_dict["event_type"] = event.event_type.value
         
-        # Send to matching subscriptions
-        disconnected = []
-        
+        # Send to matching subscriptions via queues
         for connection_id, agent_name in self.subscriptions.items():
             # Check if this connection should receive the event
             if agent_name is None or agent_name == event.agent_name:
-                websocket = self.active_connections.get(connection_id)
-                if websocket:
+                queue = self.event_queues.get(connection_id)
+                if queue:
                     try:
-                        await websocket.send_json(event_dict)
-                    except Exception as e:
-                        logger.error(f"Error broadcasting to {connection_id}: {e}")
-                        disconnected.append(connection_id)
-        
-        # Clean up disconnected clients
-        for connection_id in disconnected:
-            self.disconnect(connection_id)
+                        # Non-blocking put to ensure broadcaster is never blocked by a slow client
+                        queue.put_nowait(event_dict)
+                    except asyncio.QueueFull:
+                        logger.warning(f"Event queue full for client {connection_id}, dropping event")
     
     def get_stats(self) -> Dict[str, Any]:
         """Get connection statistics."""
@@ -229,21 +223,28 @@ def create_websocket_app(
         await manager.connect(websocket, connection_id, agent_name)
         
         try:
-            # Create event broadcaster task
-            async def broadcast_events():
-                """Broadcast events from emitter."""
+            # Create event sender task
+            async def sender_task():
+                """Send events from queue to websocket."""
                 queue = manager.event_queues[connection_id]
-                while connection_id in manager.active_connections:
-                    try:
-                        # This would normally listen to the emitter
-                        # For now, we'll use a timeout to keep connection alive
-                        await asyncio.sleep(1)
-                    except Exception as e:
-                        logger.error(f"Broadcast error: {e}")
-                        break
+                try:
+                    while True:
+                        # Get message from queue
+                        message = await queue.get()
+                        
+                        # Send to websocket
+                        await websocket.send_json(message)
+                        
+                        # Mark task as done
+                        queue.task_done()
+                except asyncio.CancelledError:
+                    # Task cancelled, normal shutdown
+                    pass
+                except Exception as e:
+                    logger.error(f"Sender task error for {connection_id}: {e}")
             
-            # Start broadcaster
-            broadcaster = asyncio.create_task(broadcast_events())
+            # Start sender
+            sender = asyncio.create_task(sender_task())
             
             # Keep connection alive and handle incoming messages
             while True:
@@ -274,7 +275,11 @@ def create_websocket_app(
                     break
             
             # Cleanup
-            broadcaster.cancel()
+            sender.cancel()
+            try:
+                await sender
+            except asyncio.CancelledError:
+                pass
             
         finally:
             manager.disconnect(connection_id)

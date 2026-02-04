@@ -5,7 +5,7 @@ over WebSocket connections.
 """
 
 from typing import Any, Dict, Optional, List, Literal
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field, ConfigDict
 from enum import Enum
 
@@ -46,7 +46,7 @@ class AgentEvent(BaseModel):
     """Base event from agent execution."""
     
     event_type: EventType
-    timestamp: datetime = Field(default_factory=datetime.now)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     agent_name: str
     step_index: Optional[int] = None
     data: Dict[str, Any] = Field(default_factory=dict)
