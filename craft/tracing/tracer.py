@@ -30,7 +30,6 @@ class CraftTracer:
         self._otel_bridge = None
         if os.getenv("OTEL_EXPORTER_TYPE"):
             try:
-                from craft.tracing.otel_bridge import get_otel_bridge
                 self._otel_bridge = get_otel_bridge()
             except ImportError:
                 pass  # OTel not installed, continue with CRAFT-only tracing
@@ -119,23 +118,32 @@ class CraftTracer:
         
         # Also create OTel span if bridge is available
         otel_span_context = None
+        otel_span = None
         if self._otel_bridge and self._otel_bridge.enabled:
             otel_span_context = self._otel_bridge.start_span(operation, **inputs)
-            otel_span = otel_span_context.__enter__()
+            if hasattr(otel_span_context, "__enter__"):
+                otel_span = otel_span_context.__enter__()
+            else:
+                otel_span = otel_span_context
         
         try:
             yield craft_span
             craft_span.end(status=SpanStatus.SUCCESS)
-            if otel_span_context:
+            if otel_span_context and hasattr(otel_span_context, "__exit__"):
                 otel_span_context.__exit__(None, None, None)
         except Exception as e:
             craft_span.end(status=SpanStatus.ERROR, error=str(e))
             if otel_span_context:
                 # Set error status on OTel span
-                if otel_span:
-                    from opentelemetry.trace import StatusCode
-                    otel_span.set_status(StatusCode.ERROR, str(e))
-                otel_span_context.__exit__(type(e), e, e.__traceback__)
+                if otel_span and hasattr(otel_span, "set_status"):
+                    try:
+                        from opentelemetry.trace import StatusCode
+                        status_code = StatusCode.ERROR
+                    except Exception:
+                        status_code = SpanStatus.ERROR
+                    otel_span.set_status(status_code, str(e))
+                if hasattr(otel_span_context, "__exit__"):
+                    otel_span_context.__exit__(type(e), e, e.__traceback__)
             raise
         finally:
             self._current_span = old_span
@@ -153,6 +161,12 @@ class CraftTracer:
 
 # Global tracer instance
 tracer = CraftTracer()
+
+
+def get_otel_bridge():
+    """Load OTel bridge lazily to allow test patching."""
+    from craft.tracing.otel_bridge import get_otel_bridge as _get_otel_bridge
+    return _get_otel_bridge()
 
 
 # Decorators for easy tracing
