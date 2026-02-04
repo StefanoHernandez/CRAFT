@@ -67,11 +67,15 @@ def process_file(filepath, folder):
     )
 
     # 2. Replace the <nav> block
-    # We look for <nav class="...">...</nav>
     new_nav = generate_sidebar_html(folder)
     content = re.sub(r'<nav class="flex flex-col p-3 gap-1">.*?</nav>', new_nav, content, flags=re.DOTALL)
     content = re.sub(r'<nav class="flex flex-col gap-2">.*?</nav>', new_nav, content, flags=re.DOTALL)
     
+    # 3. Inject Nexus Bridge JS before </body>
+    if '/assets/js/nexus-bridge.js' not in content:
+        bridge_script = '    <!-- CRAFT Nexus Bridge -->\n    <script src="/assets/js/nexus-bridge.js"></script>\n'
+        content = content.replace('</body>', f'{bridge_script}</body>')
+        
     with open(filepath, 'w') as f:
         f.write(content)
     print(f"✅ Processed {filepath}")
