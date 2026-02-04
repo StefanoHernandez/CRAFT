@@ -14,14 +14,18 @@ class SQLiteStorage(StorageAdapter):
     Stores conversations in a local SQLite database file.
     """
     
-    def __init__(self, db_path: str = "craft.db"):
+    def __init__(self, db_path: str = "craft.db", database_path: Optional[str] = None):
         """
         Initialize SQLite storage.
         
         Args:
             db_path: Path to SQLite database file
+            database_path: Alias for db_path (backward compatibility)
         """
+        if database_path is not None:
+            db_path = database_path
         self.db_path = db_path
+        self.database_path = db_path
         self._init_db()
         
     def _init_db(self):

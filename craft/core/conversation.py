@@ -1,7 +1,7 @@
 """Conversation management."""
 
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field, ConfigDict
 from craft.providers.base import Message, Role
 
@@ -9,11 +9,11 @@ from craft.providers.base import Message, Role
 class Conversation(BaseModel):
     """Conversation model to manage chat history."""
 
-    id: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    id: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     messages: List[Message] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -31,7 +31,7 @@ class Conversation(BaseModel):
         """
         message = Message(role=role, content=content, metadata=metadata or {})
         self.messages.append(message)
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
         return message
 
     def add_user_message(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> Message:
@@ -63,7 +63,7 @@ class Conversation(BaseModel):
     def clear(self) -> None:
         """Clear all messages."""
         self.messages = []
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     def __len__(self) -> int:
         return len(self.messages)

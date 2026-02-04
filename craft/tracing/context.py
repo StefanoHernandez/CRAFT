@@ -127,6 +127,11 @@ class TraceContext(BaseModel):
             collect(root)
             
         return spans
+
+    @property
+    def spans(self) -> List[TraceSpan]:
+        """Backward-compatible alias for all spans."""
+        return self.get_all_spans()
     
     def get_summary(self) -> Dict[str, Any]:
         """Get trace summary statistics."""
