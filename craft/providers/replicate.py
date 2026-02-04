@@ -121,4 +121,48 @@ class ReplicateProvider(Provider):
         **kwargs: Any,
     ) -> Union[ChatResponse, AsyncIterator[StreamChunk]]:
         """Async chat implementation."""
-        raise NotImplementedError("Async chat not implemented for ReplicateProvider yet")
+        # Wrap the synchronous _chat method in a thread
+        if stream:
+            # For streaming, we need to wrap the generator. 
+            # Since _chat returns an async iterator when stream=True is passed? 
+            # No, _chat returns a sync iterator (yields). 
+            # We can't simply await a generator.
+            
+            # Let's re-implement logic to use to_thread for the blocking call
+            # and then yield async.
+            system_prompt = next((m.content for m in messages if m.role == Role.SYSTEM), "")
+            user_prompt = "\n".join(f"{m.role.value}: {m.content}" for m in messages if m.role != Role.SYSTEM)
+            
+            input_data = {
+                "prompt": user_prompt,
+                "system_prompt": system_prompt,
+                "max_tokens": kwargs.get("max_tokens", self.config.max_tokens or 1024),
+                "temperature": kwargs.get("temperature", self.config.temperature),
+                "top_p": kwargs.get("top_p", self.config.top_p),
+            }
+            
+            # Start stream in thread
+            # replicate.Client.stream is blocking? Yes.
+            stream_iter = await asyncio.to_thread(self.client.stream, self.config.model, input=input_data)
+            
+            async def async_gen():
+                for event in stream_iter:
+                    if event:
+                        yield StreamChunk(
+                            content=str(event),
+                            metadata={"raw": event}
+                        )
+                        await asyncio.sleep(0)
+            
+            return async_gen()
+            
+        else:
+            # Non-streaming is easier, just await the thread
+            return await asyncio.to_thread(
+                self._chat,
+                messages=messages,
+                stream=False,
+                tools=tools,
+                tool_choice=tool_choice,
+                **kwargs
+            )

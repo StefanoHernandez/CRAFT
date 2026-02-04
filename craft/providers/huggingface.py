@@ -97,23 +97,19 @@ class HuggingFaceProvider(Provider):
         except Exception as e:
             raise e # Let base class handle retry
 
-    def _stream_chat(
+    async def _stream_chat(
         self,
         messages: List[Dict[str, str]],
         **kwargs
     ) -> AsyncIterator[StreamChunk]:
         """Stream chat response."""
-        # Note: This is a synchronous generator in current implementation, 
-        # but base class expects AsyncIterator if async is used? 
-        # Wait, base class `chat` returns `Union[ChatResponse, AsyncIterator[StreamChunk]]`?
-        # No, `chat` is sync, so it should return `Iterator[StreamChunk]`?
-        # The base class type hint says `AsyncIterator` but that might be for `achat`.
-        # Let's check base.py again. `chat` returns `Union[ChatResponse, AsyncIterator[StreamChunk]]`.
-        # This seems wrong for a sync method. It should be `Iterator`.
-        # However, if I implement it as a generator, it works for sync iteration.
-        
         try:
-            stream = self.client.chat_completion(
+            # Run the blocking stream creation in a thread if needed, 
+            # but usually the iteration blocks. 
+            # We'll use asyncio.sleep(0) to yield control between chunks.
+            
+            stream = await asyncio.to_thread(
+                self.client.chat_completion,
                 messages=messages,
                 stream=True,
                 **kwargs
@@ -126,6 +122,8 @@ class HuggingFaceProvider(Provider):
                         content=delta,
                         metadata={"raw": chunk}
                     )
+                    # Yield control to event loop to prevent blocking
+                    await asyncio.sleep(0)
                     
         except Exception as e:
             raise e
