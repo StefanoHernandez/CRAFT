@@ -130,19 +130,20 @@ class VotingStrategy:
         """Determine if there is a winner based on strategy."""
         if not tally:
             return None, False
-            
+
         sorted_results = sorted(tally.items(), key=lambda x: x[1], reverse=True)
         top_choice, top_score = sorted_results[0]
-        
+
         if self.type == VoteType.MAJORITY or self.type == VoteType.WEIGHTED:
             # Simple plurality (or absolute majority check could be added)
             return top_choice, True
-            
+
         elif self.type == VoteType.CONSENSUS:
-            # All agents must vote for the same thing (excluding abstains for now, or failing?)
-            # Simplified: Score must equal total weight? Or just checking if only 1 key exists
-            if len(tally) == 1 and top_score >= total_agents: # Assuming weight 1.0 logic broadly
-                 return top_choice, True
+            # All agents must vote for the same thing
+            # Use total weight instead of assuming weight=1.0 for all agents
+            total_weight = sum(self.weights.values())
+            if len(tally) == 1 and top_score >= total_weight:
+                return top_choice, True
             return None, False
-            
+
         return None, False

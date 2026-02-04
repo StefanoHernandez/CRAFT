@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field, ConfigDict
 
 
@@ -18,7 +18,7 @@ class ToolCall(BaseModel):
     result: Any = None
     success: bool = True
     error: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.now)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 class StepResult(BaseModel):

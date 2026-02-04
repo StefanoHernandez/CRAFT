@@ -53,9 +53,9 @@ class ExecutionEngine:
                     
                 current_step += 1
                 
-        except Exception as e:
-            # Re-raise or handle, for now we re-raise as AgentExecutionError is expected by caller
-            raise e
+        except Exception:
+            # Re-raise to preserve original stack trace
+            raise
             
         return step_results
 
