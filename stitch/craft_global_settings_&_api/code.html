@@ -59,29 +59,50 @@
 </div>
 </div>
 <!-- Navigation -->
-<nav class="flex flex-col gap-2">
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9cb0ba] hover:bg-[#1b2327] hover:text-white transition-colors group" href="#">
-<span class="material-symbols-outlined group-hover:text-primary transition-colors">dashboard</span>
-<p class="text-sm font-medium leading-normal">Dashboard</p>
-</a>
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9cb0ba] hover:bg-[#1b2327] hover:text-white transition-colors group" href="#">
-<span class="material-symbols-outlined group-hover:text-primary transition-colors">account_tree</span>
-<p class="text-sm font-medium leading-normal">Workflows</p>
-</a>
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9cb0ba] hover:bg-[#1b2327] hover:text-white transition-colors group" href="#">
-<span class="material-symbols-outlined group-hover:text-primary transition-colors">smart_toy</span>
-<p class="text-sm font-medium leading-normal">Agents</p>
-</a>
-<!-- Active State -->
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 border border-primary/20 text-white shadow-neon" href="#">
-<span class="material-symbols-outlined text-primary fill-1">settings</span>
-<p class="text-sm font-medium leading-normal">Settings &amp; API</p>
-</a>
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9cb0ba] hover:bg-[#1b2327] hover:text-white transition-colors group" href="#">
-<span class="material-symbols-outlined group-hover:text-primary transition-colors">description</span>
-<p class="text-sm font-medium leading-normal">Logs</p>
-</a>
-</nav>
+            <!-- Unified Nav -->
+            <nav class="flex flex-col p-3 gap-1 overflow-y-auto flex-1">
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="../index.html">
+                    <span class="material-symbols-outlined text-[20px]">hub</span>
+                    <span class="text-sm font-medium">Nexus Hub</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="../craft_mission_control_dashboard/code.html">
+                    <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                    <span class="text-sm font-medium">Mission Control</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="../craft_workflow_builder/code.html">
+                    <span class="material-symbols-outlined text-[20px]">account_tree</span>
+                    <span class="text-sm font-medium">Workflow Builder</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="../craft_agent_fleet_management/code.html">
+                    <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+                    <span class="text-sm font-medium">Agent Fleet</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="../craft_knowledge_base_rag/code.html">
+                    <span class="material-symbols-outlined text-[20px]">database</span>
+                    <span class="text-sm font-medium">Knowledge Base</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="../craft_live_workflow_execution/code.html">
+                    <span class="material-symbols-outlined text-[20px]">play_circle</span>
+                    <span class="text-sm font-medium">Live Execution</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="../craft_system_health_monitor/code.html">
+                    <span class="material-symbols-outlined text-[20px]">monitoring</span>
+                    <span class="text-sm font-medium">Health Monitor</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary" href="../craft_global_settings_&_api/code.html">
+                    <span class="material-symbols-outlined text-[20px] fill-1">settings</span>
+                    <span class="text-sm font-medium">Settings & API</span>
+                    <div class="ml-auto size-1.5 rounded-full bg-primary shadow-[0_0_8px_#0da6f2]"></div>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="../craft_agent_thought_log/code.html">
+                    <span class="material-symbols-outlined text-[20px]">psychology</span>
+                    <span class="text-sm font-medium">Thought Log</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="../craft_task_history_&_archive/code.html">
+                    <span class="material-symbols-outlined text-[20px]">history</span>
+                    <span class="text-sm font-medium">Task History</span>
+                </a>
+            </nav>
 </div>
 <!-- Sidebar CTA -->
 <button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary hover:bg-sky-400 text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-[0_0_15px_rgba(13,166,242,0.4)]">
