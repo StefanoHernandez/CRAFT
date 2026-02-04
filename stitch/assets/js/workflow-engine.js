@@ -91,8 +91,14 @@ class WorkflowEngine {
 
     initEventListeners() {
         // Canvas Drag & Drop
-        this.canvas.addEventListener('dragover', (e) => e.preventDefault());
-        this.canvas.addEventListener('drop', (e) => this.handlePaletteDrop(e));
+        this.canvas.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        });
+        this.canvas.addEventListener('drop', (e) => {
+            console.log('📦 Drop event received!', e);
+            this.handlePaletteDrop(e);
+        });
 
         // Node Movement
         window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
@@ -106,19 +112,26 @@ class WorkflowEngine {
         const nodeType = e.dataTransfer.getData('node-type');
         const nodeName = e.dataTransfer.getData('node-name');
 
+        console.log('🎯 Palette drop:', { nodeType, nodeName });
+
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left - 100; // Center offset
         const y = e.clientY - rect.top - 20;
 
         if (nodeType) {
-            this.addNode({
+            const nodeConfig = {
                 id: 'node_' + Math.random().toString(36).substr(2, 5),
                 type: nodeType,
                 name: nodeName || 'New Node',
-                x: x,
-                y: y,
+                x: Math.max(0, x),
+                y: Math.max(0, y),
                 data: {}
-            });
+            };
+            console.log('➕ Adding node:', nodeConfig);
+            this.addNode(nodeConfig);
+            this.showToast(`Added: ${nodeName}`, 'success');
+        } else {
+            console.warn('⚠️ No node-type in drop data');
         }
     }
 
@@ -127,6 +140,28 @@ class WorkflowEngine {
         this.nodes.push(node);
         this.renderNode(node);
         this.renderConnections();
+    }
+
+    // Add node from palette click (not drag)
+    addNodeFromPalette(nodeType, nodeName) {
+        // Calculate position: center of canvas with offset based on existing nodes
+        const canvasRect = this.canvas.getBoundingClientRect();
+        const baseX = (canvasRect.width / 2) - 144; // Half node width
+        const baseY = 100 + (this.nodes.length * 150); // Stack vertically
+
+        const nodeConfig = {
+            id: 'node_' + Math.random().toString(36).substr(2, 5),
+            type: nodeType,
+            name: nodeName,
+            x: Math.min(baseX, canvasRect.width - 300),
+            y: Math.min(baseY, canvasRect.height - 200),
+            data: {}
+        };
+
+        console.log('🖱️ Click-add node:', nodeConfig);
+        this.addNode(nodeConfig);
+        this.showToast(`Added: ${nodeName}`, 'success');
+        this.selectNode(nodeConfig);
     }
 
     renderNode(node) {
@@ -296,6 +331,102 @@ class WorkflowEngine {
         el.classList.add('ring-2', 'ring-primary');
     }
 
+    // ========== CONNECTION LOGIC ==========
+    startConnection(node, portElement) {
+        const isOutput = portElement.classList.contains('output-port');
+        if (!isOutput) return; // Only start connections from output ports
+
+        this.isConnecting = true;
+        this.connectionStart = {
+            node: node,
+            port: portElement
+        };
+
+        // Create temporary line
+        this.tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        this.tempLine.setAttribute('stroke', '#0da6f2');
+        this.tempLine.setAttribute('stroke-width', '2');
+        this.tempLine.setAttribute('stroke-dasharray', '5,5');
+
+        const rect = portElement.getBoundingClientRect();
+        const canvasRect = this.canvas.getBoundingClientRect();
+        const x = rect.left - canvasRect.left + rect.width / 2;
+        const y = rect.top - canvasRect.top + rect.height / 2;
+
+        this.tempLine.setAttribute('x1', x);
+        this.tempLine.setAttribute('y1', y);
+        this.tempLine.setAttribute('x2', x);
+        this.tempLine.setAttribute('y2', y);
+
+        this.svg.appendChild(this.tempLine);
+
+        // Add mousemove and mouseup listeners for connection
+        this._connectMouseMove = (e) => this.handleConnectionMove(e);
+        this._connectMouseUp = (e) => this.handleConnectionEnd(e);
+
+        window.addEventListener('mousemove', this._connectMouseMove);
+        window.addEventListener('mouseup', this._connectMouseUp);
+    }
+
+    handleConnectionMove(e) {
+        if (!this.isConnecting || !this.tempLine) return;
+
+        const canvasRect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - canvasRect.left;
+        const y = e.clientY - canvasRect.top;
+
+        this.tempLine.setAttribute('x2', x);
+        this.tempLine.setAttribute('y2', y);
+    }
+
+    handleConnectionEnd(e) {
+        if (!this.isConnecting) return;
+
+        // Check if we dropped on an input port
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+
+        if (target && target.classList.contains('input-port')) {
+            // Find the target node
+            const targetNodeEl = target.closest('[id^="node_"]');
+            if (targetNodeEl) {
+                const targetNode = this.nodes.find(n => n.id === targetNodeEl.id);
+
+                if (targetNode && targetNode.id !== this.connectionStart.node.id) {
+                    // Create connection
+                    const connection = {
+                        from: this.connectionStart.node.id,
+                        to: targetNode.id
+                    };
+
+                    // Check if connection already exists
+                    const exists = this.connections.some(c =>
+                        c.from === connection.from && c.to === connection.to
+                    );
+
+                    if (!exists) {
+                        this.connections.push(connection);
+                        this.showToast(`Connected ${this.connectionStart.node.name} → ${targetNode.name}`, 'success');
+                        console.log('🔗 Connection created:', connection);
+                    }
+                }
+            }
+        }
+
+        // Cleanup
+        if (this.tempLine) {
+            this.tempLine.remove();
+            this.tempLine = null;
+        }
+
+        this.isConnecting = false;
+        this.connectionStart = null;
+
+        window.removeEventListener('mousemove', this._connectMouseMove);
+        window.removeEventListener('mouseup', this._connectMouseUp);
+
+        this.renderConnections();
+    }
+
     renderConnections() {
         // Clear SVG except defs
         const defs = this.svg.querySelector('defs');
@@ -348,8 +479,11 @@ class WorkflowEngine {
             connections: this.connections
         };
 
+        console.log('📤 Exporting workflow:', state);
+
         try {
-            const response = await fetch('/api/export', {
+            // Use the GraphParser API server on port 8001
+            const response = await fetch('http://localhost:8001/api/export', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(state)
@@ -358,13 +492,52 @@ class WorkflowEngine {
 
             if (data.success) {
                 this.showCodeModal(data.code);
+                this.showToast('Code exported successfully!', 'success');
             } else {
                 this.showToast('Export failed: ' + data.error, 'error');
             }
         } catch (e) {
-            console.error(e);
-            this.showToast('Export error: ' + e.message, 'error');
+            console.error('Export error:', e);
+            // Fallback: generate basic code client-side
+            this.showCodeModal(this.generateBasicCode());
+            this.showToast('Using offline export (start server for full features)', 'info');
         }
+    }
+
+    generateBasicCode() {
+        // Fallback client-side code generation
+        let code = `import asyncio
+from craft.agents import Agent
+from craft.providers import OpenAIProvider
+from dotenv import load_dotenv
+
+load_dotenv()
+provider = OpenAIProvider()
+
+`;
+        // Generate agents
+        this.nodes.filter(n => n.type === 'agent').forEach(agent => {
+            const name = agent.name.toLowerCase().replace(/ /g, '_');
+            code += `
+${name} = Agent(
+    name="${agent.name}",
+    role="Assistant",
+    goal="Help the user",
+    provider=provider
+)
+`;
+        });
+
+        code += `
+async def main():
+    print("🚀 Starting CRAFT Workflow...")
+    # Add your workflow logic here
+    pass
+
+if __name__ == "__main__":
+    asyncio.run(main())
+`;
+        return code;
     }
 
     showCodeModal(code) {

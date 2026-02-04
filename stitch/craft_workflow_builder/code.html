@@ -160,86 +160,257 @@
             <!-- Draggable Components (Accordions) -->
             <div class="flex-1 overflow-y-auto px-3 pb-4">
                 <h3 class="px-2 pb-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Node Palette</h3>
-                <div class="flex flex-col gap-3">
-                    <!-- AI Agents -->
-                    <details
-                        class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all"
-                        open="">
+                <div class="flex flex-col gap-2">
+
+                    <!-- TRIGGERS -->
+                    <details class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all">
                         <summary class="flex cursor-pointer items-center justify-between px-3 py-2 select-none">
                             <span class="flex items-center gap-2 text-sm font-medium text-slate-200">
-                                <span class="material-symbols-outlined text-primary text-[18px]">psychology</span>
+                                <span class="material-symbols-outlined text-sky-400 text-[18px]">play_circle</span>
+                                Triggers
+                            </span>
+                            <span class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
+                        </summary>
+                        <div class="px-3 pb-3 pt-1 flex flex-col gap-1">
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-sky-400/50 hover:bg-sky-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('user_input', 'User Input')">
+                                <span class="material-symbols-outlined text-sky-400 text-[16px]">input</span>
+                                <span class="text-xs text-slate-300">User Input</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-sky-400/50 hover:bg-sky-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('webhook', 'Webhook')">
+                                <span class="material-symbols-outlined text-sky-400 text-[16px]">webhook</span>
+                                <span class="text-xs text-slate-300">Webhook</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-sky-400/50 hover:bg-sky-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('chat_trigger', 'Chat Trigger')">
+                                <span class="material-symbols-outlined text-sky-400 text-[16px]">chat</span>
+                                <span class="text-xs text-slate-300">Chat Trigger</span>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- AI AGENTS -->
+                    <details class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all" open>
+                        <summary class="flex cursor-pointer items-center justify-between px-3 py-2 select-none">
+                            <span class="flex items-center gap-2 text-sm font-medium text-slate-200">
+                                <span class="material-symbols-outlined text-amber-400 text-[18px]">psychology</span>
                                 AI Agents
                             </span>
-                            <span
-                                class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
+                            <span class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
                         </summary>
-                        <div class="px-3 pb-3 pt-1 flex flex-col gap-2">
-                            <div class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors"
-                                draggable="true"
-                                ondragstart="event.dataTransfer.setData('node-type', 'agent'); event.dataTransfer.setData('node-name', 'LLM Chat Node')">
-                                <span class="material-symbols-outlined text-amber-400 text-[16px]">chat</span>
-                                <span class="text-xs text-slate-300">LLM Chat Node</span>
+                        <div class="px-3 pb-3 pt-1 flex flex-col gap-1">
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-amber-400/50 hover:bg-amber-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('agent', 'Agent')">
+                                <span class="material-symbols-outlined text-amber-400 text-[16px]">smart_toy</span>
+                                <span class="text-xs text-slate-300">Agent</span>
                             </div>
-                            <div class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors"
-                                draggable="true"
-                                ondragstart="event.dataTransfer.setData('node-type', 'agent'); event.dataTransfer.setData('node-name', 'Image Gen Node')">
-                                <span class="material-symbols-outlined text-amber-400 text-[16px]">image</span>
-                                <span class="text-xs text-slate-300">Image Gen Node</span>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-amber-400/50 hover:bg-amber-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('planning_agent', 'Planning Agent')">
+                                <span class="material-symbols-outlined text-amber-400 text-[16px]">schema</span>
+                                <span class="text-xs text-slate-300">Planning Agent</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-amber-400/50 hover:bg-amber-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('research_agent', 'Research Agent')">
+                                <span class="material-symbols-outlined text-amber-400 text-[16px]">biotech</span>
+                                <span class="text-xs text-slate-300">Research Agent</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-amber-400/50 hover:bg-amber-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('code_review_agent', 'Code Review Agent')">
+                                <span class="material-symbols-outlined text-amber-400 text-[16px]">code</span>
+                                <span class="text-xs text-slate-300">Code Review Agent</span>
                             </div>
                         </div>
                     </details>
-                    <!-- Logic Gates -->
-                    <details
-                        class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all">
+
+                    <!-- LLM PROVIDERS -->
+                    <details class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all">
                         <summary class="flex cursor-pointer items-center justify-between px-3 py-2 select-none">
                             <span class="flex items-center gap-2 text-sm font-medium text-slate-200">
-                                <span class="material-symbols-outlined text-primary text-[18px]">call_split</span>
-                                Logic Gates
+                                <span class="material-symbols-outlined text-emerald-400 text-[18px]">auto_awesome</span>
+                                LLM Providers
                             </span>
-                            <span
-                                class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
+                            <span class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
                         </summary>
-                        <div class="px-3 pb-3 pt-1 flex flex-col gap-2">
-                            <div class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors"
-                                draggable="true"
-                                ondragstart="event.dataTransfer.setData('node-type', 'logic'); event.dataTransfer.setData('node-name', 'If / Else Condition')">
-                                <span class="material-symbols-outlined text-purple-400 text-[16px]">flaky</span>
-                                <span class="text-xs text-slate-300">If / Else Condition</span>
+                        <div class="px-3 pb-3 pt-1 flex flex-col gap-1">
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-emerald-400/50 hover:bg-emerald-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('openai', 'OpenAI')">
+                                <span class="material-symbols-outlined text-emerald-400 text-[16px]">auto_awesome</span>
+                                <span class="text-xs text-slate-300">OpenAI</span>
                             </div>
-                            <div class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors"
-                                draggable="true"
-                                ondragstart="event.dataTransfer.setData('node-type', 'logic'); event.dataTransfer.setData('node-name', 'Loop / Iterator')">
-                                <span class="material-symbols-outlined text-purple-400 text-[16px]">loop</span>
-                                <span class="text-xs text-slate-300">Loop / Iterator</span>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-emerald-400/50 hover:bg-emerald-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('anthropic', 'Anthropic')">
+                                <span class="material-symbols-outlined text-emerald-400 text-[16px]">smart_toy</span>
+                                <span class="text-xs text-slate-300">Anthropic</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-emerald-400/50 hover:bg-emerald-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('groq', 'Groq')">
+                                <span class="material-symbols-outlined text-emerald-400 text-[16px]">bolt</span>
+                                <span class="text-xs text-slate-300">Groq</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-emerald-400/50 hover:bg-emerald-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('ollama', 'Ollama')">
+                                <span class="material-symbols-outlined text-emerald-400 text-[16px]">computer</span>
+                                <span class="text-xs text-slate-300">Ollama (Local)</span>
                             </div>
                         </div>
                     </details>
-                    <!-- Knowledge Bases -->
-                    <details
-                        class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all">
+
+                    <!-- TOOLS -->
+                    <details class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all">
                         <summary class="flex cursor-pointer items-center justify-between px-3 py-2 select-none">
                             <span class="flex items-center gap-2 text-sm font-medium text-slate-200">
-                                <span class="material-symbols-outlined text-primary text-[18px]">database</span>
-                                Data &amp; RAG
+                                <span class="material-symbols-outlined text-blue-400 text-[18px]">build</span>
+                                Tools
                             </span>
-                            <span
-                                class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
+                            <span class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
                         </summary>
-                        <div class="px-3 pb-3 pt-1 flex flex-col gap-2">
-                            <div class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors"
-                                draggable="true"
-                                ondragstart="event.dataTransfer.setData('node-type', 'knowledge'); event.dataTransfer.setData('node-name', 'PDF Loader')">
-                                <span class="material-symbols-outlined text-emerald-400 text-[16px]">description</span>
+                        <div class="px-3 pb-3 pt-1 flex flex-col gap-1">
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-blue-400/50 hover:bg-blue-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('web_search', 'Web Search')">
+                                <span class="material-symbols-outlined text-blue-400 text-[16px]">search</span>
+                                <span class="text-xs text-slate-300">Web Search</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-blue-400/50 hover:bg-blue-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('calculator', 'Calculator')">
+                                <span class="material-symbols-outlined text-blue-400 text-[16px]">calculate</span>
+                                <span class="text-xs text-slate-300">Calculator</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-blue-400/50 hover:bg-blue-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('http_request', 'HTTP Request')">
+                                <span class="material-symbols-outlined text-blue-400 text-[16px]">http</span>
+                                <span class="text-xs text-slate-300">HTTP Request</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-blue-400/50 hover:bg-blue-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('custom_tool', 'Custom Tool')">
+                                <span class="material-symbols-outlined text-blue-400 text-[16px]">extension</span>
+                                <span class="text-xs text-slate-300">Custom Tool</span>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- RAG PIPELINE -->
+                    <details class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all">
+                        <summary class="flex cursor-pointer items-center justify-between px-3 py-2 select-none">
+                            <span class="flex items-center gap-2 text-sm font-medium text-slate-200">
+                                <span class="material-symbols-outlined text-teal-400 text-[18px]">database</span>
+                                RAG Pipeline
+                            </span>
+                            <span class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
+                        </summary>
+                        <div class="px-3 pb-3 pt-1 flex flex-col gap-1">
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-teal-400/50 hover:bg-teal-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('pdf_loader', 'PDF Loader')">
+                                <span class="material-symbols-outlined text-teal-400 text-[16px]">picture_as_pdf</span>
                                 <span class="text-xs text-slate-300">PDF Loader</span>
                             </div>
-                            <div class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors"
-                                draggable="true"
-                                ondragstart="event.dataTransfer.setData('node-type', 'knowledge'); event.dataTransfer.setData('node-name', 'Vector Search')">
-                                <span class="material-symbols-outlined text-emerald-400 text-[16px]">search</span>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-teal-400/50 hover:bg-teal-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('text_chunker', 'Text Chunker')">
+                                <span class="material-symbols-outlined text-teal-400 text-[16px]">content_cut</span>
+                                <span class="text-xs text-slate-300">Text Chunker</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-teal-400/50 hover:bg-teal-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('embedding', 'Embedding')">
+                                <span class="material-symbols-outlined text-teal-400 text-[16px]">data_array</span>
+                                <span class="text-xs text-slate-300">Embedding</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-teal-400/50 hover:bg-teal-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('vector_store', 'Vector Store')">
+                                <span class="material-symbols-outlined text-teal-400 text-[16px]">storage</span>
+                                <span class="text-xs text-slate-300">Vector Store</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-teal-400/50 hover:bg-teal-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('vector_search', 'Vector Search')">
+                                <span class="material-symbols-outlined text-teal-400 text-[16px]">manage_search</span>
                                 <span class="text-xs text-slate-300">Vector Search</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-teal-400/50 hover:bg-teal-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('reranker', 'Reranker')">
+                                <span class="material-symbols-outlined text-teal-400 text-[16px]">sort</span>
+                                <span class="text-xs text-slate-300">Reranker</span>
                             </div>
                         </div>
                     </details>
+
+                    <!-- CONSENSUS -->
+                    <details class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all">
+                        <summary class="flex cursor-pointer items-center justify-between px-3 py-2 select-none">
+                            <span class="flex items-center gap-2 text-sm font-medium text-slate-200">
+                                <span class="material-symbols-outlined text-orange-400 text-[18px]">groups</span>
+                                Consensus
+                            </span>
+                            <span class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
+                        </summary>
+                        <div class="px-3 pb-3 pt-1 flex flex-col gap-1">
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-orange-400/50 hover:bg-orange-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('council', 'Council')">
+                                <span class="material-symbols-outlined text-orange-400 text-[16px]">groups</span>
+                                <span class="text-xs text-slate-300">Council</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-orange-400/50 hover:bg-orange-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('voting', 'Voting')">
+                                <span class="material-symbols-outlined text-orange-400 text-[16px]">how_to_vote</span>
+                                <span class="text-xs text-slate-300">Voting</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-orange-400/50 hover:bg-orange-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('debate', 'Debate')">
+                                <span class="material-symbols-outlined text-orange-400 text-[16px]">forum</span>
+                                <span class="text-xs text-slate-300">Debate</span>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- LOGIC -->
+                    <details class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all">
+                        <summary class="flex cursor-pointer items-center justify-between px-3 py-2 select-none">
+                            <span class="flex items-center gap-2 text-sm font-medium text-slate-200">
+                                <span class="material-symbols-outlined text-purple-400 text-[18px]">call_split</span>
+                                Logic
+                            </span>
+                            <span class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
+                        </summary>
+                        <div class="px-3 pb-3 pt-1 flex flex-col gap-1">
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-purple-400/50 hover:bg-purple-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('condition', 'If / Else')">
+                                <span class="material-symbols-outlined text-purple-400 text-[16px]">call_split</span>
+                                <span class="text-xs text-slate-300">If / Else</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-purple-400/50 hover:bg-purple-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('loop', 'Loop')">
+                                <span class="material-symbols-outlined text-purple-400 text-[16px]">loop</span>
+                                <span class="text-xs text-slate-300">Loop</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-purple-400/50 hover:bg-purple-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('error_handler', 'Error Handler')">
+                                <span class="material-symbols-outlined text-purple-400 text-[16px]">error</span>
+                                <span class="text-xs text-slate-300">Error Handler</span>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- MEMORY -->
+                    <details class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all">
+                        <summary class="flex cursor-pointer items-center justify-between px-3 py-2 select-none">
+                            <span class="flex items-center gap-2 text-sm font-medium text-slate-200">
+                                <span class="material-symbols-outlined text-violet-400 text-[18px]">memory</span>
+                                Memory
+                            </span>
+                            <span class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
+                        </summary>
+                        <div class="px-3 pb-3 pt-1 flex flex-col gap-1">
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-violet-400/50 hover:bg-violet-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('conversation_memory', 'Conversation Memory')">
+                                <span class="material-symbols-outlined text-violet-400 text-[16px]">history</span>
+                                <span class="text-xs text-slate-300">Conversation Memory</span>
+                            </div>
+                            <div class="palette-node flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-pointer hover:border-violet-400/50 hover:bg-violet-400/10 transition-colors"
+                                onclick="window.engine && window.engine.addNodeFromPalette('persistent_memory', 'Persistent Memory')">
+                                <span class="material-symbols-outlined text-violet-400 text-[16px]">save_alt</span>
+                                <span class="text-xs text-slate-300">Persistent Memory</span>
+                            </div>
+                        </div>
+                    </details>
+
                 </div>
             </div>
         </aside>
