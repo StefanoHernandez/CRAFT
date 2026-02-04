@@ -5,6 +5,25 @@ All notable changes to CRAFT will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0-alpha] - 2026-02-04
+
+### Added - Framework Evolution (Phase 1)
+
+#### Council Upgrade (Multi-Agent Consensus)
+- **Voting Strategy** (`craft/consensus/strategies/voting.py`):
+  - Implements democratic decision-making (Majority, Consensus, Weighted).
+  - Fulfills the "Democratic" agent promise.
+- **Hierarchical Strategy** (`craft/consensus/strategies/hierarchical.py`):
+  - Implements Manager-Worker delegation pattern (inspired by **CrewAI**).
+  - Allows "Chairman" agents to break down goals and assign sub-tasks.
+- **Council Integration**: Updated `Council.deliberate()` to support new strategies.
+
+#### Developer Experience (Simplicity)
+- **Tool Decorator** (`craft/tools/decorators.py`):
+  - New `@tool` decorator for "Code-First" tool creation (inspired by **DataPizza**).
+  - Auto-generates JSON schemas from function signatures and docstrings.
+  - Removes boilerplate class definitions for simple functions.
+
 ## [2.0.0] - 2025-11-26
 
 ### 🎉 Major Release - Complete RAG Stack + Real-time Streaming

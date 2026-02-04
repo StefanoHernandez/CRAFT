@@ -11,9 +11,8 @@ from craft.consensus.base import (
     CouncilResult,
     ConsensusStrategy
 )
-from craft.consensus.strategies.debate import DebateStrategy
-
-logger = logging.getLogger(__name__)
+from craft.consensus.strategies.voting import VotingStrategy
+from craft.consensus.strategies.hierarchical import HierarchicalStrategy
 
 class Council:
     """
@@ -42,12 +41,13 @@ class Council:
             if not self.config.chairman:
                 raise ValueError(f"Strategy {self.config.strategy} requires a Chairman agent.")
 
-    async def deliberate(self, topic: str) -> CouncilResult:
+    async def deliberate(self, topic: str, options: Optional[List[str]] = None) -> CouncilResult:
         """
         Conduct a deliberation on a topic.
         
         Args:
             topic: The topic or question to deliberate on.
+            options: List of options for voting (required if strategy is VOTING)
             
         Returns:
             CouncilResult containing the decision and rationale.
@@ -57,7 +57,11 @@ class Council:
         if self.config.strategy == ConsensusStrategy.DEBATE:
             return await self._run_debate(topic)
         elif self.config.strategy == ConsensusStrategy.VOTING:
-            return await self._run_voting(topic)
+            if not options:
+                raise ValueError("Voting strategy requires a list of 'options'.")
+            return await self._run_voting(topic, options)
+        elif self.config.strategy == ConsensusStrategy.HIERARCHICAL:
+            return await self._run_hierarchical(topic)
         else:
             raise NotImplementedError(f"Strategy {self.config.strategy} not yet implemented.")
 
@@ -71,7 +75,19 @@ class Council:
         )
         return await strategy.run(topic)
 
-    async def _run_voting(self, topic: str) -> CouncilResult:
-        """Run a simple voting strategy."""
-        # TODO: Implement voting strategy
-        raise NotImplementedError("Voting strategy not yet implemented")
+    async def _run_voting(self, topic: str, options: List[str]) -> CouncilResult:
+        """Run a voting strategy."""
+        strategy = VotingStrategy(
+            agents=self.config.agents
+            # Future: Pass type/weights from config if added to CouncilConfig
+        )
+        return await strategy.run(topic, options)
+
+    async def _run_hierarchical(self, goal: str) -> CouncilResult:
+        """Run a hierarchical strategy."""
+        strategy = HierarchicalStrategy(
+            manager=self.config.chairman, # Manager is the Chairman
+            workers=self.config.agents,   # Rest are workers
+            verbose=self.config.verbose
+        )
+        return await strategy.run(goal)
