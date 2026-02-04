@@ -24,6 +24,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Auto-generates JSON schemas from function signatures and docstrings.
   - Removes boilerplate class definitions for simple functions.
 
+#### Architecture Refactoring (Phase 5)
+- **Agent Decomposition**:
+  - `ExecutionEngine` (`craft/core/execution_engine.py`) handles the execution loop.
+  - `Planner` (`craft/agents/planning.py`) centralizes planning logic.
+  - `Agent` class refactored to be cleaner and more modular.
+- **API Cleanup**:
+  - Duplicate endpoints removed in `unified-serve.py`.
+  - New `craft/api/server.py` for centralized FastAPI configuration.
+  - Pydantic models in `craft/api/schemas.py` for strict validation.
+- **Dashboard Redesign**:
+  - New "Bento Grid" layout (`stitch/designs/nexus_dashboard_v2.pen`).
+  - Dark, terminal-inspired aesthetic for the Mission Control dashboard.
+
 ## [2.0.0] - 2025-11-26
 
 ### 🎉 Major Release - Complete RAG Stack + Real-time Streaming
