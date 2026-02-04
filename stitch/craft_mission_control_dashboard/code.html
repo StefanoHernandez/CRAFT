@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CRAFT Mission Control Dashboard</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0da6f2", // Cyan
+                        "secondary": "#f59e0b", // Amber
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101c22",
+                        "cyber-dark": "#0a0a0f",
+                        "panel-dark": "#131b20",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for cyberpunk look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0f; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #374151; 
+        }
+        .neon-glow {
+            box-shadow: 0 0 10px rgba(13, 166, 242, 0.3);
+        }
+        .text-glow {
+            text-shadow: 0 0 10px rgba(13, 166, 242, 0.5);
+        }
+        .glass-panel {
+            background: rgba(19, 27, 32, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-300 font-display overflow-hidden h-screen flex antialiased">
+<!-- Sidebar -->
+<aside class="w-64 bg-background-dark border-r border-white/5 flex flex-col justify-between shrink-0 z-20">
+<div class="p-6">
+<div class="flex items-center gap-3 mb-10">
+<div class="size-8 rounded bg-primary/20 flex items-center justify-center border border-primary/40 text-primary">
+<span class="material-symbols-outlined text-xl">hub</span>
+</div>
+<div>
+<h1 class="text-white text-lg font-bold tracking-wider leading-none">CRAFT</h1>
+<p class="text-xs text-slate-500 font-mono mt-0.5">MISSION CONTROL</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-primary/10 border border-primary/20 text-white group transition-all" href="#">
+<span class="material-symbols-outlined text-primary group-hover:text-white transition-colors">hub</span>
+<span class="text-sm font-medium">Nexus View</span>
+<div class="ml-auto size-1.5 rounded-full bg-primary shadow-[0_0_8px_#0da6f2]"></div>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="text-sm font-medium">Agent Fleet</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">database</span>
+<span class="text-sm font-medium">Knowledge Base</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+</div>
+<div class="p-4 border-t border-white/5">
+<div class="flex items-center gap-3 px-3 py-2 bg-[#0a0a0f] rounded-lg border border-white/5">
+<div class="relative flex items-center justify-center size-8">
+<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-20"></span>
+<span class="material-symbols-outlined text-green-500 text-lg">wifi</span>
+</div>
+<div>
+<p class="text-white text-xs font-bold uppercase tracking-wider">System Online</p>
+<p class="text-[#0bda57] text-[10px] font-mono">WS_CONNECTED: 24ms</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full relative bg-cyber-dark">
+<!-- TOP: Nexus Canvas (Main Stage) -->
+<section class="relative flex-1 w-full min-h-[50%] overflow-hidden group">
+<!-- Background Visualization -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center opacity-80" data-alt="Futuristic dark node graph network with glowing blue and orange connections on a black background" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCaGusiH7g6FdIJ9XQW4uM1qAPdd04ZuQot3H4cAlNZ_GDJCC79jbZdgyltkOeIKMLTp5CguehMMTUydLxDdrz_uH0lv_4vLMzQjUlKQBfyg2mZ9Gdnuyg37E5IqfoIV7zvYcUJo-Ltl4kfwm9TJVCmim3m7kSvdLyYVZfYV8EODTaQh4dUNn7uQA8JCbdaGqW_793xtpSA_xNq2Q6aaHfAzc8t_vn5Iy-hxgUc-wQvLVYKA6K978ZMChxIcBLNtrUXRNLRzLkYsIXo');">
+<!-- Overlay gradient to fade into the dark theme -->
+<div class="absolute inset-0 bg-gradient-to-b from-transparent via-cyber-dark/40 to-cyber-dark"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-background-dark/80 to-transparent"></div>
+</div>
+<!-- Header / Breadcrumbs (Floating top left) -->
+<div class="absolute top-6 left-6 z-10 flex items-center gap-2 text-xs font-mono text-slate-400 glass-panel px-3 py-1.5 rounded-full">
+<span class="text-primary">NEXUS</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span>LIVE_MONITORING</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span class="text-white">NODE_GRAPH_V4</span>
+</div>
+<!-- Metrics Panel (Floating Top Right - Glassmorphism) -->
+<div class="absolute top-6 right-6 z-10 flex flex-col md:flex-row gap-3">
+<!-- Metric Card 1 -->
+<div class="glass-panel p-4 rounded-xl min-w-[140px] flex flex-col border-l-2 border-l-primary">
+<div class="flex items-center justify-between mb-2">
+<span class="text-slate-400 text-xs font-medium uppercase tracking-wider">Tokens/Sec</span>
+<span class="material-symbols-outlined text-primary text-sm">bolt</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-white font-mono">124</span>
+<span class="text-[#0bda57] text-xs font-medium">+12%</span>
+</div>
+</div>
+<!-- Metric Card 2 -->
+<div class="glass-panel p-4 rounded-xl min-w-[140px] flex flex-col border-l-2 border-l-secondary">
+<div class="flex items-center justify-between mb-2">
+<span class="text-slate-400 text-xs font-medium uppercase tracking-wider">Active Tools</span>
+<span class="material-symbols-outlined text-secondary text-sm">construction</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-white font-mono">5</span>
+<span class="text-slate-400 text-xs font-medium">idle: 2</span>
+</div>
+</div>
+<!-- Metric Card 3 -->
+<div class="glass-panel p-4 rounded-xl min-w-[140px] flex flex-col border-l-2 border-l-purple-500">
+<div class="flex items-center justify-between mb-2">
+<span class="text-slate-400 text-xs font-medium uppercase tracking-wider">Est. Cost</span>
+<span class="material-symbols-outlined text-purple-500 text-sm">attach_money</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-white font-mono">0.042</span>
+<span class="text-slate-400 text-xs font-medium">/hr</span>
+</div>
+</div>
+</div>
+<!-- Central Node Interaction (Simulated UI element on the canvas) -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+<div class="relative">
+<div class="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse"></div>
+<div class="size-20 bg-background-dark border-2 border-primary text-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(13,166,242,0.4)] z-10 relative">
+<span class="material-symbols-outlined text-4xl">neurology</span>
+</div>
+<!-- Connecting lines simulated -->
+<div class="absolute top-1/2 left-full w-24 h-0.5 bg-gradient-to-r from-primary to-transparent"></div>
+<div class="absolute top-1/2 right-full w-24 h-0.5 bg-gradient-to-l from-primary to-transparent"></div>
+<div class="absolute left-1/2 top-full h-24 w-0.5 bg-gradient-to-b from-primary to-transparent"></div>
+</div>
+</div>
+</section>
+<!-- BOTTOM: Command Terminal & Split View -->
+<section class="h-[45%] bg-background-dark border-t border-white/10 flex flex-col md:flex-row z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+<!-- Left Panel: Context/Logs (Hidden on small screens) -->
+<div class="hidden lg:flex w-1/3 flex-col border-r border-white/5 bg-[#0e1215]">
+<div class="h-10 border-b border-white/5 flex items-center px-4 bg-[#131b20]">
+<span class="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">list_alt</span>
+                        Event Stream
+                    </span>
+<div class="ml-auto flex gap-1">
+<div class="size-2 rounded-full bg-red-500/20 border border-red-500/50"></div>
+<div class="size-2 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+<div class="size-2 rounded-full bg-green-500/20 border border-green-500/50"></div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-xs">
+<div class="flex gap-2 text-slate-500">
+<span class="opacity-50">10:41:02</span>
+<span class="text-blue-400">[INFO]</span>
+<span>Connection established w/ Node_04</span>
+</div>
+<div class="flex gap-2 text-slate-500">
+<span class="opacity-50">10:41:05</span>
+<span class="text-secondary">[WARN]</span>
+<span>High latency detected on sub-routine B</span>
+</div>
+<div class="flex gap-2 text-slate-500">
+<span class="opacity-50">10:41:12</span>
+<span class="text-green-400">[SUCCESS]</span>
+<span>Tool 'WebSearch' loaded successfully</span>
+</div>
+<div class="flex gap-2 text-slate-500">
+<span class="opacity-50">10:41:45</span>
+<span class="text-blue-400">[INFO]</span>
+<span>User request packet received</span>
+</div>
+<div class="flex gap-2 text-slate-500">
+<span class="opacity-50">10:42:01</span>
+<span class="text-purple-400">[DEBUG]</span>
+<span>Token context window at 45%</span>
+</div>
+</div>
+</div>
+<!-- Right Panel: Active Terminal -->
+<div class="flex-1 flex flex-col bg-[#0a0a0f] relative">
+<!-- Terminal Header -->
+<div class="h-10 border-b border-white/5 flex items-center justify-between px-4 bg-[#0a0a0f]">
+<span class="text-xs font-mono text-primary uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-sm animate-pulse">terminal</span>
+                        Live Command Feed
+                    </span>
+<button class="text-[10px] border border-white/10 px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition text-slate-300">Clear Output</button>
+</div>
+<!-- Messages Feed -->
+<div class="flex-1 overflow-y-auto p-4 space-y-6 font-mono text-sm scroll-smooth">
+<!-- Previous Interaction -->
+<div class="flex flex-col gap-2 opacity-60 hover:opacity-100 transition-opacity">
+<div class="flex items-center gap-3">
+<div class="size-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-white">U</div>
+<span class="text-slate-400 font-bold">User</span>
+<span class="text-xs text-slate-600">10:38 AM</span>
+</div>
+<div class="pl-9 text-slate-300">
+                            Initialize system diagnostics.
+                        </div>
+<div class="pl-9 text-secondary text-xs mt-1">
+                            &gt; System checks complete. All green.
+                        </div>
+</div>
+<!-- Current Active Interaction -->
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-3">
+<div class="size-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-white">U</div>
+<span class="text-slate-400 font-bold">User</span>
+<span class="text-xs text-slate-600">10:42 AM</span>
+</div>
+<div class="pl-9 text-white font-medium">
+                            Analyze current market trends for autonomous AI agents in 2024.
+                        </div>
+<!-- Thinking Block -->
+<div class="ml-9 border-l-2 border-primary/30 pl-4 py-2 bg-primary/5 rounded-r-lg">
+<div class="flex items-center gap-2 text-primary text-xs font-bold mb-1 uppercase">
+<span class="material-symbols-outlined text-sm">psychology</span>
+                                Reasoning
+                            </div>
+<p class="text-slate-400 leading-relaxed text-xs">
+                                The user is requesting real-time market data. My internal knowledge cutoff is 2023. 
+                                I must use the <span class="text-secondary">WebSearch</span> tool to fetch the latest "2024 autonomous AI agent trends".
+                            </p>
+</div>
+<!-- Tool Execution Block -->
+<div class="ml-9 border-l-2 border-secondary/30 pl-4 py-2 bg-secondary/5 rounded-r-lg">
+<div class="flex items-center gap-2 text-secondary text-xs font-bold mb-1 uppercase">
+<span class="material-symbols-outlined text-sm">code</span>
+                                Tool Execution
+                            </div>
+<div class="font-mono text-xs text-slate-300 bg-[#000] p-2 rounded border border-white/5">
+<span class="text-purple-400">await</span> tools.web_search.execute(<br/>
+                                  query=<span class="text-green-400">"AI agent market trends 2024"</span>,<br/>
+                                  max_results=<span class="text-orange-400">5</span><br/>
+                                )
+                            </div>
+</div>
+<!-- Result/Answer Block -->
+<div class="ml-9 pl-4 py-1">
+<div class="flex items-center gap-2 text-green-400 text-xs font-bold mb-2 uppercase">
+<span class="material-symbols-outlined text-sm">smart_toy</span>
+                                CRAFT Core
+                            </div>
+<p class="text-slate-200 leading-relaxed">
+                                Based on the latest reports, the market for autonomous AI agents is shifting towards <span class="text-white font-bold">multi-agent orchestration</span> and <span class="text-white font-bold">enterprise workflow automation</span>. Key trends include:
+                            </p>
+<ul class="list-disc list-inside mt-2 text-slate-400 space-y-1">
+<li>Rise of agentic workflows in SaaS.</li>
+<li>Standardization of agent-to-agent protocols.</li>
+<li>Increased focus on safety and alignment layers.</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-4 border-t border-white/5 bg-[#0e1215]">
+<div class="relative flex items-center w-full">
+<div class="absolute left-3 text-primary flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-xl">chevron_right</span>
+</div>
+<input class="w-full bg-[#050507] border border-white/10 rounded-lg py-3 pl-10 pr-12 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 font-mono transition-all" placeholder="Enter command prompt or select a preset..." type="text" value=""/>
+<div class="absolute right-3 flex items-center gap-2">
+<button class="text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg">mic</span>
+</button>
+<button class="text-primary hover:text-primary/80 transition-colors">
+<span class="material-symbols-outlined text-lg">send</span>
+</button>
+</div>
+</div>
+<div class="flex gap-2 mt-2 px-1">
+<button class="text-[10px] text-slate-500 hover:text-primary transition-colors border border-white/5 px-2 py-0.5 rounded-full bg-white/5">/reset</button>
+<button class="text-[10px] text-slate-500 hover:text-primary transition-colors border border-white/5 px-2 py-0.5 rounded-full bg-white/5">/visualize</button>
+<button class="text-[10px] text-slate-500 hover:text-primary transition-colors border border-white/5 px-2 py-0.5 rounded-full bg-white/5">/optimize</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

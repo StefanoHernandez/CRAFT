@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CRAFT Live Workflow Execution</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#25e2f4",
+              "background-light": "#f5f8f8",
+              "background-dark": "#102122",
+              "surface-dark": "#1b2627",
+              "border-dark": "#283839"
+            },
+            fontFamily: {
+              "display": ["Space Grotesk", "sans-serif"],
+              "body": ["Noto Sans", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            animation: {
+                'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                'flow': 'flow 2s linear infinite',
+            },
+            keyframes: {
+                flow: {
+                    '0%': { strokeDashoffset: '24' },
+                    '100%': { strokeDashoffset: '0' },
+                }
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(37, 226, 244, 0.3), inset 0 0 10px rgba(37, 226, 244, 0.1);
+        }
+        .node-connector {
+            stroke-dasharray: 6;
+            animation: flow 1s linear infinite;
+        }
+        /* Custom scrollbar for log area */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #102122; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #283839; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3a4f50; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white overflow-hidden h-screen flex flex-col">
+<!-- Header -->
+<header class="flex shrink-0 items-center justify-between whitespace-nowrap border-b border-solid border-border-dark px-6 py-3 bg-[#111718] z-20">
+<div class="flex items-center gap-4 text-white">
+<div class="size-8 flex items-center justify-center rounded bg-primary/20 text-primary">
+<span class="material-symbols-outlined text-2xl">hub</span>
+</div>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">CRAFT Builder <span class="opacity-50 font-normal mx-2">/</span> Live Monitor</h2>
+</div>
+<div class="flex gap-3">
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 px-4 bg-primary text-background-dark text-sm font-bold leading-normal tracking-[0.015em] transition hover:brightness-110">
+<span class="truncate">Edit Workflow</span>
+</button>
+<button class="flex size-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-border-dark text-white transition hover:bg-[#3a4f50]">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+<button class="flex size-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-border-dark text-white transition hover:bg-[#3a4f50]">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<div class="ml-2 flex items-center gap-2 pl-4 border-l border-border-dark">
+<div class="size-8 rounded-full bg-cover bg-center" data-alt="User avatar placeholder" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDvttxZvrk9aN3j60Qx7BuGE2MopwdERieOWfzCQQ9cERDTVeh3xkq0EwQ_6VX5Ds9Fube6HF10zz2VRxZJ3LlJyZ8f3TMnNk95RbVH9R2CI6Qz_o8ejG1hXG5x-2h1zU1yPmcMi4TLryhEteaMoChEkJ1iodx1VzOe0n_PDzbQ57zk0tEQrGGowo72vJUK9dbTNb90Cgv3D3nH5V1N5rzxoe0TCvIQWKbRIQ_EruRPpm4CldS05tvO5zeRmb91d5gFA3FVZR55_uOV');"></div>
+</div>
+</div>
+</header>
+<!-- Main Content Layout -->
+<div class="flex flex-1 overflow-hidden relative">
+<!-- Left Stage: Node Canvas -->
+<main class="relative flex-1 bg-[#0a0a0f] overflow-hidden flex items-center justify-center">
+<!-- Grid Background -->
+<div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(#283839 1px, transparent 1px); background-size: 24px 24px;"></div>
+<!-- Nodes Container -->
+<div class="relative w-full max-w-5xl h-[600px] p-10 flex items-center justify-between z-10">
+<!-- SVG Connections Background Layer -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none z-0" style="overflow: visible;">
+<!-- Line 1-2 -->
+<path class="opacity-30" d="M150 300 L 380 300" fill="none" stroke="#25e2f4" stroke-width="2"></path>
+<path class="node-connector" d="M150 300 L 380 300" fill="none" stroke="#25e2f4" stroke-width="2"></path>
+<!-- Line 2-3 -->
+<path class="opacity-30" d="M500 300 L 730 300" fill="none" stroke="#25e2f4" stroke-width="2"></path>
+<path class="node-connector" d="M500 300 L 730 300" fill="none" stroke="#25e2f4" stroke-width="2"></path>
+<!-- Line 3-4 (Inactive/Pending) -->
+<path d="M850 300 L 1050 300" fill="none" stroke="#4a5556" stroke-dasharray="4 4" stroke-width="2"></path>
+</svg>
+<!-- Node 1: Input Source (Done) -->
+<div class="relative group flex flex-col items-center gap-3">
+<div class="w-32 h-20 rounded-xl bg-surface-dark border border-primary/50 shadow-[0_0_10px_rgba(37,226,244,0.1)] flex items-center justify-center relative z-10">
+<span class="material-symbols-outlined text-primary text-3xl">database</span>
+<div class="absolute -top-2 -right-2 bg-green-500 text-[#0a0a0f] text-[10px] font-bold px-1.5 py-0.5 rounded-full">DONE</div>
+</div>
+<span class="text-sm font-medium text-gray-400">PostgreSQL</span>
+</div>
+<!-- Node 2: Transform (Done) -->
+<div class="relative group flex flex-col items-center gap-3">
+<div class="w-32 h-20 rounded-xl bg-surface-dark border border-primary/50 shadow-[0_0_10px_rgba(37,226,244,0.1)] flex items-center justify-center relative z-10">
+<span class="material-symbols-outlined text-primary text-3xl">cleaning_services</span>
+<div class="absolute -top-2 -right-2 bg-green-500 text-[#0a0a0f] text-[10px] font-bold px-1.5 py-0.5 rounded-full">DONE</div>
+</div>
+<span class="text-sm font-medium text-gray-400">Clean Data</span>
+</div>
+<!-- Node 3: AI Enrichment (Active) -->
+<div class="relative group flex flex-col items-center gap-3">
+<!-- Tooltip Telemetry -->
+<div class="absolute -top-24 left-1/2 -translate-x-1/2 w-48 bg-surface-dark/90 backdrop-blur border border-primary/30 rounded-lg p-3 z-20 animate-bounce transition-transform duration-700">
+<div class="flex justify-between items-center text-xs mb-1">
+<span class="text-gray-400">Current Task</span>
+<span class="text-primary font-bold">Inference</span>
+</div>
+<div class="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[65%] rounded-full"></div>
+</div>
+<div class="flex justify-between items-center text-[10px] mt-1 text-gray-400">
+<span>Tokens: 450/1k</span>
+<span>Thinking...</span>
+</div>
+<!-- Triangle pointer -->
+<div class="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-surface-dark border-r border-b border-primary/30 rotate-45"></div>
+</div>
+<div class="w-32 h-20 rounded-xl bg-[#1a2e30] border-2 border-primary neon-glow flex items-center justify-center relative z-10">
+<span class="material-symbols-outlined text-primary text-3xl animate-pulse">psychology</span>
+<div class="absolute -top-3 -right-3 bg-primary text-[#0a0a0f] text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse shadow-lg shadow-primary/40">ACTIVE</div>
+</div>
+<span class="text-sm font-bold text-primary">AI Enrichment</span>
+</div>
+<!-- Node 4: Output (Pending) -->
+<div class="relative group flex flex-col items-center gap-3 opacity-50">
+<div class="w-32 h-20 rounded-xl bg-surface-dark border border-dashed border-gray-600 flex items-center justify-center relative z-10">
+<span class="material-symbols-outlined text-gray-500 text-3xl">webhook</span>
+<div class="absolute -top-2 -right-2 bg-gray-700 text-gray-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full">WAIT</div>
+</div>
+<span class="text-sm font-medium text-gray-500">API Sync</span>
+</div>
+</div>
+<!-- Floating Control Bar -->
+<div class="absolute bottom-8 left-1/2 -translate-x-1/2 bg-surface-dark/80 backdrop-blur-md border border-border-dark p-2 rounded-full shadow-2xl flex items-center gap-2 z-30">
+<button class="size-10 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-[#0a0a0f] flex items-center justify-center transition">
+<span class="material-symbols-outlined">first_page</span>
+</button>
+<button class="size-10 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-[#0a0a0f] flex items-center justify-center transition">
+<span class="material-symbols-outlined">play_arrow</span>
+</button>
+<button class="size-10 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition">
+<span class="material-symbols-outlined">pause</span>
+</button>
+<button class="size-10 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-[#0a0a0f] flex items-center justify-center transition">
+<span class="material-symbols-outlined">stop</span>
+</button>
+<div class="h-6 w-px bg-border-dark mx-2"></div>
+<div class="flex items-center gap-2 px-2">
+<span class="material-symbols-outlined text-gray-400 text-sm">speed</span>
+<select class="bg-transparent text-sm font-bold text-white outline-none cursor-pointer">
+<option>0.5x</option>
+<option selected="">1.0x</option>
+<option>2.0x</option>
+<option>4.0x</option>
+</select>
+</div>
+</div>
+</main>
+<!-- Right Panel: Telemetry & Logs -->
+<aside class="w-[400px] bg-[#111718] border-l border-border-dark flex flex-col overflow-y-auto shrink-0 z-20 shadow-xl">
+<!-- Page Heading Component (Adapted) -->
+<div class="p-6 border-b border-border-dark">
+<div class="flex flex-col gap-2">
+<div class="flex items-start justify-between gap-2">
+<p class="text-white tracking-tight text-2xl font-bold leading-tight">Data Pipeline Alpha</p>
+<div class="flex h-2 w-2 rounded-full bg-primary mt-2 shadow-[0_0_8px_#25e2f4]"></div>
+</div>
+<p class="text-[#9cb7ba] text-sm font-normal leading-normal flex items-center gap-2">
+<span class="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+                        Status: Active - Processing Node 3/4
+                    </p>
+</div>
+</div>
+<!-- Stats Component (Stacked for sidebar) -->
+<div class="p-4 grid grid-cols-2 gap-3">
+<div class="flex flex-col gap-1 rounded-lg p-4 bg-surface-dark border border-border-dark">
+<div class="flex items-center gap-2 text-[#9cb7ba]">
+<span class="material-symbols-outlined text-sm">token</span>
+<p class="text-xs font-medium uppercase tracking-wider">Tokens</p>
+</div>
+<p class="text-white tracking-light text-xl font-bold leading-tight">12,450</p>
+</div>
+<div class="flex flex-col gap-1 rounded-lg p-4 bg-surface-dark border border-border-dark">
+<div class="flex items-center gap-2 text-[#9cb7ba]">
+<span class="material-symbols-outlined text-sm">timer</span>
+<p class="text-xs font-medium uppercase tracking-wider">Time</p>
+</div>
+<p class="text-white tracking-light text-xl font-bold leading-tight">4.2s</p>
+</div>
+<div class="flex flex-col gap-1 rounded-lg p-4 bg-surface-dark border border-border-dark col-span-2">
+<div class="flex justify-between items-start">
+<div>
+<div class="flex items-center gap-2 text-[#9cb7ba]">
+<span class="material-symbols-outlined text-sm">attach_money</span>
+<p class="text-xs font-medium uppercase tracking-wider">Est. Cost</p>
+</div>
+<p class="text-white tracking-light text-xl font-bold leading-tight">$0.0421</p>
+</div>
+<div class="h-8 w-24">
+<!-- Simple CSS Sparkline -->
+<div class="flex items-end justify-between h-full gap-1">
+<div class="w-1 bg-primary/30 h-[40%] rounded-t"></div>
+<div class="w-1 bg-primary/40 h-[60%] rounded-t"></div>
+<div class="w-1 bg-primary/60 h-[30%] rounded-t"></div>
+<div class="w-1 bg-primary/50 h-[80%] rounded-t"></div>
+<div class="w-1 bg-primary h-[50%] rounded-t"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Active Card Component -->
+<div class="px-4 py-2">
+<h3 class="text-[#9cb7ba] text-xs font-bold uppercase tracking-wider mb-3 px-1">Active Focus</h3>
+<div class="rounded-xl bg-surface-dark border border-primary/30 overflow-hidden">
+<div class="h-32 w-full bg-cover bg-center relative" data-alt="Abstract visualization of neural network processing" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB8jhdrDzZVrOabNufChsi_guMHLNCFarTff9njIzPEnXINSKjtgYqAxWZYakR6pGTcrgwcAsciGwoeYf9d9MI2NSCD9XhN9Rh4iAKcwbK1YlyJwj9ZD4lpELSn9ZVeZjbaKzDR-fFTDFKKyA3CdhoHxCfWlWwgOXBsOcHTHSUtucehvVWNgA5Fnt76UH--fby0XhHxpp0GUcLr3kyzkXHRtTMqqmAf6GHmudQvjp7oJpkOPK1eVKWQE2TsoxQ0Pl6tJMxqEFu0QB6H');">
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dark to-transparent"></div>
+<div class="absolute bottom-3 left-3 flex gap-2">
+<span class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] font-bold border border-white/10">GPT-4 Turbo</span>
+<span class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] font-bold border border-white/10">Temp 0.7</span>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-white text-base font-bold leading-tight">AI Enrichment</p>
+<p class="text-primary text-xs font-normal mt-1 animate-pulse">Generating response...</p>
+</div>
+<button class="p-1.5 hover:bg-white/10 rounded-md transition text-[#9cb7ba]">
+<span class="material-symbols-outlined text-lg">open_in_new</span>
+</button>
+</div>
+<!-- Progress bar -->
+<div class="w-full bg-[#111718] h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[45%] rounded-full animate-[pulse_2s_infinite]"></div>
+</div>
+<div class="flex gap-2 mt-1">
+<button class="flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 bg-primary/10 text-primary hover:bg-primary/20 transition text-xs font-bold border border-primary/20">
+                                View Prompt
+                            </button>
+<button class="flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 bg-border-dark text-white hover:bg-gray-700 transition text-xs font-bold border border-gray-600">
+                                Debug
+                            </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Logs Section -->
+<div class="flex-1 flex flex-col min-h-0 px-4 pb-4 mt-2">
+<h3 class="text-[#9cb7ba] text-xs font-bold uppercase tracking-wider mb-3 px-1 flex justify-between items-center">
+<span>Live Logs</span>
+<span class="text-[10px] bg-border-dark px-1.5 py-0.5 rounded text-white">Real-time</span>
+</h3>
+<div class="flex-1 rounded-lg bg-[#0d1213] border border-border-dark p-3 font-mono text-xs overflow-y-auto">
+<div class="flex flex-col gap-2 text-gray-400">
+<div class="flex gap-2">
+<span class="text-gray-600">[10:42:01]</span>
+<span>Pipeline initiated. ID: #Alpha-99</span>
+</div>
+<div class="flex gap-2">
+<span class="text-gray-600">[10:42:02]</span>
+<span class="text-green-400">✓ Node 1 (PostgreSQL) Connected</span>
+</div>
+<div class="flex gap-2">
+<span class="text-gray-600">[10:42:05]</span>
+<span>Fetched 1,240 records.</span>
+</div>
+<div class="flex gap-2">
+<span class="text-gray-600">[10:42:06]</span>
+<span class="text-green-400">✓ Node 2 (Clean Data) Complete</span>
+</div>
+<div class="flex gap-2">
+<span class="text-gray-600">[10:42:07]</span>
+<span class="text-primary">→ Node 3 (AI) Started</span>
+</div>
+<div class="flex gap-2 opacity-80">
+<span class="text-gray-600">[10:42:08]</span>
+<span>Streaming chunk 1/12...</span>
+</div>
+<div class="flex gap-2 opacity-80">
+<span class="text-gray-600">[10:42:08]</span>
+<span>Streaming chunk 2/12...</span>
+</div>
+<div class="flex gap-2 border-l-2 border-primary pl-2 animate-pulse">
+<span class="text-gray-600">[Now]</span>
+<span class="text-white">Processing context window...</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</body></html>

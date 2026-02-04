@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CRAFT Quick Deploy Wizard</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0dccf2",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#101f22",
+                        "midnight-blue": "#0a1114",
+                        "surface-dark": "#16262a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(16, 31, 34, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #101f22; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b5054; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #537075; 
+        }
+
+        .pulse-breathing {
+            animation: breathing 3s infinite ease-in-out;
+        }
+        @keyframes breathing {
+            0% { box-shadow: 0 0 0 0 rgba(13, 204, 242, 0.4); }
+            50% { box-shadow: 0 0 15px 5px rgba(13, 204, 242, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(13, 204, 242, 0.4); }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white font-display overflow-x-hidden min-h-screen flex flex-col items-center justify-center relative">
+<!-- Background Abstract Elements for "Blurred Nexus View" feel -->
+<div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+<div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#0dccf2]/10 rounded-full blur-[100px]"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#0dccf2]/5 rounded-full blur-[100px]"></div>
+<div class="absolute top-[20%] right-[10%] w-[20%] h-[20%] bg-purple-500/10 rounded-full blur-[80px]"></div>
+</div>
+<!-- Main Layout Container -->
+<div class="relative z-10 w-full max-w-[960px] p-4 md:p-6 flex flex-col gap-6">
+<!-- Header Section -->
+<div class="flex flex-col gap-2 mb-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-4xl">deployed_code</span>
+<h1 class="text-white tracking-light text-[32px] font-bold leading-tight">CRAFT Quick Deploy</h1>
+</div>
+<p class="text-[#9cb5ba] text-sm font-normal leading-normal">Configure and initialize a new autonomous AI agent instance.</p>
+</div>
+<!-- Glass Modal Container -->
+<div class="glass-panel rounded-xl p-8 flex flex-col gap-8 w-full">
+<!-- Step Progress Indicator -->
+<div class="w-full">
+<div class="flex justify-between items-end mb-2 px-1">
+<span class="text-primary text-sm font-bold tracking-wider uppercase font-mono">Step 2 of 3</span>
+<span class="text-[#9cb5ba] text-xs font-mono">System Initialization</span>
+</div>
+<div class="h-1.5 w-full bg-[#1b2527] rounded-full overflow-hidden">
+<div class="h-full bg-primary w-2/3 shadow-[0_0_10px_rgba(13,204,242,0.6)]"></div>
+</div>
+<div class="flex justify-between mt-3 px-1 text-xs text-[#537075] font-mono">
+<span class="text-primary">Identity</span>
+<span class="text-primary">Intelligence</span>
+<span>Toolbox</span>
+</div>
+</div>
+<!-- Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+<!-- Left Column: Identity & Core Specs -->
+<div class="flex flex-col gap-6">
+<!-- Section: Agent Identity -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-2 border-b border-[#3b5054] pb-2 mb-2">
+<span class="material-symbols-outlined text-[#9cb5ba] text-xl">fingerprint</span>
+<h3 class="text-white text-lg font-bold">Agent Identity</h3>
+</div>
+<label class="flex flex-col gap-2">
+<span class="text-white text-sm font-medium">Codename Designation</span>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#537075] material-symbols-outlined text-[20px]">terminal</span>
+<input class="w-full bg-[#1b2527] border border-[#3b5054] focus:border-primary focus:ring-1 focus:ring-primary rounded-lg h-12 pl-12 pr-4 text-white font-mono placeholder-[#537075] text-sm transition-all" placeholder="e.g. OMEGA-9" value="NEXUS-PRIME"/>
+</div>
+</label>
+<div class="flex flex-col gap-3">
+<span class="text-white text-sm font-medium">Base Personality Matrix</span>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+<label class="cursor-pointer group relative">
+<input class="peer sr-only" name="personality" type="radio"/>
+<div class="h-full rounded-lg border border-[#3b5054] bg-[#1b2527] p-4 flex flex-col items-center gap-2 hover:bg-[#233033] peer-checked:border-primary peer-checked:bg-primary/10 transition-all">
+<span class="material-symbols-outlined text-[#9cb5ba] peer-checked:text-primary group-hover:text-white transition-colors">psychology</span>
+<span class="text-xs font-medium text-[#9cb5ba] peer-checked:text-white">Creative</span>
+</div>
+<div class="absolute inset-0 rounded-lg ring-2 ring-primary opacity-0 peer-checked:opacity-100 pointer-events-none shadow-[0_0_15px_rgba(13,204,242,0.2)]"></div>
+</label>
+<label class="cursor-pointer group relative">
+<input checked="" class="peer sr-only" name="personality" type="radio"/>
+<div class="h-full rounded-lg border border-[#3b5054] bg-[#1b2527] p-4 flex flex-col items-center gap-2 hover:bg-[#233033] peer-checked:border-primary peer-checked:bg-primary/10 transition-all">
+<span class="material-symbols-outlined text-[#9cb5ba] peer-checked:text-primary group-hover:text-white transition-colors">precision_manufacturing</span>
+<span class="text-xs font-medium text-[#9cb5ba] peer-checked:text-white">Logical</span>
+</div>
+<div class="absolute inset-0 rounded-lg ring-2 ring-primary opacity-0 peer-checked:opacity-100 pointer-events-none shadow-[0_0_15px_rgba(13,204,242,0.2)]"></div>
+</label>
+<label class="cursor-pointer group relative">
+<input class="peer sr-only" name="personality" type="radio"/>
+<div class="h-full rounded-lg border border-[#3b5054] bg-[#1b2527] p-4 flex flex-col items-center gap-2 hover:bg-[#233033] peer-checked:border-primary peer-checked:bg-primary/10 transition-all">
+<span class="material-symbols-outlined text-[#9cb5ba] peer-checked:text-primary group-hover:text-white transition-colors">bolt</span>
+<span class="text-xs font-medium text-[#9cb5ba] peer-checked:text-white">Aggressive</span>
+</div>
+<div class="absolute inset-0 rounded-lg ring-2 ring-primary opacity-0 peer-checked:opacity-100 pointer-events-none shadow-[0_0_15px_rgba(13,204,242,0.2)]"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- Section: Intelligence Core -->
+<div class="flex flex-col gap-4 mt-2">
+<div class="flex items-center gap-2 border-b border-[#3b5054] pb-2 mb-2">
+<span class="material-symbols-outlined text-[#9cb5ba] text-xl">memory</span>
+<h3 class="text-white text-lg font-bold">Intelligence Core</h3>
+</div>
+<div class="space-y-6">
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<span class="text-white text-sm font-medium">Model Complexity</span>
+<span class="text-primary text-xs font-mono bg-primary/10 px-2 py-1 rounded">GPT-4o (High Fidelity)</span>
+</div>
+<input class="w-full h-2 bg-[#3b5054] rounded-lg appearance-none cursor-pointer accent-primary" max="100" min="0" type="range" value="85"/>
+<div class="flex justify-between text-[10px] text-[#537075] font-mono uppercase tracking-wider">
+<span>Haiku</span>
+<span>Sonnet</span>
+<span>GPT-4o</span>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<span class="text-white text-sm font-medium">Temperature</span>
+<span class="text-amber-500 text-xs font-mono bg-amber-500/10 px-2 py-1 rounded shadow-[0_0_10px_rgba(245,158,11,0.2)]">0.7 (Creative)</span>
+</div>
+<input class="w-full h-2 bg-[#3b5054] rounded-lg appearance-none cursor-pointer accent-amber-500" max="100" min="0" type="range" value="70"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Toolbox -->
+<div class="flex flex-col gap-6">
+<div class="flex items-center gap-2 border-b border-[#3b5054] pb-2 mb-2">
+<span class="material-symbols-outlined text-[#9cb5ba] text-xl">construction</span>
+<h3 class="text-white text-lg font-bold">Toolbox Integration</h3>
+</div>
+<div class="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2">
+<!-- Tool Item 1 -->
+<label class="flex items-center gap-4 p-4 rounded-lg bg-[#1b2527] border border-[#3b5054] cursor-pointer hover:bg-[#233033] transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5 group">
+<input checked="" class="w-5 h-5 rounded border-[#537075] bg-[#101f22] text-primary focus:ring-0 focus:ring-offset-0 checked:bg-primary" type="checkbox"/>
+<div class="flex items-center justify-center w-10 h-10 rounded-md bg-[#101f22] border border-[#3b5054] group-has-[:checked]:border-primary/50 text-[#9cb5ba] group-has-[:checked]:text-primary group-has-[:checked]:shadow-[0_0_10px_rgba(13,204,242,0.3)]">
+<span class="material-symbols-outlined text-xl">public</span>
+</div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium group-has-[:checked]:text-primary">Global Web Search</span>
+<span class="text-[#537075] text-xs">Access live internet data via API</span>
+</div>
+</label>
+<!-- Tool Item 2 -->
+<label class="flex items-center gap-4 p-4 rounded-lg bg-[#1b2527] border border-[#3b5054] cursor-pointer hover:bg-[#233033] transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5 group">
+<input checked="" class="w-5 h-5 rounded border-[#537075] bg-[#101f22] text-primary focus:ring-0 focus:ring-offset-0 checked:bg-primary" type="checkbox"/>
+<div class="flex items-center justify-center w-10 h-10 rounded-md bg-[#101f22] border border-[#3b5054] group-has-[:checked]:border-primary/50 text-[#9cb5ba] group-has-[:checked]:text-primary group-has-[:checked]:shadow-[0_0_10px_rgba(13,204,242,0.3)]">
+<span class="material-symbols-outlined text-xl">code</span>
+</div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium group-has-[:checked]:text-primary">Python Interpreter</span>
+<span class="text-[#537075] text-xs">Execute sandboxed code snippets</span>
+</div>
+</label>
+<!-- Tool Item 3 -->
+<label class="flex items-center gap-4 p-4 rounded-lg bg-[#1b2527] border border-[#3b5054] cursor-pointer hover:bg-[#233033] transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5 group">
+<input class="w-5 h-5 rounded border-[#537075] bg-[#101f22] text-primary focus:ring-0 focus:ring-offset-0 checked:bg-primary" type="checkbox"/>
+<div class="flex items-center justify-center w-10 h-10 rounded-md bg-[#101f22] border border-[#3b5054] group-has-[:checked]:border-primary/50 text-[#9cb5ba] group-has-[:checked]:text-primary group-has-[:checked]:shadow-[0_0_10px_rgba(13,204,242,0.3)]">
+<span class="material-symbols-outlined text-xl">database</span>
+</div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium group-has-[:checked]:text-primary">SQL Client</span>
+<span class="text-[#537075] text-xs">Read/Write access to Nexus DB</span>
+</div>
+</label>
+<!-- Tool Item 4 -->
+<label class="flex items-center gap-4 p-4 rounded-lg bg-[#1b2527] border border-[#3b5054] cursor-pointer hover:bg-[#233033] transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5 group">
+<input class="w-5 h-5 rounded border-[#537075] bg-[#101f22] text-primary focus:ring-0 focus:ring-offset-0 checked:bg-primary" type="checkbox"/>
+<div class="flex items-center justify-center w-10 h-10 rounded-md bg-[#101f22] border border-[#3b5054] group-has-[:checked]:border-primary/50 text-[#9cb5ba] group-has-[:checked]:text-primary group-has-[:checked]:shadow-[0_0_10px_rgba(13,204,242,0.3)]">
+<span class="material-symbols-outlined text-xl">mail</span>
+</div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium group-has-[:checked]:text-primary">Comms Module</span>
+<span class="text-[#537075] text-xs">Slack/Discord integration access</span>
+</div>
+</label>
+</div>
+<!-- Resource Estimate Panel -->
+<div class="mt-auto rounded-lg bg-[#0a1114] p-4 border border-[#3b5054] flex gap-4 items-start">
+<span class="material-symbols-outlined text-amber-500 mt-0.5">warning</span>
+<div class="flex flex-col gap-1">
+<p class="text-white text-xs font-bold uppercase tracking-wide">Resource Estimation</p>
+<p class="text-[#9cb5ba] text-xs leading-relaxed">
+                                High-fidelity model selection (GPT-4o) combined with Web Search may result in increased latency. Estimated response time: <span class="text-primary font-mono">1.2s - 2.5s</span>.
+                             </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-[#3b5054] mt-2">
+<button class="text-[#9cb5ba] hover:text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-[#1b2527] transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">arrow_back</span>
+                    Back
+                </button>
+<div class="flex gap-4 w-full sm:w-auto">
+<button class="flex-1 sm:flex-none bg-[#1b2527] border border-[#3b5054] text-white hover:border-[#537075] hover:bg-[#233033] text-sm font-bold py-3 px-6 rounded-lg transition-all">
+                        Save Draft
+                    </button>
+<button class="flex-1 sm:flex-none bg-primary text-[#0a1114] text-sm font-bold py-3 px-8 rounded-lg shadow-[0_0_20px_rgba(13,204,242,0.4)] hover:shadow-[0_0_30px_rgba(13,204,242,0.6)] hover:bg-[#34dcfd] transition-all pulse-breathing flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">rocket_launch</span>
+                        Initialize Agent
+                    </button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

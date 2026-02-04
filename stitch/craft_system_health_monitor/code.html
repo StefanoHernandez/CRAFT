@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>CRAFT // SYSTEM MONITOR</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Theme Configuration -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#25f459", // Neon Green
+                        "secondary": "#ffb02e", // Amber
+                        "alert": "#ef4444", // Red
+                        "background-light": "#f5f8f6",
+                        "background-dark": "#102214",
+                        "panel-dark": "#162b1b",
+                        "border-dark": "#2a4230",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for industrial feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #102214;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2a4230;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b5441;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display antialiased overflow-x-hidden min-h-screen flex flex-col">
+    <!-- Main Layout -->
+    <div class="relative flex h-full w-full flex-col">
+        <!-- Header -->
+        <header
+            class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-border-dark bg-[#111813]/90 backdrop-blur-md px-6 lg:px-10 py-4">
+            <div class="flex items-center gap-4 text-white">
+                <div class="size-8 text-primary">
+                    <svg class="size-full" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor" fill-opacity="0.2"
+                            stroke="currentColor" stroke-width="2"></path>
+                        <circle cx="24" cy="24" fill="currentColor" r="4"></circle>
+                    </svg>
+                </div>
+                <div class="flex flex-col">
+                    <h2 class="text-white text-xl font-bold leading-tight tracking-wider">CRAFT // SYSTEM MONITOR</h2>
+                    <span class="text-xs text-primary/60 font-mono tracking-widest">V.2.4.1 // ONLINE</span>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button
+                    class="flex items-center justify-center overflow-hidden rounded-lg size-10 bg-panel-dark border border-border-dark text-primary hover:bg-primary/20 transition-colors">
+                    <span class="material-symbols-outlined">notifications</span>
+                </button>
+                <button
+                    class="flex items-center justify-center overflow-hidden rounded-lg size-10 bg-panel-dark border border-border-dark text-white hover:bg-white/10 transition-colors">
+                    <span class="material-symbols-outlined">settings</span>
+                </button>
+                <button
+                    class="flex items-center justify-center overflow-hidden rounded-lg size-10 bg-panel-dark border border-border-dark text-white hover:bg-white/10 transition-colors">
+                    <span class="material-symbols-outlined">account_circle</span>
+                </button>
+            </div>
+        </header>
+        <!-- Main Content -->
+        <main class="flex-1 flex justify-center p-6 lg:p-10">
+            <div class="flex flex-col max-w-[1280px] w-full gap-8">
+                <!-- TOP ROW: STATUS INDICATORS -->
+                <section>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Card 1: Compute Load -->
+                        <div
+                            class="flex flex-col items-center justify-between rounded-xl bg-panel-dark border border-border-dark p-6 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-3 opacity-20">
+                                <span class="material-symbols-outlined text-4xl">memory</span>
+                            </div>
+                            <div class="w-full flex justify-between items-start mb-4">
+                                <p class="text-white/70 text-sm font-bold tracking-widest uppercase">Compute Load</p>
+                                <span class="text-primary text-xs font-mono bg-primary/10 px-2 py-1 rounded">+12%</span>
+                            </div>
+                            <!-- Radial Progress -->
+                            <div class="relative size-32">
+                                <svg class="size-full -rotate-90 transform" viewbox="0 0 100 100">
+                                    <circle class="text-white/5" cx="50" cy="50" fill="transparent" r="42"
+                                        stroke="currentColor" stroke-width="8"></circle>
+                                    <circle class="text-primary" cx="50" cy="50" fill="transparent" r="42"
+                                        stroke="currentColor" stroke-dasharray="264" stroke-dashoffset="58"
+                                        stroke-linecap="round" stroke-width="8"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-3xl font-bold text-white">78%</span>
+                                    <span class="text-xs text-white/50 font-mono">128 CORES</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 2: Memory Usage -->
+                        <div
+                            class="flex flex-col items-center justify-between rounded-xl bg-panel-dark border border-border-dark p-6 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-3 opacity-20">
+                                <span class="material-symbols-outlined text-4xl">database</span>
+                            </div>
+                            <div class="w-full flex justify-between items-start mb-4">
+                                <p class="text-white/70 text-sm font-bold tracking-widest uppercase">Memory Usage</p>
+                                <span class="text-primary text-xs font-mono bg-primary/10 px-2 py-1 rounded">+5%</span>
+                            </div>
+                            <!-- Radial Progress -->
+                            <div class="relative size-32">
+                                <svg class="size-full -rotate-90 transform" viewbox="0 0 100 100">
+                                    <circle class="text-white/5" cx="50" cy="50" fill="transparent" r="42"
+                                        stroke="currentColor" stroke-width="8"></circle>
+                                    <circle class="text-primary" cx="50" cy="50" fill="transparent" r="42"
+                                        stroke="currentColor" stroke-dasharray="264" stroke-dashoffset="95"
+                                        stroke-linecap="round" stroke-width="8"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-3xl font-bold text-white">64%</span>
+                                    <span class="text-xs text-white/50 font-mono">512 GB</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 3: Active Agents -->
+                        <div
+                            class="flex flex-col items-center justify-between rounded-xl bg-panel-dark border border-border-dark p-6 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-3 opacity-20">
+                                <span class="material-symbols-outlined text-4xl">smart_toy</span>
+                            </div>
+                            <div class="w-full flex justify-between items-start mb-4">
+                                <p class="text-white/70 text-sm font-bold tracking-widest uppercase">Active Agents</p>
+                                <span class="text-primary text-xs font-mono bg-primary/10 px-2 py-1 rounded">+2</span>
+                            </div>
+                            <!-- Radial Progress -->
+                            <div class="relative size-32">
+                                <svg class="size-full -rotate-90 transform" viewbox="0 0 100 100">
+                                    <circle class="text-white/5" cx="50" cy="50" fill="transparent" r="42"
+                                        stroke="currentColor" stroke-width="8"></circle>
+                                    <circle class="text-primary" cx="50" cy="50" fill="transparent" r="42"
+                                        stroke="currentColor" stroke-dasharray="264" stroke-dashoffset="200"
+                                        stroke-linecap="round" stroke-width="8"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-3xl font-bold text-white">12</span>
+                                    <span class="text-xs text-white/50 font-mono">NODES</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 4: Queue Depth (Warning State) -->
+                        <div
+                            class="flex flex-col items-center justify-between rounded-xl bg-panel-dark border border-secondary/30 p-6 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-3 opacity-20 text-secondary">
+                                <span class="material-symbols-outlined text-4xl">layers</span>
+                            </div>
+                            <div class="w-full flex justify-between items-start mb-4">
+                                <p class="text-secondary text-sm font-bold tracking-widest uppercase">Queue Depth</p>
+                                <span
+                                    class="text-secondary text-xs font-mono bg-secondary/10 px-2 py-1 rounded">HIGH</span>
+                            </div>
+                            <!-- Radial Progress -->
+                            <div class="relative size-32">
+                                <svg class="size-full -rotate-90 transform" viewbox="0 0 100 100">
+                                    <circle class="text-white/5" cx="50" cy="50" fill="transparent" r="42"
+                                        stroke="currentColor" stroke-width="8"></circle>
+                                    <circle class="text-secondary" cx="50" cy="50" fill="transparent" r="42"
+                                        stroke="currentColor" stroke-dasharray="264" stroke-dashoffset="132"
+                                        stroke-linecap="round" stroke-width="8"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-3xl font-bold text-secondary">45</span>
+                                    <span class="text-xs text-white/50 font-mono">PENDING</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- MIDDLE ROW: LATENCY CHART -->
+                <section class="rounded-xl bg-panel-dark border border-border-dark p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-white text-lg font-bold leading-tight tracking-wider uppercase">LLM Provider
+                                Latency</h3>
+                            <p class="text-white/50 text-sm font-mono mt-1">REAL-TIME RESPONSE METRICS (MS)</p>
+                        </div>
+                        <div class="flex items-center gap-4 flex-wrap">
+                            <div class="flex items-center gap-2">
+                                <span class="size-2 rounded-full bg-primary"></span>
+                                <span class="text-xs text-white font-mono">ANTHROPIC (145ms)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="size-2 rounded-full bg-secondary"></span>
+                                <span class="text-xs text-white font-mono">OPENAI (210ms)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="size-2 rounded-full bg-orange-500"></span>
+                                <span class="text-xs text-white font-mono">GROQ (25ms)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="size-2 rounded-full bg-slate-500"></span>
+                                <span class="text-xs text-white font-mono">OLLAMA (85ms)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative h-[240px] w-full">
+                        <!-- Chart Grid Lines -->
+                        <div class="absolute inset-0 flex flex-col justify-between text-white/10 pointer-events-none">
+                            <div class="w-full border-t border-dashed border-current"></div>
+                            <div class="w-full border-t border-dashed border-current"></div>
+                            <div class="w-full border-t border-dashed border-current"></div>
+                            <div class="w-full border-t border-dashed border-current"></div>
+                            <div class="w-full border-t border-dashed border-current"></div>
+                        </div>
+                        <!-- Chart SVG -->
+                        <svg class="absolute inset-0 h-full w-full" preserveaspectratio="none" viewbox="0 0 1000 240">
+                            <!-- Gradient Defs -->
+                            <defs>
+                                <lineargradient id="gradGreen" x1="0%" x2="0%" y1="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#25f459;stop-opacity:0.2"></stop>
+                                    <stop offset="100%" style="stop-color:#25f459;stop-opacity:0"></stop>
+                                </lineargradient>
+                                <lineargradient id="gradOrange" x1="0%" x2="0%" y1="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#ffb02e;stop-opacity:0.2"></stop>
+                                    <stop offset="100%" style="stop-color:#ffb02e;stop-opacity:0"></stop>
+                                </lineargradient>
+                            </defs>
+                            <!-- OpenAI Line (Secondary) -->
+                            <path d="M0,180 Q100,160 200,190 T400,150 T600,170 T800,140 T1000,160 L1000,240 L0,240 Z"
+                                fill="url(#gradOrange)"></path>
+                            <path d="M0,180 Q100,160 200,190 T400,150 T600,170 T800,140 T1000,160" fill="none"
+                                stroke="#ffb02e" stroke-width="2"></path>
+                            <!-- Anthropic Line (Primary) -->
+                            <path d="M0,120 Q100,100 200,130 T400,90 T600,110 T800,80 T1000,100 L1000,240 L0,240 Z"
+                                fill="url(#gradGreen)"></path>
+                            <path d="M0,120 Q100,100 200,130 T400,90 T600,110 T800,80 T1000,100" fill="none"
+                                stroke="#25f459" stroke-width="2"></path>
+                            <!-- Current Time Indicator -->
+                            <line stroke="#fff" stroke-dasharray="4,4" stroke-opacity="0.3" x1="900" x2="900" y1="0"
+                                y2="240"></line>
+                            <circle cx="900" cy="90" fill="#25f459" r="4"></circle>
+                            <circle cx="900" cy="155" fill="#ffb02e" r="4"></circle>
+                        </svg>
+                    </div>
+                    <!-- X-Axis Labels -->
+                    <div class="flex justify-between mt-2 px-2 text-white/30 text-xs font-mono">
+                        <span>10:25:00</span>
+                        <span>10:26:00</span>
+                        <span>10:27:00</span>
+                        <span>10:28:00</span>
+                        <span>10:29:00</span>
+                        <span>10:30:00</span>
+                        <span class="text-primary font-bold">LIVE</span>
+                    </div>
+                </section>
+                <!-- BOTTOM ROW: SYSTEM LOGS -->
+                <section class="flex flex-col gap-4">
+                    <div class="flex items-center justify-between px-2">
+                        <h3 class="text-white text-lg font-bold leading-tight tracking-wider uppercase">System Logs</h3>
+                        <div class="flex gap-2">
+                            <span
+                                class="text-xs font-mono text-white/50 bg-white/5 px-2 py-1 rounded border border-white/10">FILTER:
+                                ALL</span>
+                            <span
+                                class="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded border border-primary/20">LIVE
+                                STREAM</span>
+                        </div>
+                    </div>
+                    <div class="w-full overflow-hidden rounded-xl border border-border-dark bg-panel-dark">
+                        <div class="overflow-x-auto">
+                            <table class="w-full min-w-[800px] text-left font-mono text-sm">
+                                <thead class="bg-[#1b271e] text-xs uppercase tracking-wider text-white/60">
+                                    <tr>
+                                        <th class="px-6 py-4 font-medium w-48">Timestamp</th>
+                                        <th class="px-6 py-4 font-medium w-32">Level</th>
+                                        <th class="px-6 py-4 font-medium w-40">Event ID</th>
+                                        <th class="px-6 py-4 font-medium">Message</th>
+                                        <th class="px-6 py-4 font-medium w-32 text-right">Latency</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-border-dark text-white/80">
+                                    <!-- Row 1 -->
+                                    <tr class="hover:bg-white/5 transition-colors group">
+                                        <td class="px-6 py-4 text-primary">10:30:45.002</td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="inline-flex items-center rounded bg-primary/20 px-2 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/30">INFO</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-white/50">EVT-9921</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <span
+                                                    class="material-symbols-outlined text-sm text-primary">search</span>
+                                                Vector Search completed
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right font-bold text-primary">45ms</td>
+                                    </tr>
+                                    <!-- Row 2 -->
+                                    <tr class="hover:bg-white/5 transition-colors group">
+                                        <td class="px-6 py-4 text-white/70">10:30:42.115</td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="inline-flex items-center rounded bg-blue-500/20 px-2 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-500/30">INFO</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-white/50">EVT-9920</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <span
+                                                    class="material-symbols-outlined text-sm text-blue-400">smart_toy</span>
+                                                Agent-42 instantiated
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right text-white/50">120ms</td>
+                                    </tr>
+                                    <!-- Row 3 (Warning) -->
+                                    <tr class="hover:bg-white/5 transition-colors bg-secondary/5 group">
+                                        <td class="px-6 py-4 text-secondary">10:30:38.854</td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="inline-flex items-center rounded bg-secondary/20 px-2 py-1 text-xs font-medium text-secondary ring-1 ring-inset ring-secondary/30">WARN</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-white/50">EVT-9919</td>
+                                        <td class="px-6 py-4 text-secondary">
+                                            <div class="flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-sm">warning</span>
+                                                Memory spike detected
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right text-white/30">N/A</td>
+                                    </tr>
+                                    <!-- Row 4 -->
+                                    <tr class="hover:bg-white/5 transition-colors group">
+                                        <td class="px-6 py-4 text-white/70">10:30:35.221</td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="inline-flex items-center rounded bg-primary/20 px-2 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/30">INFO</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-white/50">EVT-9918</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-sm text-primary">api</span>
+                                                Anthropic API response received
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right text-white/70">310ms</td>
+                                    </tr>
+                                    <!-- Row 5 -->
+                                    <tr class="hover:bg-white/5 transition-colors group">
+                                        <td class="px-6 py-4 text-white/70">10:30:30.101</td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="inline-flex items-center rounded bg-primary/20 px-2 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/30">INFO</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-white/50">EVT-9917</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <span
+                                                    class="material-symbols-outlined text-sm text-primary">check_circle</span>
+                                                Task queue processed
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right text-primary font-bold">15ms</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

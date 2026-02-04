@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CRAFT Task History &amp; Archive</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0dccf2",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0a0a0f",
+                        "surface-dark": "#13131a",
+                        "surface-highlight": "#1c1c24",
+                        "accent-success": "#00ff9d",
+                        "accent-failure": "#ff0055",
+                        "accent-warning": "#ffcc00",
+                        "text-dim": "#8a8a99",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    boxShadow: {
+                        "neon-primary": "0 0 10px rgba(13, 204, 242, 0.3)",
+                        "neon-success": "0 0 10px rgba(0, 255, 157, 0.2)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom Scrollbar for cyberpunk feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0f; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #283639; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3a4b4e; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased min-h-screen flex flex-col overflow-hidden text-slate-900 dark:text-white">
+<!-- Header -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-[#283639] bg-white dark:bg-surface-dark px-6 py-3 z-20 shrink-0">
+<div class="flex items-center gap-4">
+<div class="size-8 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-tight">CRAFT <span class="text-text-dim font-normal">Framework</span></h2>
+</div>
+<div class="flex items-center gap-8">
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-text-dim hover:text-primary transition-colors text-sm font-medium" href="#">Dashboard</a>
+<a class="text-primary text-sm font-medium" href="#">Task History</a>
+<a class="text-text-dim hover:text-primary transition-colors text-sm font-medium" href="#">Agent Fleets</a>
+<a class="text-text-dim hover:text-primary transition-colors text-sm font-medium" href="#">Settings</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="relative rounded-full p-2 hover:bg-surface-highlight transition-colors text-text-dim">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-primary rounded-full"></span>
+</button>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-9 ring-2 ring-surface-highlight" data-alt="User profile avatar showing a futuristic abstract face" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA_SGvBplInA3s52ARDSFmltmHa_ZGrJ2f5dp4yUOA8vH5Uyoq571GSolOSUFZMOKsvJ1rTzik0gf1cOGzGU9XE41LVhHZBl41KV7aiM6Xn1T8wQG5FsuHc-I32uUtt3UebS1JKFJpHSZIO7eQ8419g6wE9N0xbeNod1WuDIC_OhvhjsbBn9olV6Be7A4iBX0OLHEaL9RT_mBvx5VjMMmAZYuZH-y3OrICyB6gpZTqQ7kZG4Ot4q36A1E--kGYl8vb4nPz7M2V-X_TH");'></div>
+</div>
+</div>
+</header>
+<!-- Main Layout -->
+<div class="flex flex-1 overflow-hidden">
+<!-- Left Panel: Task List -->
+<aside class="flex flex-col w-full md:w-[420px] lg:w-[480px] border-r border-slate-200 dark:border-[#283639] bg-white dark:bg-surface-dark z-10">
+<!-- Page Heading & Actions -->
+<div class="p-6 pb-2 border-b border-slate-200 dark:border-[#283639]">
+<div class="flex flex-col gap-1 mb-4">
+<h1 class="text-2xl font-black leading-tight tracking-tight">Task History</h1>
+<p class="text-text-dim text-sm">Review executions and artifacts.</p>
+</div>
+<!-- Search -->
+<div class="relative w-full mb-4 group">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-text-dim group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="block w-full p-2.5 pl-10 text-sm rounded-lg bg-slate-100 dark:bg-surface-highlight border-transparent focus:border-primary focus:ring-1 focus:ring-primary dark:placeholder-gray-500 dark:text-white" placeholder="Search by Task ID or keyword..." type="text"/>
+</div>
+<!-- Chips / Filters -->
+<div class="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+<button class="flex shrink-0 items-center justify-center gap-x-2 rounded-lg bg-slate-100 dark:bg-surface-highlight hover:bg-slate-200 dark:hover:bg-[#283639] px-3 py-1.5 transition-colors border border-transparent hover:border-slate-300 dark:hover:border-gray-600">
+<span class="text-xs font-medium">All Fleets</span>
+<span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+<button class="flex shrink-0 items-center justify-center gap-x-2 rounded-lg bg-slate-100 dark:bg-surface-highlight hover:bg-slate-200 dark:hover:bg-[#283639] px-3 py-1.5 transition-colors border border-transparent hover:border-slate-300 dark:hover:border-gray-600">
+<span class="text-xs font-medium">Date Range</span>
+<span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+<button class="flex shrink-0 items-center justify-center gap-x-2 rounded-lg bg-slate-100 dark:bg-surface-highlight hover:bg-slate-200 dark:hover:bg-[#283639] px-3 py-1.5 transition-colors border border-transparent hover:border-slate-300 dark:hover:border-gray-600">
+<span class="text-xs font-medium">Status</span>
+<span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+</div>
+</div>
+<!-- List Items -->
+<div class="flex-1 overflow-y-auto">
+<!-- Item 1 (Active) -->
+<div class="group flex gap-4 p-4 border-b border-slate-100 dark:border-[#1e1e24] cursor-pointer bg-slate-50 dark:bg-[#1a1a23] border-l-4 border-l-primary transition-colors">
+<div class="flex items-start gap-3 w-full">
+<div class="flex items-center justify-center rounded-lg bg-emerald-500/10 shrink-0 size-10 text-accent-success">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+<div class="flex flex-1 flex-col gap-1">
+<div class="flex justify-between items-start">
+<p class="font-mono text-xs text-primary font-bold">#TASK-8492</p>
+<span class="text-xs text-text-dim">2m ago</span>
+</div>
+<p class="text-sm font-semibold leading-tight line-clamp-1">Market Analysis: Q3 Trends in APAC</p>
+<div class="flex items-center gap-3 mt-1">
+<span class="inline-flex items-center rounded bg-slate-200 dark:bg-[#283639] px-1.5 py-0.5 text-[10px] font-medium text-slate-700 dark:text-gray-300">
+                                    Analyst_Pro
+                                </span>
+<span class="text-[10px] text-text-dim font-mono">45s</span>
+<span class="text-[10px] text-text-dim font-mono">$0.42</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="group flex gap-4 p-4 border-b border-slate-100 dark:border-[#1e1e24] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#15151b] border-l-4 border-l-transparent transition-colors">
+<div class="flex items-start gap-3 w-full">
+<div class="flex items-center justify-center rounded-lg bg-red-500/10 shrink-0 size-10 text-accent-failure">
+<span class="material-symbols-outlined text-[20px]">error</span>
+</div>
+<div class="flex flex-1 flex-col gap-1">
+<div class="flex justify-between items-start">
+<p class="font-mono text-xs text-text-dim font-bold group-hover:text-primary transition-colors">#TASK-8491</p>
+<span class="text-xs text-text-dim">1h ago</span>
+</div>
+<p class="text-sm font-medium leading-tight line-clamp-1 text-slate-600 dark:text-gray-300">Generate Python Script for scraping</p>
+<div class="flex items-center gap-3 mt-1">
+<span class="inline-flex items-center rounded bg-slate-200 dark:bg-[#283639] px-1.5 py-0.5 text-[10px] font-medium text-slate-700 dark:text-gray-300">
+                                    Dev_Fleet_Alpha
+                                </span>
+<span class="text-[10px] text-text-dim font-mono">12s</span>
+<span class="text-[10px] text-text-dim font-mono">$0.15</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="group flex gap-4 p-4 border-b border-slate-100 dark:border-[#1e1e24] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#15151b] border-l-4 border-l-transparent transition-colors">
+<div class="flex items-start gap-3 w-full">
+<div class="flex items-center justify-center rounded-lg bg-emerald-500/10 shrink-0 size-10 text-accent-success">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+<div class="flex flex-1 flex-col gap-1">
+<div class="flex justify-between items-start">
+<p class="font-mono text-xs text-text-dim font-bold group-hover:text-primary transition-colors">#TASK-8490</p>
+<span class="text-xs text-text-dim">3h ago</span>
+</div>
+<p class="text-sm font-medium leading-tight line-clamp-1 text-slate-600 dark:text-gray-300">Synthesize Competitor Reports</p>
+<div class="flex items-center gap-3 mt-1">
+<span class="inline-flex items-center rounded bg-slate-200 dark:bg-[#283639] px-1.5 py-0.5 text-[10px] font-medium text-slate-700 dark:text-gray-300">
+                                    Analyst_Pro
+                                </span>
+<span class="text-[10px] text-text-dim font-mono">1m 20s</span>
+<span class="text-[10px] text-text-dim font-mono">$1.05</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="group flex gap-4 p-4 border-b border-slate-100 dark:border-[#1e1e24] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#15151b] border-l-4 border-l-transparent transition-colors">
+<div class="flex items-start gap-3 w-full">
+<div class="flex items-center justify-center rounded-lg bg-slate-500/10 shrink-0 size-10 text-text-dim">
+<span class="material-symbols-outlined text-[20px]">cancel</span>
+</div>
+<div class="flex flex-1 flex-col gap-1">
+<div class="flex justify-between items-start">
+<p class="font-mono text-xs text-text-dim font-bold group-hover:text-primary transition-colors">#TASK-8489</p>
+<span class="text-xs text-text-dim">Yesterday</span>
+</div>
+<p class="text-sm font-medium leading-tight line-clamp-1 text-slate-600 dark:text-gray-300">Email Campaign Drafting</p>
+<div class="flex items-center gap-3 mt-1">
+<span class="inline-flex items-center rounded bg-slate-200 dark:bg-[#283639] px-1.5 py-0.5 text-[10px] font-medium text-slate-700 dark:text-gray-300">
+                                    Copywriter_V2
+                                </span>
+<span class="text-[10px] text-text-dim font-mono">--</span>
+<span class="text-[10px] text-text-dim font-mono">$0.00</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Right Panel: Detail View -->
+<main class="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0d0d12] overflow-hidden relative">
+<!-- Detail Header -->
+<div class="flex items-center justify-between px-8 py-6 border-b border-slate-200 dark:border-[#283639] bg-white dark:bg-[#0a0a0f]">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<h2 class="text-xl font-bold font-display">Market Analysis: Q3 Trends in APAC</h2>
+<span class="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-accent-success ring-1 ring-inset ring-emerald-500/20">Success</span>
+</div>
+<div class="flex items-center gap-6 text-sm text-text-dim">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">fingerprint</span>
+<span class="font-mono">#TASK-8492</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>Sep 24, 14:30 PM</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">attach_money</span>
+<span class="font-mono">$0.42</span>
+</div>
+</div>
+</div>
+<button class="flex items-center justify-center gap-2 rounded-lg bg-primary/10 hover:bg-primary/20 px-4 py-2 text-primary font-bold text-sm shadow-neon-primary transition-all active:scale-95 ring-1 ring-primary/50">
+<span class="material-symbols-outlined text-[18px]">replay</span>
+                    Rerun Task
+                </button>
+</div>
+<!-- Detail Content -->
+<div class="flex-1 overflow-y-auto p-8">
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-8 max-w-[1400px] mx-auto">
+<!-- Main Content Column -->
+<div class="xl:col-span-2 flex flex-col gap-8">
+<!-- Initial Prompt Section -->
+<section class="flex flex-col gap-3">
+<h3 class="text-sm font-bold text-text-dim uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">input</span>
+                                Initial Prompt
+                            </h3>
+<div class="p-5 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-[#283639] shadow-sm">
+<p class="text-slate-700 dark:text-slate-300 leading-relaxed font-mono text-sm">
+                                    &gt; Analyze the emerging market trends for SaaS platforms in the APAC region for Q3 2024. Focus specifically on enterprise adoption rates in Singapore, Japan, and Australia. Output a summary report with key bullet points and a potential risk assessment.
+                                </p>
+</div>
+</section>
+<!-- Final Artifact Section -->
+<section class="flex flex-col gap-3 flex-1">
+<div class="flex items-center justify-between">
+<h3 class="text-sm font-bold text-text-dim uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">article</span>
+                                    Final Artifact
+                                </h3>
+<div class="flex gap-2">
+<button class="text-xs text-text-dim hover:text-white flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[14px]">content_copy</span> Copy
+                                    </button>
+<button class="text-xs text-text-dim hover:text-white flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[14px]">download</span> Download
+                                    </button>
+</div>
+</div>
+<div class="flex-1 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-[#283639] overflow-hidden shadow-sm flex flex-col">
+<div class="bg-slate-50 dark:bg-surface-highlight border-b border-slate-200 dark:border-[#283639] px-4 py-2 flex items-center gap-2">
+<div class="size-2 rounded-full bg-red-500"></div>
+<div class="size-2 rounded-full bg-yellow-500"></div>
+<div class="size-2 rounded-full bg-emerald-500"></div>
+<span class="ml-2 text-xs text-text-dim font-mono">analysis_report.md</span>
+</div>
+<div class="p-6 overflow-auto font-mono text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+<h1 class="text-lg font-bold text-slate-900 dark:text-white mb-4"># APAC SaaS Market Trends (Q3 2024)</h1>
+<p class="mb-4">Adoption of enterprise SaaS solutions has seen a <strong class="text-primary">14% YoY increase</strong> across the key APAC regions designated.</p>
+<h2 class="text-base font-bold text-slate-800 dark:text-slate-200 mb-2">## Regional Breakdown</h2>
+<ul class="list-disc list-inside space-y-2 mb-6 ml-2">
+<li><strong class="text-slate-900 dark:text-white">Singapore:</strong> High saturation in Fintech sectors. Government grants for digitalization are driving SME adoption.</li>
+<li><strong class="text-slate-900 dark:text-white">Japan:</strong> Legacy system migration is the primary driver. Strong demand for localized UI/UX in SaaS products.</li>
+<li><strong class="text-slate-900 dark:text-white">Australia:</strong> Focus on compliance and data sovereignty tools due to new privacy regulations.</li>
+</ul>
+<h2 class="text-base font-bold text-slate-800 dark:text-slate-200 mb-2">## Risk Assessment</h2>
+<div class="p-3 bg-red-500/10 border border-red-500/20 rounded mb-4">
+<p class="text-red-400">High volatility in currency exchange rates may impact subscription pricing models for US-based vendors.</p>
+</div>
+<p class="text-text-dim italic">-- End of generated report --</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Sidebar: Meta & Map -->
+<div class="flex flex-col gap-8">
+<!-- Workflow Mini-map -->
+<section class="flex flex-col gap-3">
+<h3 class="text-sm font-bold text-text-dim uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">account_tree</span>
+                                Execution Path
+                            </h3>
+<div class="relative h-64 rounded-xl overflow-hidden border border-slate-200 dark:border-[#283639] bg-surface-dark group">
+<!-- Abstract "Map" representation using CSS/HTML -->
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-background-dark to-background-dark"></div>
+<div class="absolute inset-0 p-6 flex flex-col justify-between z-10">
+<!-- Node 1 -->
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary text-primary shadow-neon-primary">
+<span class="material-symbols-outlined text-[16px]">start</span>
+</div>
+<span class="text-xs font-mono text-primary">Input_Parser</span>
+</div>
+<!-- Connector -->
+<div class="w-0.5 h-6 bg-primary/30 ml-4"></div>
+<!-- Node 2 -->
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-surface-highlight flex items-center justify-center border border-slate-600 text-slate-300">
+<span class="material-symbols-outlined text-[16px]">travel_explore</span>
+</div>
+<span class="text-xs font-mono text-slate-300">Web_Search_Agent</span>
+</div>
+<!-- Connector -->
+<div class="w-0.5 h-6 bg-slate-700 ml-4"></div>
+<!-- Node 3 -->
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-emerald-500/20 flex items-center justify-center border border-accent-success text-accent-success shadow-neon-success">
+<span class="material-symbols-outlined text-[16px]">flag</span>
+</div>
+<span class="text-xs font-mono text-accent-success">Report_Gen</span>
+</div>
+</div>
+<!-- Background Grid Pattern -->
+<div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" data-alt="Abstract noisy texture overlay"></div>
+</div>
+</section>
+<!-- Agent Fleet Info -->
+<section class="flex flex-col gap-3">
+<h3 class="text-sm font-bold text-text-dim uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">group_work</span>
+                                Agent Fleet
+                            </h3>
+<div class="p-4 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-[#283639]">
+<div class="flex items-center gap-3 mb-3">
+<div class="size-10 rounded bg-gradient-to-br from-blue-500 to-primary flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                        A
+                                    </div>
+<div>
+<p class="font-bold text-sm">Analyst_Pro_v2</p>
+<p class="text-xs text-text-dim">Specialized in Market Research</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-2">
+<div class="bg-slate-50 dark:bg-surface-highlight p-2 rounded border border-slate-100 dark:border-transparent">
+<p class="text-[10px] uppercase text-text-dim font-bold">Model</p>
+<p class="text-xs font-mono">GPT-4o</p>
+</div>
+<div class="bg-slate-50 dark:bg-surface-highlight p-2 rounded border border-slate-100 dark:border-transparent">
+<p class="text-[10px] uppercase text-text-dim font-bold">Temp</p>
+<p class="text-xs font-mono">0.7</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Logs Snippet -->
+<section class="flex flex-col gap-3">
+<h3 class="text-sm font-bold text-text-dim uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+                                System Logs
+                            </h3>
+<div class="p-4 rounded-xl bg-black border border-[#283639] font-mono text-xs text-slate-400 h-48 overflow-y-auto">
+<div class="flex gap-2 mb-1">
+<span class="text-emerald-500">[14:30:01]</span>
+<span>Initializing fleet Analyst_Pro...</span>
+</div>
+<div class="flex gap-2 mb-1">
+<span class="text-blue-400">[14:30:05]</span>
+<span>Parsing user intent &gt; "Market Trends"</span>
+</div>
+<div class="flex gap-2 mb-1">
+<span class="text-blue-400">[14:30:12]</span>
+<span>Searching [Bing] for "APAC SaaS 2024"</span>
+</div>
+<div class="flex gap-2 mb-1">
+<span class="text-yellow-500">[14:30:25]</span>
+<span>WARN: Source link timeout (retry 1/3)</span>
+</div>
+<div class="flex gap-2 mb-1">
+<span class="text-blue-400">[14:30:30]</span>
+<span>Synthesizing data points: 14 found</span>
+</div>
+<div class="flex gap-2 mb-1">
+<span class="text-emerald-500">[14:30:45]</span>
+<span>Task completed successfully. Artifact saved.</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

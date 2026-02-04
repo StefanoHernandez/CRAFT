@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CRAFT Agent Thought Log</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0da6f2",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#111618",
+                        "secondary-dark": "#1a2228",
+                        "accent-amber": "#ffab00",
+                        "accent-green": "#0bda57",
+                        "accent-purple": "#d946ef",
+                    },
+                    fontFamily: {
+                        display: ["Space Grotesk", "sans-serif"],
+                        body: ["Noto Sans", "sans-serif"],
+                        mono: ["Space Mono", "monospace"],
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1a2228;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #3b4c54;
+            border-radius: 3px;
+        }
+        .neon-pulse {
+            box-shadow: 0 0 5px rgba(13, 166, 242, 0.2), 0 0 10px rgba(13, 166, 242, 0.1);
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #0da6f2;
+            cursor: pointer;
+            margin-top: -8px; 
+            box-shadow: 0 0 10px rgba(13, 166, 242, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #283339;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-hidden flex flex-col h-screen">
+<!-- Header -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-[#283339] bg-[#111618] px-6 py-3 shrink-0 z-20">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-white">
+<div class="size-8 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">CRAFT Framework</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-[#9cb0ba] hover:text-white text-sm font-medium transition-colors" href="#">Documentation</a>
+<a class="text-[#9cb0ba] hover:text-white text-sm font-medium transition-colors" href="#">API</a>
+<a class="text-[#9cb0ba] hover:text-white text-sm font-medium transition-colors" href="#">Support</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-[#9cb0ba]">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="w-64 rounded-lg bg-[#283339] py-2 pl-10 pr-4 text-sm text-white placeholder-[#9cb0ba] focus:outline-none focus:ring-1 focus:ring-primary border-none" placeholder="Search logs..." type="text"/>
+</div>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-9 border border-[#283339]" data-alt="User Avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCwXRlfk6XZdnI86kV7dtgKy0fv2Zs0ZFJxELKhHS4Un4oiN8rJNKN2ii-88Oj9EhpZOoLsjs_iewOEfz_cUF5P8T8p7voS6xc7cEIqfKAeldRC_cQUHo551f0gro6g6CA4GJ80b-0HDjCQsLRfiRhwWfYnnmnOMoIuUdYSfUWQPzhCsCzQUGAFgwPNFOiZc7LJfIsjflrAauS1f7P7tsPGjS1bpB2SRlDXrl_SKQjxYhc1A_Vb34WYcw9Td3CxzAALW0U32iKsxg_p");'></div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-64 flex-col justify-between bg-[#111618] border-r border-[#283339] hidden lg:flex shrink-0">
+<div class="flex flex-col gap-1 p-4">
+<div class="mb-6 px-2">
+<h1 class="text-white text-sm font-bold tracking-wider opacity-80">NAVIGATION</h1>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#9cb0ba] hover:bg-[#1a2228] hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#9cb0ba] hover:bg-[#1a2228] hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">smart_toy</span>
+<span class="text-sm font-medium">Agents</span>
+</a>
+<div class="my-2 border-t border-[#283339]"></div>
+<div class="px-3 py-2">
+<span class="text-xs font-bold text-[#586e7a] uppercase tracking-wider">Active Trace</span>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#1a2228] border-l-2 border-primary text-white neon-pulse" href="#">
+<span class="material-symbols-outlined text-[20px] text-primary">psychology</span>
+<span class="text-sm font-medium">Thought Logs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#9cb0ba] hover:bg-[#1a2228] hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">network_node</span>
+<span class="text-sm font-medium">Knowledge Graph</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#9cb0ba] hover:bg-[#1a2228] hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</div>
+<div class="p-4 border-t border-[#283339]">
+<div class="flex items-center gap-3 bg-[#1a2228] p-3 rounded-lg border border-[#283339]">
+<div class="size-2 rounded-full bg-accent-green animate-pulse"></div>
+<div class="flex flex-col">
+<span class="text-xs text-[#9cb0ba]">System Status</span>
+<span class="text-sm font-bold text-white">Operational</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col min-w-0 bg-[#111618] overflow-hidden relative">
+<!-- Breadcrumbs & Heading -->
+<div class="px-6 pt-6 pb-2 shrink-0">
+<div class="flex items-center gap-2 mb-4 text-sm">
+<a class="text-[#586e7a] hover:text-primary transition-colors" href="#">Agents</a>
+<span class="text-[#283339] material-symbols-outlined text-[16px]">chevron_right</span>
+<a class="text-[#586e7a] hover:text-primary transition-colors" href="#">Agent Alpha</a>
+<span class="text-[#283339] material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-white font-medium">Reasoning Trace #8492</span>
+</div>
+<div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+<div>
+<h1 class="text-3xl font-bold text-white tracking-tight mb-1">Agent Alpha: Thought Log</h1>
+<p class="text-[#9cb0ba] text-sm">Real-time X-ray of cognitive cycles and reasoning steps</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1a2228] border border-[#283339] text-white hover:bg-[#283339] transition-colors text-sm font-medium">
+<span class="material-symbols-outlined text-[18px]">pause</span>
+                            Pause Stream
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-medium shadow-[0_0_15px_rgba(13,166,242,0.3)]">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                            Export Log
+                        </button>
+</div>
+</div>
+<!-- Neural Activity Graph (Compact) -->
+<div class="bg-[#1a2228] border border-[#283339] rounded-xl p-4 mb-4 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-primary">analytics</span>
+</div>
+<div class="flex flex-col md:flex-row gap-6">
+<div class="flex-1">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-sm font-semibold text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">show_chart</span>
+                                    Neural Confidence
+                                </h3>
+<span class="text-xs font-mono text-accent-green">98.4% PEAK</span>
+</div>
+<!-- Fake Chart Lines -->
+<div class="h-24 w-full flex items-end gap-1 relative">
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none" viewbox="0 0 100 50">
+<defs>
+<lineargradient id="grad1" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#0da6f2;stop-opacity:0.3"></stop>
+<stop offset="100%" style="stop-color:#0da6f2;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+<path d="M0 40 Q 10 35, 20 42 T 40 20 T 60 15 T 80 30 T 100 10 L 100 50 L 0 50 Z" fill="url(#grad1)" stroke="none"></path>
+<path d="M0 40 Q 10 35, 20 42 T 40 20 T 60 15 T 80 30 T 100 10" fill="none" stroke="#0da6f2" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+</svg>
+<!-- Grid lines -->
+<div class="absolute inset-0 w-full h-full border-b border-[#283339]/50"></div>
+<div class="absolute top-1/2 w-full h-px bg-[#283339]/50 border-t border-dashed border-[#283339]"></div>
+</div>
+</div>
+<div class="w-px bg-[#283339] hidden md:block"></div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-sm font-semibold text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-accent-purple text-[18px]">grain</span>
+                                    System Entropy
+                                </h3>
+<span class="text-xs font-mono text-accent-purple">LOW STABILITY</span>
+</div>
+<div class="h-24 w-full flex items-end gap-1 relative">
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none" viewbox="0 0 100 50">
+<defs>
+<lineargradient id="grad2" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#d946ef;stop-opacity:0.3"></stop>
+<stop offset="100%" style="stop-color:#d946ef;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+<path d="M0 45 Q 15 48, 25 40 T 45 42 T 65 35 T 85 45 T 100 38 L 100 50 L 0 50 Z" fill="url(#grad2)" stroke="none"></path>
+<path d="M0 45 Q 15 48, 25 40 T 45 42 T 65 35 T 85 45 T 100 38" fill="none" stroke="#d946ef" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+</svg>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Scrollable Timeline Area -->
+<div class="flex-1 overflow-y-auto custom-scrollbar px-6 pb-20 relative">
+<div class="absolute top-0 left-9 bottom-0 w-px bg-[#283339] z-0"></div>
+<!-- Cycle 1: Completed -->
+<div class="relative z-10 pl-16 py-4 group">
+<div class="absolute left-6 top-8 -translate-x-1/2 size-6 rounded-full bg-[#1a2228] border-2 border-[#586e7a] flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-[#586e7a]">check</span>
+</div>
+<div class="text-xs font-mono text-[#586e7a] mb-2 ml-1">CYCLE 01 • T-0.45s</div>
+<div class="bg-[#1a2228]/50 border border-[#283339] rounded-lg p-5 hover:border-[#3b4c54] transition-colors">
+<div class="flex items-start gap-3 mb-3">
+<span class="material-symbols-outlined text-primary mt-1">input</span>
+<div>
+<h4 class="text-sm font-bold text-white">Input Context</h4>
+<p class="text-[#9cb0ba] text-sm leading-relaxed">User query: "Analyze the Q3 financial report for Acme Corp and compare against market trends."</p>
+</div>
+</div>
+<div class="bg-[#111618] rounded border border-[#283339] p-3 font-mono text-xs text-[#9cb0ba] mb-3">
+<span class="text-primary">&gt;</span> Identifying key entities: "Acme Corp", "Q3", "Market Trends"<br/>
+<span class="text-primary">&gt;</span> Determining required tools: Search, Financial_DB, Comparative_Analysis
+                        </div>
+</div>
+</div>
+<!-- Cycle 2: Tool Use -->
+<div class="relative z-10 pl-16 py-4 group">
+<div class="absolute left-6 top-8 -translate-x-1/2 size-6 rounded-full bg-[#1a2228] border-2 border-accent-amber flex items-center justify-center shadow-[0_0_10px_rgba(255,171,0,0.3)]">
+<span class="material-symbols-outlined text-[14px] text-accent-amber">build</span>
+</div>
+<div class="text-xs font-mono text-accent-amber mb-2 ml-1">CYCLE 02 • T-0.32s • TOOL CALL</div>
+<div class="bg-[#1a2228] border border-accent-amber/30 rounded-lg p-5 shadow-[0_0_20px_rgba(255,171,0,0.05)]">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-2">
+<span class="bg-accent-amber/10 text-accent-amber px-2 py-0.5 rounded text-xs font-bold border border-accent-amber/20">SEARCH_API</span>
+<span class="text-white text-sm font-medium">Querying Financial Database</span>
+</div>
+<span class="text-xs text-[#586e7a] font-mono">Duration: 142ms</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="space-y-1">
+<p class="text-xs text-[#586e7a] uppercase font-bold">Parameters</p>
+<div class="bg-[#111618] p-2 rounded border border-[#283339] font-mono text-xs text-accent-amber">
+                                    {<br/>
+                                      "query": "Acme Corp 10-Q Q3 2023",<br/>
+                                      "source": "edgar_db"<br/>
+                                    }
+                                </div>
+</div>
+<div class="space-y-1">
+<p class="text-xs text-[#586e7a] uppercase font-bold">Output Preview</p>
+<div class="bg-[#111618] p-2 rounded border border-[#283339] font-mono text-xs text-[#9cb0ba]">
+                                    Status: 200 OK<br/>
+                                    Found: "10-Q_Acme_Q3.pdf"<br/>
+                                    Size: 4.2MB
+                                </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Cycle 3: Self-Correction -->
+<div class="relative z-10 pl-16 py-4 group">
+<div class="absolute left-6 top-8 -translate-x-1/2 size-6 rounded-full bg-[#1a2228] border-2 border-accent-purple flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-accent-purple">loop</span>
+</div>
+<div class="text-xs font-mono text-accent-purple mb-2 ml-1">CYCLE 03 • T-0.15s • SELF-CORRECTION</div>
+<div class="bg-[#1a2228] border border-accent-purple/30 rounded-lg p-5 relative overflow-hidden">
+<div class="absolute right-0 top-0 p-4 opacity-5">
+<span class="material-symbols-outlined text-6xl">refresh</span>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-2 text-accent-purple">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+<h4 class="text-sm font-bold">Ambiguity Detected</h4>
+</div>
+<p class="text-sm text-white">Initial retrieval returned multiple "Acme Corp" entities globally. Refining context.</p>
+<div class="bg-[#111618] rounded border border-accent-purple/20 p-3 font-mono text-xs text-[#9cb0ba]">
+<span class="text-[#586e7a] line-through">Target: Acme Corp (Global)</span><br/>
+<span class="text-accent-purple font-bold">New Target: Acme Corp (NASDAQ: ACME) based on "market trends" context.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Cycle 4: Active Thinking -->
+<div class="relative z-10 pl-16 py-4 group">
+<div class="absolute left-6 top-8 -translate-x-1/2 size-6 rounded-full bg-primary flex items-center justify-center animate-pulse shadow-[0_0_15px_rgba(13,166,242,0.6)]">
+<span class="material-symbols-outlined text-[14px] text-white">psychology</span>
+</div>
+<div class="text-xs font-mono text-primary mb-2 ml-1 flex items-center gap-2">
+                        CYCLE 04 • NOW 
+                        <span class="flex size-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full size-2 bg-primary"></span>
+</span>
+</div>
+<div class="bg-[#1a2228] border border-primary/50 rounded-lg p-5 shadow-[0_0_30px_rgba(13,166,242,0.1)]">
+<div class="flex items-center justify-between mb-4">
+<h4 class="text-sm font-bold text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">auto_awesome</span>
+                                Synthesizing Analysis
+                            </h4>
+<div class="flex gap-1">
+<span class="h-1.5 w-1.5 rounded-full bg-primary animate-bounce"></span>
+<span class="h-1.5 w-1.5 rounded-full bg-primary animate-bounce delay-75"></span>
+<span class="h-1.5 w-1.5 rounded-full bg-primary animate-bounce delay-150"></span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="h-2 w-3/4 bg-[#283339] rounded animate-pulse"></div>
+<div class="h-2 w-full bg-[#283339] rounded animate-pulse delay-75"></div>
+<div class="h-2 w-5/6 bg-[#283339] rounded animate-pulse delay-150"></div>
+</div>
+<div class="mt-4 pt-4 border-t border-[#283339] flex justify-between items-center">
+<span class="text-xs text-[#9cb0ba]">Confidence Score</span>
+<div class="flex items-center gap-2">
+<div class="w-24 h-1.5 bg-[#111618] rounded-full overflow-hidden">
+<div class="h-full bg-accent-green w-[92%]"></div>
+</div>
+<span class="text-xs font-bold text-accent-green">92%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Rewind / Scrubber Footer -->
+<div class="h-20 bg-[#111618] border-t border-[#283339] px-6 flex items-center gap-6 shrink-0 relative z-20 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
+<button class="size-10 rounded-full bg-[#1a2228] hover:bg-[#283339] text-white flex items-center justify-center transition-colors border border-[#3b4c54]">
+<span class="material-symbols-outlined">replay_10</span>
+</button>
+<div class="flex-1 flex flex-col gap-2">
+<div class="flex justify-between text-xs font-mono text-[#586e7a] uppercase tracking-wider">
+<span>Cycle 01</span>
+<span class="text-primary">Current State (Live)</span>
+</div>
+<div class="relative w-full h-6 flex items-center">
+<!-- Tick marks -->
+<div class="absolute inset-0 flex justify-between px-1 pointer-events-none">
+<div class="w-px h-2 bg-[#3b4c54] self-center"></div>
+<div class="w-px h-1 bg-[#283339] self-center"></div>
+<div class="w-px h-1 bg-[#283339] self-center"></div>
+<div class="w-px h-1 bg-[#283339] self-center"></div>
+<div class="w-px h-1 bg-[#283339] self-center"></div>
+<div class="w-px h-2 bg-[#3b4c54] self-center"></div>
+</div>
+<input class="w-full appearance-none bg-transparent relative z-10 focus:outline-none" max="100" min="1" type="range" value="100"/>
+</div>
+</div>
+<div class="flex items-center gap-3 border-l border-[#283339] pl-6">
+<div class="flex flex-col items-end">
+<span class="text-xs text-[#9cb0ba]">Total Cycles</span>
+<span class="text-lg font-mono font-bold text-white">04</span>
+</div>
+<button class="size-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 shadow-[0_0_15px_rgba(13,166,242,0.4)] transition-all transform hover:scale-105">
+<span class="material-symbols-outlined">play_arrow</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+</body></html>

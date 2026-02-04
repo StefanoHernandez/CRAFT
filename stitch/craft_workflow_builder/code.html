@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>CRAFT Workflow Builder</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Material Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind Config -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0da6f2",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101c22",
+                        "surface-dark": "#16232b",
+                        "border-dark": "#2a3b47",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                        "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"],
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #101c22;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2a3b47;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b4c5a;
+        }
+
+        /* Dot Grid Pattern */
+        .bg-grid-pattern {
+            background-image: radial-gradient(#2a3b47 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* Animation for connecting lines */
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -20;
+            }
+        }
+
+        .animate-dash {
+            stroke-dasharray: 5 5;
+            animation: dash 1s linear infinite;
+        }
+    </style>
+</head>
+
+<body
+    class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white h-screen flex overflow-hidden selection:bg-primary selection:text-white">
+    <!-- Main Layout Container -->
+    <div class="flex w-full h-full">
+        <!-- Left Sidebar: Navigation & Node Palette -->
+        <aside class="w-64 flex flex-col border-r border-border-dark bg-surface-dark shrink-0 z-20">
+            <!-- Branding -->
+            <div class="p-5 border-b border-border-dark">
+                <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">hub</span>
+                    CRAFT
+                </h1>
+                <p class="text-slate-400 text-xs font-normal mt-1">Autonomous Orchestrator</p>
+            </div>
+            <!-- Main Nav -->
+            <nav class="flex flex-col p-3 gap-1">
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                    <span class="text-sm font-medium">Dashboard</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary" href="#">
+                    <span class="material-symbols-outlined text-[20px] fill-1">account_tree</span>
+                    <span class="text-sm font-medium">Workflows</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+                    <span class="text-sm font-medium">Agents</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium">Settings</span>
+                </a>
+            </nav>
+            <div class="px-5 py-2">
+                <div class="h-px w-full bg-border-dark"></div>
+            </div>
+            <!-- Draggable Components (Accordions) -->
+            <div class="flex-1 overflow-y-auto px-3 pb-4">
+                <h3 class="px-2 pb-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Node Palette</h3>
+                <div class="flex flex-col gap-3">
+                    <!-- AI Agents -->
+                    <details
+                        class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all"
+                        open="">
+                        <summary class="flex cursor-pointer items-center justify-between px-3 py-2 select-none">
+                            <span class="flex items-center gap-2 text-sm font-medium text-slate-200">
+                                <span class="material-symbols-outlined text-primary text-[18px]">psychology</span>
+                                AI Agents
+                            </span>
+                            <span
+                                class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
+                        </summary>
+                        <div class="px-3 pb-3 pt-1 flex flex-col gap-2">
+                            <div
+                                class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors">
+                                <span class="material-symbols-outlined text-amber-400 text-[16px]">chat</span>
+                                <span class="text-xs text-slate-300">LLM Chat Node</span>
+                            </div>
+                            <div
+                                class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors">
+                                <span class="material-symbols-outlined text-amber-400 text-[16px]">image</span>
+                                <span class="text-xs text-slate-300">Image Gen Node</span>
+                            </div>
+                        </div>
+                    </details>
+                    <!-- Logic Gates -->
+                    <details
+                        class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all">
+                        <summary class="flex cursor-pointer items-center justify-between px-3 py-2 select-none">
+                            <span class="flex items-center gap-2 text-sm font-medium text-slate-200">
+                                <span class="material-symbols-outlined text-primary text-[18px]">call_split</span>
+                                Logic Gates
+                            </span>
+                            <span
+                                class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
+                        </summary>
+                        <div class="px-3 pb-3 pt-1 flex flex-col gap-2">
+                            <div
+                                class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors">
+                                <span class="material-symbols-outlined text-purple-400 text-[16px]">flaky</span>
+                                <span class="text-xs text-slate-300">If / Else Condition</span>
+                            </div>
+                            <div
+                                class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors">
+                                <span class="material-symbols-outlined text-purple-400 text-[16px]">loop</span>
+                                <span class="text-xs text-slate-300">Loop / Iterator</span>
+                            </div>
+                        </div>
+                    </details>
+                    <!-- Knowledge Bases -->
+                    <details
+                        class="group rounded-lg bg-background-dark border border-border-dark open:bg-surface-dark transition-all">
+                        <summary class="flex cursor-pointer items-center justify-between px-3 py-2 select-none">
+                            <span class="flex items-center gap-2 text-sm font-medium text-slate-200">
+                                <span class="material-symbols-outlined text-primary text-[18px]">database</span>
+                                Data &amp; RAG
+                            </span>
+                            <span
+                                class="material-symbols-outlined text-slate-500 text-[18px] transition-transform group-open:rotate-180">expand_more</span>
+                        </summary>
+                        <div class="px-3 pb-3 pt-1 flex flex-col gap-2">
+                            <div
+                                class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors">
+                                <span class="material-symbols-outlined text-emerald-400 text-[16px]">description</span>
+                                <span class="text-xs text-slate-300">PDF Loader</span>
+                            </div>
+                            <div
+                                class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors">
+                                <span class="material-symbols-outlined text-emerald-400 text-[16px]">search</span>
+                                <span class="text-xs text-slate-300">Vector Search</span>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </aside>
+        <!-- Main Workspace Area -->
+        <main class="flex-1 flex flex-col relative h-full overflow-hidden">
+            <!-- Toolbar -->
+            <header
+                class="h-16 flex items-center justify-between px-6 border-b border-border-dark bg-background-dark/80 backdrop-blur z-10">
+                <div class="flex items-center gap-4">
+                    <div class="flex bg-surface-dark rounded-lg p-1 border border-border-dark">
+                        <button class="p-2 text-white hover:text-primary transition-colors rounded hover:bg-white/5"
+                            title="Play">
+                            <span class="material-symbols-outlined text-[20px]">play_arrow</span>
+                        </button>
+                        <button class="p-2 text-white hover:text-primary transition-colors rounded hover:bg-white/5"
+                            title="Pause">
+                            <span class="material-symbols-outlined text-[20px]">pause</span>
+                        </button>
+                    </div>
+                    <div class="h-6 w-px bg-border-dark"></div>
+                    <div class="flex bg-surface-dark rounded-lg p-1 border border-border-dark">
+                        <button class="p-2 text-white hover:text-primary transition-colors rounded hover:bg-white/5"
+                            title="Save">
+                            <span class="material-symbols-outlined text-[20px]">save</span>
+                        </button>
+                        <button class="p-2 text-white hover:text-primary transition-colors rounded hover:bg-white/5"
+                            title="Auto Layout">
+                            <span class="material-symbols-outlined text-[20px]">auto_fix_high</span>
+                        </button>
+                        <button class="p-2 text-white hover:text-primary transition-colors rounded hover:bg-white/5"
+                            title="Zoom In">
+                            <span class="material-symbols-outlined text-[20px]">add</span>
+                        </button>
+                        <button class="p-2 text-white hover:text-primary transition-colors rounded hover:bg-white/5"
+                            title="Zoom Out">
+                            <span class="material-symbols-outlined text-[20px]">remove</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-slate-400 font-mono">Status: <span
+                            class="text-emerald-400">Ready</span></span>
+                    <button
+                        class="flex items-center gap-2 bg-primary hover:bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(13,166,242,0.3)] transition-all">
+                        <span class="material-symbols-outlined text-[20px] fill-1">rocket_launch</span>
+                        Deploy Workflow
+                    </button>
+                </div>
+            </header>
+            <!-- Canvas Area -->
+            <div
+                class="flex-1 relative overflow-hidden bg-background-dark bg-grid-pattern cursor-grab active:cursor-grabbing">
+                <!-- Background Gradient Decoration -->
+                <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-primary/5 rounded-full blur-[100px] pointer-events-none">
+                </div>
+                <!-- SVG Connections Layer -->
+                <svg class="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-visible">
+                    <defs>
+                        <lineargradient id="gradient-line" x1="0%" x2="100%" y1="0%" y2="0%">
+                            <stop offset="0%" stop-color="#0da6f2" stop-opacity="0.3"></stop>
+                            <stop offset="50%" stop-color="#0da6f2"></stop>
+                            <stop offset="100%" stop-color="#f59e0b"></stop>
+                        </lineargradient>
+                    </defs>
+                    <!-- Connection 1 -->
+                    <path class="animate-pulse" d="M380,180 C500,180 500,320 620,320" fill="none"
+                        stroke="url(#gradient-line)" stroke-width="2"></path>
+                    <!-- Connection 2 -->
+                    <path d="M380,450 C500,450 500,350 620,350" fill="none" stroke="#2a3b47" stroke-width="2"></path>
+                </svg>
+                <!-- Node 1: Input Data -->
+                <div class="absolute top-[120px] left-[100px] w-72 group" style="transform: translate3d(0,0,0);">
+                    <div
+                        class="relative bg-surface-dark/90 backdrop-blur-md border border-border-dark rounded-xl shadow-xl hover:border-emerald-500/50 transition-colors">
+                        <!-- Header -->
+                        <div
+                            class="px-4 py-3 border-b border-white/5 flex items-center justify-between bg-white/5 rounded-t-xl">
+                            <div class="flex items-center gap-2">
+                                <div class="bg-emerald-500/20 p-1 rounded text-emerald-400">
+                                    <span class="material-symbols-outlined text-[16px]">description</span>
+                                </div>
+                                <span class="text-sm font-medium text-white">Knowledge Source</span>
+                            </div>
+                            <span
+                                class="material-symbols-outlined text-slate-500 text-[16px] cursor-pointer hover:text-white">more_horiz</span>
+                        </div>
+                        <!-- Body -->
+                        <div class="p-4 space-y-2">
+                            <div class="flex items-center gap-2 bg-background-dark p-2 rounded border border-white/5">
+                                <div class="h-8 w-8 rounded bg-slate-700 bg-cover bg-center" data-alt="PDF Icon"
+                                    style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAUSL9qej4cv1ur-m8U78U61MxRolXQQWZ2ukTzlAxIFqyRUZI3dznPL_zHvoUE_P3kpyQk7b7qFGKyCUm_MC53K4Vc-DpTlOdECYZ9kSQ2xjaGeF_pkyh-jFspyyU_R4WPS_et5LFVtZjZM-4id0bXhl9k4GWy8DO1F5Q3F4Iq82qpNHNhTkzdeaIJDrOtct_NyrAgbmhC4-HbnW95WN-7Mcc8_qXnU98fP0EW2DaVMgmCjKt0U9T7l_2chEChgZPZ9XtyPYX-LBbx');">
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-white">Q3_Financials.pdf</span>
+                                    <span class="text-[10px] text-slate-400">2.4 MB • Parsed</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Handles -->
+                        <div
+                            class="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-emerald-500 rounded-full border-2 border-surface-dark cursor-crosshair hover:scale-125 transition-transform">
+                        </div>
+                    </div>
+                </div>
+                <!-- Node 2: Logic/Agent -->
+                <div class="absolute top-[280px] left-[620px] w-80 group z-10" style="transform: translate3d(0,0,0);">
+                    <div
+                        class="relative bg-surface-dark/95 backdrop-blur-md border border-primary shadow-[0_0_20px_rgba(13,166,242,0.15)] rounded-xl">
+                        <!-- Header -->
+                        <div
+                            class="px-4 py-3 border-b border-primary/20 flex items-center justify-between bg-primary/10 rounded-t-xl">
+                            <div class="flex items-center gap-2">
+                                <div class="bg-primary/20 p-1 rounded text-primary">
+                                    <span class="material-symbols-outlined text-[16px]">psychology</span>
+                                </div>
+                                <span class="text-sm font-medium text-white">Financial Analyst</span>
+                            </div>
+                            <span class="w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_#0da6f2]"></span>
+                        </div>
+                        <!-- Body -->
+                        <div class="p-4">
+                            <div class="text-xs text-slate-400 mb-2 font-mono">MODEL: GPT-4-TURBO</div>
+                            <p class="text-sm text-white/80 line-clamp-2">Analyze the provided PDF documents and extract
+                                key performance indicators relative to...</p>
+                        </div>
+                        <!-- Footer -->
+                        <div class="px-4 py-2 border-t border-white/5 flex justify-between items-center">
+                            <span class="text-[10px] text-slate-500 font-mono">ID: AGT-004</span>
+                            <div class="flex -space-x-1">
+                                <div
+                                    class="h-5 w-5 rounded-full border border-surface-dark bg-slate-600 flex items-center justify-center text-[8px] text-white">
+                                    A</div>
+                                <div
+                                    class="h-5 w-5 rounded-full border border-surface-dark bg-slate-600 flex items-center justify-center text-[8px] text-white">
+                                    B</div>
+                            </div>
+                        </div>
+                        <!-- Handles -->
+                        <div
+                            class="absolute -left-1.5 top-8 w-3 h-3 bg-emerald-500 rounded-full border-2 border-surface-dark cursor-crosshair">
+                        </div>
+                        <div
+                            class="absolute -left-1.5 top-16 w-3 h-3 bg-slate-500 rounded-full border-2 border-surface-dark cursor-crosshair">
+                        </div>
+                        <div
+                            class="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full border-2 border-surface-dark cursor-crosshair hover:scale-125 transition-transform">
+                        </div>
+                    </div>
+                </div>
+                <!-- Node 3: Another Input -->
+                <div class="absolute top-[400px] left-[100px] w-72 group" style="transform: translate3d(0,0,0);">
+                    <div
+                        class="relative bg-surface-dark/90 backdrop-blur-md border border-border-dark rounded-xl shadow-xl hover:border-purple-500/50 transition-colors">
+                        <!-- Header -->
+                        <div
+                            class="px-4 py-3 border-b border-white/5 flex items-center justify-between bg-white/5 rounded-t-xl">
+                            <div class="flex items-center gap-2">
+                                <div class="bg-purple-500/20 p-1 rounded text-purple-400">
+                                    <span class="material-symbols-outlined text-[16px]">input</span>
+                                </div>
+                                <span class="text-sm font-medium text-white">User Query</span>
+                            </div>
+                        </div>
+                        <!-- Body -->
+                        <div class="p-4">
+                            <div
+                                class="bg-background-dark p-3 rounded border border-white/5 text-xs text-slate-300 font-mono">
+                                "Summarize the risks..."
+                            </div>
+                        </div>
+                        <!-- Handles -->
+                        <div
+                            class="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-500 rounded-full border-2 border-surface-dark cursor-crosshair hover:scale-125 transition-transform">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Floating Zoom Controls (Bottom Left) -->
+            <div class="absolute bottom-6 left-6 flex flex-col gap-2 z-10">
+                <div class="bg-surface-dark border border-border-dark p-2 rounded-lg text-xs text-slate-400 font-mono">
+                    x: 620, y: 350
+                </div>
+            </div>
+        </main>
+        <!-- Right Sidebar: Node Inspector -->
+        <aside class="w-80 flex flex-col border-l border-border-dark bg-surface-dark shrink-0 z-20 overflow-y-auto">
+            <div class="p-5 border-b border-border-dark">
+                <div class="flex items-center justify-between mb-1">
+                    <h2 class="text-lg font-bold text-white">Node Inspector</h2>
+                    <span
+                        class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/20 text-primary border border-primary/20">ACTIVE</span>
+                </div>
+                <p class="text-sm text-slate-400">Financial Analyst (Agent)</p>
+            </div>
+            <form class="flex-1 p-5 space-y-6">
+                <!-- Model Configuration -->
+                <div class="space-y-3">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wide">Model Choice</label>
+                    <div class="relative">
+                        <select
+                            class="w-full bg-background-dark border border-border-dark rounded-lg py-2.5 px-3 text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary appearance-none outline-none">
+                            <option>GPT-4 Turbo</option>
+                            <option>GPT-4</option>
+                            <option>Claude 3 Opus</option>
+                            <option>Claude 3 Sonnet</option>
+                            <option>Mistral Large</option>
+                        </select>
+                        <span
+                            class="material-symbols-outlined absolute right-3 top-2.5 text-slate-500 pointer-events-none text-[20px]">expand_more</span>
+                    </div>
+                </div>
+                <!-- Temperature Slider -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label
+                            class="block text-xs font-bold text-slate-300 uppercase tracking-wide">Temperature</label>
+                        <span class="text-xs font-mono text-primary">0.7</span>
+                    </div>
+                    <input class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary"
+                        max="1" min="0" step="0.1" type="range" value="0.7" />
+                    <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                        <span>Precise</span>
+                        <span>Creative</span>
+                    </div>
+                </div>
+                <div class="h-px bg-border-dark w-full"></div>
+                <!-- System Prompt -->
+                <div class="space-y-3 flex-1 flex flex-col">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wide">System
+                            Prompt</label>
+                        <button class="text-xs text-primary hover:text-white transition-colors"
+                            type="button">Expand</button>
+                    </div>
+                    <textarea
+                        class="w-full h-40 bg-background-dark border border-border-dark rounded-lg p-3 text-xs text-slate-300 font-mono leading-relaxed focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none"
+                        spellcheck="false">You are a senior financial analyst capable of reading complex balance sheets and risk assessment reports. 
+
+Your goal is to extract Key Performance Indicators (KPIs) and identify any red flags in the attached documentation.
+
+Output Format: JSON.</textarea>
+                </div>
+                <!-- Capabilities Toggles -->
+                <div class="space-y-3">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wide">Tools &amp;
+                        Capabilities</label>
+                    <div
+                        class="flex items-center justify-between p-3 rounded-lg bg-background-dark border border-border-dark">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-slate-400 text-[18px]">public</span>
+                            <span class="text-sm text-white">Web Search</span>
+                        </div>
+                        <div
+                            class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input
+                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 checked:border-primary"
+                                id="toggle1" name="toggle" type="checkbox" />
+                            <label
+                                class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-700 cursor-pointer checked:bg-primary/50"
+                                for="toggle1"></label>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-center justify-between p-3 rounded-lg bg-background-dark border border-border-dark">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-slate-400 text-[18px]">code</span>
+                            <span class="text-sm text-white">Code Interpreter</span>
+                        </div>
+                        <div
+                            class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input checked=""
+                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 checked:border-primary"
+                                id="toggle2" name="toggle" type="checkbox" />
+                            <label
+                                class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-700 cursor-pointer checked:bg-primary/50"
+                                for="toggle2"></label>
+                        </div>
+                    </div>
+                </div>
+                <!-- Execution Settings (NEW - matches backend tool.timeout) -->
+                <div class="h-px bg-border-dark w-full"></div>
+                <div class="space-y-3">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wide">Execution
+                        Settings</label>
+                    <!-- Timeout -->
+                    <div
+                        class="flex items-center justify-between p-3 rounded-lg bg-background-dark border border-border-dark">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-slate-400 text-[18px]">timer</span>
+                            <span class="text-sm text-white">Tool Timeout</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input
+                                class="w-16 bg-[#111618] border border-border-dark rounded px-2 py-1 text-xs text-white font-mono text-right focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                                type="number" value="30" min="1" max="300" />
+                            <span class="text-xs text-slate-500">sec</span>
+                        </div>
+                    </div>
+                    <!-- Retry on Error -->
+                    <div
+                        class="flex items-center justify-between p-3 rounded-lg bg-background-dark border border-border-dark">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-slate-400 text-[18px]">replay</span>
+                            <span class="text-sm text-white">Retry on Error</span>
+                            <span class="text-[10px] text-primary/60 bg-primary/10 px-1.5 py-0.5 rounded">transient
+                                only</span>
+                        </div>
+                        <div
+                            class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input checked=""
+                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 checked:border-primary"
+                                id="toggle3" name="toggle" type="checkbox" />
+                            <label
+                                class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-700 cursor-pointer checked:bg-primary/50"
+                                for="toggle3"></label>
+                        </div>
+                    </div>
+                    <!-- Max Retries -->
+                    <div
+                        class="flex items-center justify-between p-3 rounded-lg bg-background-dark border border-border-dark">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-slate-400 text-[18px]">repeat</span>
+                            <span class="text-sm text-white">Max Retries</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input
+                                class="w-12 bg-[#111618] border border-border-dark rounded px-2 py-1 text-xs text-white font-mono text-right focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                                type="number" value="3" min="0" max="10" />
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="p-5 border-t border-border-dark bg-background-dark">
+                <button
+                    class="w-full py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white text-sm font-medium transition-all flex justify-center items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">bug_report</span>
+                    Debug Node
+                </button>
+            </div>
+        </aside>
+    </div>
+    <style>
+        /* Custom Toggle Styles for Tailwind usually require a plugin or custom css like this */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #0da6f2;
+        }
+
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: rgba(13, 166, 242, 0.5);
+        }
+    </style>
+</body>
+
+</html>

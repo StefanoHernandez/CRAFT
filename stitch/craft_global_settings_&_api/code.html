@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CRAFT Global Settings &amp; API</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0da6f2",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101c22",
+                        "glass-dark": "rgba(27, 35, 39, 0.7)",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    boxShadow: {
+                        "neon": "0 0 10px rgba(13, 166, 242, 0.3), 0 0 20px rgba(13, 166, 242, 0.1)",
+                        "neon-red": "0 0 10px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.1)",
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-200 antialiased overflow-hidden">
+<div class="relative flex h-screen w-full overflow-hidden">
+<!-- Sidebar -->
+<div class="hidden md:flex flex-col w-[280px] h-full border-r border-[#3b4c54] bg-[#111618] shrink-0">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-6">
+<!-- Branding -->
+<div class="flex gap-3 px-2">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 relative overflow-hidden bg-gradient-to-tr from-cyan-900 to-blue-600" data-alt="Abstract gradient logo for CRAFT">
+<div class="absolute inset-0 flex items-center justify-center text-white font-bold text-xs">C</div>
+</div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-bold leading-normal tracking-wide">CRAFT</h1>
+<p class="text-[#9cb0ba] text-xs font-normal leading-normal font-mono">v2.4.0-beta</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9cb0ba] hover:bg-[#1b2327] hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">dashboard</span>
+<p class="text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9cb0ba] hover:bg-[#1b2327] hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">account_tree</span>
+<p class="text-sm font-medium leading-normal">Workflows</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9cb0ba] hover:bg-[#1b2327] hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">smart_toy</span>
+<p class="text-sm font-medium leading-normal">Agents</p>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 border border-primary/20 text-white shadow-neon" href="#">
+<span class="material-symbols-outlined text-primary fill-1">settings</span>
+<p class="text-sm font-medium leading-normal">Settings &amp; API</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9cb0ba] hover:bg-[#1b2327] hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">description</span>
+<p class="text-sm font-medium leading-normal">Logs</p>
+</a>
+</nav>
+</div>
+<!-- Sidebar CTA -->
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary hover:bg-sky-400 text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-[0_0_15px_rgba(13,166,242,0.4)]">
+<span class="truncate">New Workflow</span>
+</button>
+</div>
+</div>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col h-full overflow-hidden relative">
+<!-- decorative background glow -->
+<div class="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none z-0"></div>
+<main class="flex-1 overflow-y-auto z-10 p-6 md:p-10 lg:px-20 scrollbar-hide">
+<div class="max-w-5xl mx-auto flex flex-col gap-8 pb-20">
+<!-- Page Heading -->
+<div class="flex flex-wrap justify-between items-end gap-4 border-b border-[#3b4c54]/50 pb-6">
+<div class="flex flex-col gap-2">
+<h1 class="text-white text-4xl font-black leading-tight tracking-tight">Global Settings &amp; API</h1>
+<p class="text-[#9cb0ba] text-base font-normal leading-normal max-w-xl">Manage system-wide configurations, LLM provider credentials, and environment variables.</p>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+<span class="text-emerald-500 text-xs font-mono font-medium">SYSTEM OPERATIONAL</span>
+</div>
+</div>
+<!-- General Configuration Section -->
+<section class="flex flex-col gap-5">
+<h2 class="text-white text-xl font-bold leading-tight tracking-tight flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">tune</span>
+                            General Configuration
+                        </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Instance Name -->
+<div class="flex flex-col gap-2 p-5 rounded-xl border border-[#3b4c54] bg-glass-dark backdrop-blur-sm">
+<label class="text-white text-sm font-medium" for="instance-name">Instance Name</label>
+<input class="form-input w-full rounded-lg text-white border border-[#3b4c54] bg-[#111618] focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 placeholder:text-[#566873] text-base font-normal font-mono transition-all" id="instance-name" type="text" value="CRAFT-MAIN-NODE-01"/>
+<p class="text-[#566873] text-xs">Unique identifier for this node in the cluster.</p>
+</div>
+<!-- Base URL -->
+<div class="flex flex-col gap-2 p-5 rounded-xl border border-[#3b4c54] bg-glass-dark backdrop-blur-sm">
+<label class="text-white text-sm font-medium" for="base-url">Base URL</label>
+<input class="form-input w-full rounded-lg text-white border border-[#3b4c54] bg-[#111618] focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 placeholder:text-[#566873] text-base font-normal font-mono transition-all" id="base-url" readonly="" type="text" value="https://api.craft.internal/v1"/>
+<p class="text-[#566873] text-xs">Read-only endpoint configuration.</p>
+</div>
+</div>
+</section>
+<!-- Model Providers Section -->
+<section class="flex flex-col gap-5">
+<div class="flex items-center justify-between">
+<h2 class="text-white text-xl font-bold leading-tight tracking-tight flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">cloud_sync</span>
+                                Model Providers
+                            </h2>
+<button class="text-sm text-primary hover:text-white transition-colors font-medium">Add New Provider</button>
+</div>
+<div class="flex flex-col gap-4">
+<!-- OpenAI Card -->
+<div class="group flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-xl border border-[#3b4c54] bg-glass-dark backdrop-blur-md hover:border-primary/50 transition-all shadow-lg shadow-black/20">
+<div class="flex items-center gap-4 min-w-[200px]">
+<div class="size-10 rounded-lg bg-white text-black flex items-center justify-center font-bold text-xl overflow-hidden" data-alt="OpenAI Logo">
+<svg fill="currentColor" height="24" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729ZM12.7231 21.3276a3.7388 3.7388 0 0 1-3.6666-1.5539l.1152-.3951 1.6394-5.3888h4.4285l-1.0711 3.5204a3.7482 3.7482 0 0 1-1.4454 3.8174Zm-7.7915-2.0713a3.7435 3.7435 0 0 1-.9023-4.9926l2.1627-2.3134-1.7451-4.7001-1.424 2.8996a3.753 3.753 0 0 1 1.9087 9.1065Zm8.5085-15.6027a3.7435 3.7435 0 0 1 3.4975 1.5539l-.1152.4047-1.6394 5.384H10.7593l1.0759-3.5252a3.7482 3.7482 0 0 1 1.6049-3.8174Zm7.7915 2.076a3.7435 3.7435 0 0 1 .9023 4.9926l-2.158 2.3087 1.7356 4.7048 1.4336-2.9044a3.7482 3.7482 0 0 1-1.9135-9.1017ZM8.303 12.0123l-1.6394-5.384 5.3745 1.4886-1.5724 1.5867-2.1627 2.3087Zm7.3892 0 1.6394 5.384-5.3745-1.4839 1.5724-1.5867 2.1627-2.3134Z"></path></svg>
+</div>
+<div class="flex flex-col">
+<p class="text-white font-bold leading-none">OpenAI</p>
+<div class="flex items-center gap-1.5 mt-1.5">
+<div class="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+<span class="text-emerald-500 text-xs font-medium">Active</span>
+</div>
+</div>
+</div>
+<div class="flex-1 w-full relative">
+<input class="w-full bg-[#111618] border border-[#3b4c54] rounded-lg px-4 py-2.5 text-slate-300 font-mono text-sm focus:outline-none focus:border-primary transition-colors" readonly="" type="password" value="sk-proj-xxxxxxxxxxxxxxxxxxxxxxxx"/>
+<div class="absolute right-1 top-1 h-[calc(100%-8px)]">
+<button class="h-full px-3 rounded text-xs font-bold text-background-dark bg-primary hover:bg-white transition-all shadow-neon uppercase tracking-wide">
+                                            Reveal
+                                        </button>
+</div>
+</div>
+</div>
+<!-- Anthropic Card -->
+<div class="group flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-xl border border-[#3b4c54] bg-glass-dark backdrop-blur-md hover:border-primary/50 transition-all">
+<div class="flex items-center gap-4 min-w-[200px]">
+<div class="size-10 rounded-lg bg-[#d97757] text-white flex items-center justify-center font-bold overflow-hidden p-1" data-alt="Anthropic Logo">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<div class="flex flex-col">
+<p class="text-white font-bold leading-none">Anthropic</p>
+<div class="flex items-center gap-1.5 mt-1.5">
+<div class="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+<span class="text-emerald-500 text-xs font-medium">Active</span>
+</div>
+</div>
+</div>
+<div class="flex-1 w-full relative">
+<input class="w-full bg-[#111618] border border-[#3b4c54] rounded-lg px-4 py-2.5 text-slate-300 font-mono text-sm focus:outline-none focus:border-primary transition-colors" readonly="" type="password" value="sk-ant-xxxxxxxxxxxxxxxxxxxxxxxx"/>
+<div class="absolute right-1 top-1 h-[calc(100%-8px)]">
+<button class="h-full px-3 rounded text-xs font-bold text-background-dark bg-primary hover:bg-white transition-all shadow-neon uppercase tracking-wide">
+                                            Reveal
+                                        </button>
+</div>
+</div>
+</div>
+<!-- Mistral Card (Error State) -->
+<div class="group flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-xl border border-red-900/40 bg-glass-dark backdrop-blur-md hover:border-red-500/50 transition-all">
+<div class="flex items-center gap-4 min-w-[200px]">
+<div class="size-10 rounded-lg bg-yellow-500 text-black flex items-center justify-center font-bold overflow-hidden" data-alt="Mistral Logo">
+                                        M
+                                    </div>
+<div class="flex flex-col">
+<p class="text-white font-bold leading-none">Mistral AI</p>
+<div class="flex items-center gap-1.5 mt-1.5">
+<div class="size-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
+<span class="text-red-500 text-xs font-medium">Invalid Key</span>
+</div>
+</div>
+</div>
+<div class="flex-1 w-full relative">
+<input class="w-full bg-[#111618] border border-red-900/60 rounded-lg px-4 py-2.5 text-red-300 font-mono text-sm focus:outline-none focus:border-red-500 transition-colors" type="password" value="mistral-xxxxxxxxxxxxxxxxxxxxxxxx"/>
+<div class="absolute right-1 top-1 h-[calc(100%-8px)]">
+<button class="h-full px-3 rounded text-xs font-bold text-white bg-red-600/20 hover:bg-red-600 border border-red-600 transition-all uppercase tracking-wide">
+                                            Update
+                                        </button>
+</div>
+</div>
+</div>
+<!-- Groq Card -->
+<div class="group flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-xl border border-[#3b4c54] bg-glass-dark backdrop-blur-md hover:border-primary/50 transition-all">
+    <div class="flex items-center gap-4 min-w-[200px]">
+        <div class="size-10 rounded-lg bg-orange-500 text-white flex items-center justify-center font-bold overflow-hidden" data-alt="Groq Logo">⚡</div>
+        <div class="flex flex-col">
+            <p class="text-white font-bold leading-none">Groq</p>
+            <div class="flex items-center gap-1.5 mt-1.5">
+                <div class="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                <span class="text-emerald-500 text-xs font-medium">Active</span>
+                <span class="text-xs text-primary/60 ml-2">70+ tok/s</span>
+            </div>
+        </div>
+    </div>
+    <div class="flex-1 w-full relative">
+        <input class="w-full bg-[#111618] border border-[#3b4c54] rounded-lg px-4 py-2.5 text-slate-300 font-mono text-sm focus:outline-none focus:border-primary transition-colors" readonly type="password" value="gsk_xxxxxxxxxxxxxxxxxxxxxxxx"/>
+        <div class="absolute right-1 top-1 h-[calc(100%-8px)]">
+            <button class="h-full px-3 rounded text-xs font-bold text-background-dark bg-primary hover:bg-white transition-all shadow-neon uppercase tracking-wide">Reveal</button>
+        </div>
+    </div>
+</div>
+<!-- Ollama Card (Local) -->
+<div class="group flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-xl border border-[#3b4c54] bg-glass-dark backdrop-blur-md hover:border-primary/50 transition-all">
+    <div class="flex items-center gap-4 min-w-[200px]">
+        <div class="size-10 rounded-lg bg-slate-700 text-white flex items-center justify-center font-bold overflow-hidden" data-alt="Ollama Logo">🦙</div>
+        <div class="flex flex-col">
+            <p class="text-white font-bold leading-none">Ollama</p>
+            <div class="flex items-center gap-1.5 mt-1.5">
+                <div class="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                <span class="text-emerald-500 text-xs font-medium">Local</span>
+                <span class="text-xs text-primary/60 ml-2">Zero Cost</span>
+            </div>
+        </div>
+    </div>
+    <div class="flex-1 w-full relative">
+        <input class="w-full bg-[#111618] border border-[#3b4c54] rounded-lg px-4 py-2.5 text-slate-300 font-mono text-sm focus:outline-none focus:border-primary transition-colors" readonly type="text" value="http://localhost:11434"/>
+        <div class="absolute right-1 top-1 h-[calc(100%-8px)]">
+            <button class="h-full px-3 rounded text-xs font-bold text-background-dark bg-primary hover:bg-white transition-all shadow-neon uppercase tracking-wide">Test</button>
+        </div>
+    </div>
+</div>
+<!-- HuggingFace Card -->
+<div class="group flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-xl border border-[#3b4c54] bg-glass-dark backdrop-blur-md hover:border-primary/50 transition-all">
+    <div class="flex items-center gap-4 min-w-[200px]">
+        <div class="size-10 rounded-lg bg-yellow-400 text-black flex items-center justify-center font-bold overflow-hidden" data-alt="HuggingFace Logo">🤗</div>
+        <div class="flex flex-col">
+            <p class="text-white font-bold leading-none">HuggingFace</p>
+            <div class="flex items-center gap-1.5 mt-1.5">
+                <div class="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                <span class="text-emerald-500 text-xs font-medium">Active</span>
+                <span class="text-xs text-primary/60 ml-2">Async ✓</span>
+            </div>
+        </div>
+    </div>
+    <div class="flex-1 w-full relative">
+        <input class="w-full bg-[#111618] border border-[#3b4c54] rounded-lg px-4 py-2.5 text-slate-300 font-mono text-sm focus:outline-none focus:border-primary transition-colors" readonly type="password" value="hf_xxxxxxxxxxxxxxxxxxxxxxxx"/>
+        <div class="absolute right-1 top-1 h-[calc(100%-8px)]">
+            <button class="h-full px-3 rounded text-xs font-bold text-background-dark bg-primary hover:bg-white transition-all shadow-neon uppercase tracking-wide">Reveal</button>
+        </div>
+    </div>
+</div>
+<!-- Replicate Card -->
+<div class="group flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-xl border border-[#3b4c54] bg-glass-dark backdrop-blur-md hover:border-primary/50 transition-all">
+    <div class="flex items-center gap-4 min-w-[200px]">
+        <div class="size-10 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold overflow-hidden" data-alt="Replicate Logo">R</div>
+        <div class="flex flex-col">
+            <p class="text-white font-bold leading-none">Replicate</p>
+            <div class="flex items-center gap-1.5 mt-1.5">
+                <div class="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                <span class="text-emerald-500 text-xs font-medium">Active</span>
+                <span class="text-xs text-primary/60 ml-2">Async ✓</span>
+            </div>
+        </div>
+    </div>
+    <div class="flex-1 w-full relative">
+        <input class="w-full bg-[#111618] border border-[#3b4c54] rounded-lg px-4 py-2.5 text-slate-300 font-mono text-sm focus:outline-none focus:border-primary transition-colors" readonly type="password" value="r8_xxxxxxxxxxxxxxxxxxxxxxxx"/>
+        <div class="absolute right-1 top-1 h-[calc(100%-8px)]">
+            <button class="h-full px-3 rounded text-xs font-bold text-background-dark bg-primary hover:bg-white transition-all shadow-neon uppercase tracking-wide">Reveal</button>
+        </div>
+    </div>
+</div>
+<!-- Together AI Card -->
+<div class="group flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-xl border border-[#3b4c54] bg-glass-dark backdrop-blur-md hover:border-primary/50 transition-all">
+    <div class="flex items-center gap-4 min-w-[200px]">
+        <div class="size-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 text-white flex items-center justify-center font-bold overflow-hidden" data-alt="Together AI Logo">T</div>
+        <div class="flex flex-col">
+            <p class="text-white font-bold leading-none">Together AI</p>
+            <div class="flex items-center gap-1.5 mt-1.5">
+                <div class="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                <span class="text-emerald-500 text-xs font-medium">Active</span>
+            </div>
+        </div>
+    </div>
+    <div class="flex-1 w-full relative">
+        <input class="w-full bg-[#111618] border border-[#3b4c54] rounded-lg px-4 py-2.5 text-slate-300 font-mono text-sm focus:outline-none focus:border-primary transition-colors" readonly type="password" value="together_xxxxxxxxxxxxxxxxxxxxxxxx"/>
+        <div class="absolute right-1 top-1 h-[calc(100%-8px)]">
+            <button class="h-full px-3 rounded text-xs font-bold text-background-dark bg-primary hover:bg-white transition-all shadow-neon uppercase tracking-wide">Reveal</button>
+        </div>
+    </div>
+</div>
+<!-- xAI Card -->
+<div class="group flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-xl border border-[#3b4c54] bg-glass-dark backdrop-blur-md hover:border-primary/50 transition-all">
+    <div class="flex items-center gap-4 min-w-[200px]">
+        <div class="size-10 rounded-lg bg-black text-white flex items-center justify-center font-bold overflow-hidden border border-white/20" data-alt="xAI Logo">X</div>
+        <div class="flex flex-col">
+            <p class="text-white font-bold leading-none">xAI (Grok)</p>
+            <div class="flex items-center gap-1.5 mt-1.5">
+                <div class="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                <span class="text-emerald-500 text-xs font-medium">Active</span>
+            </div>
+        </div>
+    </div>
+    <div class="flex-1 w-full relative">
+        <input class="w-full bg-[#111618] border border-[#3b4c54] rounded-lg px-4 py-2.5 text-slate-300 font-mono text-sm focus:outline-none focus:border-primary transition-colors" readonly type="password" value="xai_xxxxxxxxxxxxxxxxxxxxxxxx"/>
+        <div class="absolute right-1 top-1 h-[calc(100%-8px)]">
+            <button class="h-full px-3 rounded text-xs font-bold text-background-dark bg-primary hover:bg-white transition-all shadow-neon uppercase tracking-wide">Reveal</button>
+        </div>
+    </div>
+</div>
+<!-- OpenRouter Card -->
+<div class="group flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-xl border border-primary/30 bg-glass-dark backdrop-blur-md hover:border-primary/50 transition-all">
+    <div class="flex items-center gap-4 min-w-[200px]">
+        <div class="size-10 rounded-lg bg-gradient-to-br from-primary to-emerald-500 text-white flex items-center justify-center font-bold overflow-hidden" data-alt="OpenRouter Logo">⚙️</div>
+        <div class="flex flex-col">
+            <p class="text-white font-bold leading-none">OpenRouter</p>
+            <div class="flex items-center gap-1.5 mt-1.5">
+                <div class="size-2 rounded-full bg-primary shadow-[0_0_8px_rgba(13,166,242,0.6)]"></div>
+                <span class="text-primary text-xs font-medium">Aggregator</span>
+                <span class="text-xs text-primary/60 ml-2">400+ models</span>
+            </div>
+        </div>
+    </div>
+    <div class="flex-1 w-full relative">
+        <input class="w-full bg-[#111618] border border-[#3b4c54] rounded-lg px-4 py-2.5 text-slate-300 font-mono text-sm focus:outline-none focus:border-primary transition-colors" readonly type="password" value="sk-or-xxxxxxxxxxxxxxxxxxxxxxxx"/>
+        <div class="absolute right-1 top-1 h-[calc(100%-8px)]">
+            <button class="h-full px-3 rounded text-xs font-bold text-background-dark bg-primary hover:bg-white transition-all shadow-neon uppercase tracking-wide">Reveal</button>
+        </div>
+    </div>
+</div>
+
+</div>
+</section>
+<!-- System Defaults -->
+<section class="flex flex-col gap-5">
+<h2 class="text-white text-xl font-bold leading-tight tracking-tight flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">terminal</span>
+                            System Defaults &amp; SDK
+                        </h2>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Radio Options -->
+<div class="lg:col-span-1 flex flex-col gap-3">
+<div class="p-4 rounded-xl border border-[#3b4c54] bg-[#111618]">
+<p class="text-xs font-bold text-[#9cb0ba] uppercase tracking-wider mb-3">Operating Mode</p>
+<label class="flex items-start gap-3 p-3 rounded-lg hover:bg-[#283339] cursor-pointer transition-colors group">
+<div class="relative flex items-center pt-1">
+<input checked="" class="peer h-4 w-4 appearance-none rounded-full border border-slate-500 checked:border-primary checked:bg-primary transition-all" name="mode" type="radio"/>
+<div class="absolute inset-0 flex justify-center items-center pointer-events-none opacity-0 peer-checked:opacity-100">
+<div class="h-1.5 w-1.5 rounded-full bg-white shadow-neon"></div>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium">Debug Mode</span>
+<span class="text-[#9cb0ba] text-xs">Verbose logging enabled</span>
+</div>
+</label>
+<label class="flex items-start gap-3 p-3 rounded-lg hover:bg-[#283339] cursor-pointer transition-colors group mt-2">
+<div class="relative flex items-center pt-1">
+<input class="peer h-4 w-4 appearance-none rounded-full border border-slate-500 checked:border-primary checked:bg-primary transition-all" name="mode" type="radio"/>
+<div class="absolute inset-0 flex justify-center items-center pointer-events-none opacity-0 peer-checked:opacity-100">
+<div class="h-1.5 w-1.5 rounded-full bg-white shadow-neon"></div>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium">Performance Mode</span>
+<span class="text-[#9cb0ba] text-xs">Optimized for throughput</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Code Snippet -->
+<div class="lg:col-span-2 flex flex-col rounded-xl overflow-hidden border border-[#3b4c54] bg-[#0d1113]">
+<div class="flex items-center justify-between px-4 py-2 bg-[#1b2327] border-b border-[#3b4c54]">
+<span class="text-xs font-mono text-[#9cb0ba]">init_config.py</span>
+<button class="text-[#9cb0ba] hover:text-white"><span class="material-symbols-outlined text-[16px]">content_copy</span></button>
+</div>
+<div class="p-4 overflow-x-auto">
+<pre class="font-mono text-sm leading-relaxed"><code class="text-purple-400">from</code> <code class="text-white">craft_sdk</code> <code class="text-purple-400">import</code> <code class="text-white">CraftClient</code>
+
+<code class="text-[#566873]"># Initialize with current environment</code>
+<code class="text-white">client</code> <code class="text-primary">=</code> <code class="text-white">CraftClient(</code>
+    <code class="text-yellow-300">api_key</code><code class="text-primary">=</code><code class="text-emerald-400">"sk_live_..."</code><code class="text-white">,</code>
+    <code class="text-yellow-300">environment</code><code class="text-primary">=</code><code class="text-emerald-400">"production"</code><code class="text-white">,</code>
+    <code class="text-yellow-300">debug</code><code class="text-primary">=</code><code class="text-purple-400">True</code>
+<code class="text-white">)</code></pre>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer Danger Zone -->
+<div class="mt-8 border-t border-red-900/30 pt-8">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 rounded-xl border border-red-900/50 bg-red-950/10 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-red-600"></div>
+<div class="flex flex-col gap-2 relative z-10">
+<h3 class="text-red-100 font-bold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-red-500">warning</span>
+                                     Danger Zone
+                                 </h3>
+<p class="text-red-200/60 text-sm max-w-md">Restarting the system will terminate all active agent sessions and flush the ephemeral memory cache.</p>
+</div>
+<button class="whitespace-nowrap flex items-center gap-2 px-5 py-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/50 hover:border-red-500 transition-all shadow-neon-red font-bold text-sm group cursor-pointer relative z-10">
+<span class="material-symbols-outlined group-hover:rotate-180 transition-transform">restart_alt</span>
+                                 Force System Restart
+                             </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>
