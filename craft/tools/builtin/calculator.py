@@ -23,9 +23,9 @@ SAFE_OPERATORS = {
 def _safe_eval(node):
     """Safely evaluate an AST node."""
     if isinstance(node, ast.Constant):  # Python 3.8+
+        if node.value is Ellipsis:
+            raise ValueError("Unsupported constant: ellipsis")
         return node.value
-    elif isinstance(node, ast.Num):  # Python 3.7
-        return node.n
     elif isinstance(node, ast.BinOp):
         left = _safe_eval(node.left)
         right = _safe_eval(node.right)
