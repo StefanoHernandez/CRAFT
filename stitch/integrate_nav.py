@@ -16,7 +16,7 @@ NAV_ITEMS = [
     ("Task History", "history", "craft_task_history_&_archive"),
 ]
 
-STITCH_DIR = "/Users/stefano/Documents/Progetti_personali/CRAFT/stitch"
+STITCH_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def generate_sidebar_html(current_folder):
     html = '            <!-- Unified Nav -->\n            <nav class="flex flex-col p-3 gap-1 overflow-y-auto flex-1">\n'

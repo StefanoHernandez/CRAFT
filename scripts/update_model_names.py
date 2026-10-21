@@ -58,7 +58,7 @@ def update_file(filepath: Path):
     return False
 
 def main():
-    project_root = Path('/Users/stefano/Documents/Progetti_personali/CRAFT')
+    project_root = Path(__file__).resolve().parent.parent
     
     # File patterns to update
     patterns = ['**/*.md', '**/*.py', '**/*.ts', '**/*.tsx', '**/*.json']
